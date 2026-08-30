@@ -103,7 +103,7 @@ const getInitialAdsSettings = (): AdsSettings => {
     try {
       const stored = localStorage.getItem('streamespn_ads_settings');
       if (stored) return JSON.parse(stored);
-    } catch (e) {}
+    } catch (e) { }
   }
   return {};
 };
@@ -225,10 +225,10 @@ export const Navbar: React.FC = () => {
           setAdsSettings(settings);
           try {
             localStorage.setItem('streamespn_ads_settings', JSON.stringify(settings));
-          } catch (e) {}
+          } catch (e) { }
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     // 2. Fetch Categories independently
     getCategories()
@@ -237,7 +237,7 @@ export const Navbar: React.FC = () => {
           setCategories(sportsData);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // Search API Call
@@ -299,8 +299,8 @@ export const Navbar: React.FC = () => {
 
           {/* BRAND LOGO */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 text-black font-black text-lg shadow-md group-hover:scale-105 transition-transform">
-              🏆
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-rose-600 via-amber-500 to-yellow-400 shadow-md">
+              <Tv className="h-5 w-5 text-white" />
             </div>
             <div className="flex items-baseline font-black tracking-tight text-xl sm:text-2xl text-[var(--text-white)]">
               STREAM<span className="text-[#F8C831]">ESPN</span>
