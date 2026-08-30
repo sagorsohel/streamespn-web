@@ -6,7 +6,12 @@ import { usePathname } from 'next/navigation';
 import api from '@/lib/api';
 import { AdRenderer } from '../ads/AdRenderer';
 import { Tv, Shield, Globe, Radio, Sparkles, Lock, X } from 'lucide-react';
-import { AdsSettings } from './Navbar';
+import {
+  getAdsSettingsSync,
+  subscribeAdsSettings,
+  fetchAdsSettingsAsync,
+  AdsSettings,
+} from '@/lib/adsCache';
 
 const formatExternalUrl = (url?: string) => {
   if (!url || !url.trim()) return '#';
@@ -19,31 +24,17 @@ const formatExternalUrl = (url?: string) => {
 
 export const Footer: React.FC = () => {
   const pathname = usePathname();
-  const [adsSettings, setAdsSettings] = useState<AdsSettings>({});
+  const [adsSettings, setAdsSettings] = useState<AdsSettings>(() => getAdsSettingsSync());
   const [showFloatDesktop, setShowFloatDesktop] = useState<boolean>(true);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('streamespn_ads_settings');
-      if (stored) {
-        setAdsSettings(JSON.parse(stored));
-      }
-    } catch (e) { }
-
-    let isMounted = true;
-    const fetchAds = async () => {
-      try {
-        const res = await api.get('/ads');
-        if (isMounted && res.data?.success && res.data?.data?.settings) {
-          setAdsSettings(res.data.data.settings);
-        }
-      } catch (err) {
-        // ignore
-      }
-    };
-    fetchAds();
+    setAdsSettings(getAdsSettingsSync());
+    const unsubscribe = subscribeAdsSettings((updated) => {
+      setAdsSettings(updated);
+    });
+    fetchAdsSettingsAsync();
     return () => {
-      isMounted = false;
+      unsubscribe();
     };
   }, []);
 
@@ -171,6 +162,7 @@ export const Footer: React.FC = () => {
               <li>
                 <a
                   href={formatExternalUrl(adsSettings.membershipReferralLink)}
+                  suppressHydrationWarning
                   rel="noopener noreferrer"
                   className="hover:text-[#F8C831] transition-colors flex items-center gap-1 cursor-pointer"
                 >
@@ -180,6 +172,7 @@ export const Footer: React.FC = () => {
               <li>
                 <a
                   href={formatExternalUrl(adsSettings.globalSignInReferralLink)}
+                  suppressHydrationWarning
                   rel="noopener noreferrer"
                   className="hover:text-[#F8C831] transition-colors cursor-pointer"
                 >

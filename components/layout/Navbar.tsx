@@ -10,6 +10,12 @@ import { slugify } from '@/lib/utils';
 import { AdRenderer } from '../ads/AdRenderer';
 import { startTopLoader } from './TopLoadingBar';
 import {
+  getAdsSettingsSync,
+  subscribeAdsSettings,
+  fetchAdsSettingsAsync,
+  AdsSettings,
+} from '@/lib/adsCache';
+import {
   Search,
   Tv,
   Moon,
@@ -34,17 +40,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 
-export interface AdsSettings {
-  headAds?: string;
-  navAds?: string;
-  modalSignupAds?: string;
-  footerAds?: string;
-  floatMobileAds?: string;
-  floatDesktopAds?: string;
-  histatsScript?: string;
-  membershipReferralLink?: string;
-  globalSignInReferralLink?: string;
-}
+export type { AdsSettings };
 
 export interface Category {
   id: number;
@@ -205,27 +201,12 @@ export const Navbar: React.FC = () => {
 
   // Fetch Ads & Categories dynamically from Backend API (Instant independent calls)
   useEffect(() => {
-    // Load cached ads from localStorage on client mount (prevents SSR hydration mismatch)
-    try {
-      const stored = localStorage.getItem('streamespn_ads_settings');
-      if (stored) {
-        setAdsSettings(JSON.parse(stored));
-      }
-    } catch (e) { }
-
-    // 1. Fetch Ads Immediately & update localStorage
-    api
-      .get('/ads')
-      .then((res) => {
-        if (res.data?.success && res.data?.data?.settings) {
-          const settings = res.data.data.settings;
-          setAdsSettings(settings);
-          try {
-            localStorage.setItem('streamespn_ads_settings', JSON.stringify(settings));
-          } catch (e) { }
-        }
-      })
-      .catch(() => { });
+    // Instant cache load & subscription
+    setAdsSettings(getAdsSettingsSync());
+    const unsubscribe = subscribeAdsSettings((updated) => {
+      setAdsSettings(updated);
+    });
+    fetchAdsSettingsAsync();
 
     // 2. Fetch Categories independently
     getCategories()

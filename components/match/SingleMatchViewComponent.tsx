@@ -6,7 +6,12 @@ import api from '@/lib/api';
 import { slugify } from '@/lib/utils';
 import { MatchCard, MatchItem } from '@/components/home/MatchCard';
 import { AdRenderer } from '@/components/ads/AdRenderer';
-import { AdsSettings } from '@/components/layout/Navbar';
+import {
+  getAdsSettingsSync,
+  subscribeAdsSettings,
+  fetchAdsSettingsAsync,
+  AdsSettings,
+} from '@/lib/adsCache';
 import { formatMatchFullDateTime, formatLiveTimeOnly } from '@/lib/timezone';
 import { useLiveScoreSync } from '@/lib/useLiveScoreSync';
 import {
@@ -62,31 +67,17 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
   const [notFound, setNotFound] = useState<boolean>(false);
 
   // Ads Settings & 40s/20s Rotation Loop State
-  const [adsSettings, setAdsSettings] = useState<AdsSettings>({});
+  const [adsSettings, setAdsSettings] = useState<AdsSettings>(() => getAdsSettingsSync());
   const [activeAdTab, setActiveAdTab] = useState<'nav' | 'modal'>('nav');
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('streamespn_ads_settings');
-      if (stored) {
-        setAdsSettings(JSON.parse(stored));
-      }
-    } catch (e) { }
-
-    let isMounted = true;
-    const fetchAds = async () => {
-      try {
-        const res = await api.get('/ads');
-        if (isMounted && res.data?.success && res.data?.data?.settings) {
-          setAdsSettings(res.data.data.settings);
-        }
-      } catch (err) {
-        // ignore
-      }
-    };
-    fetchAds();
+    setAdsSettings(getAdsSettingsSync());
+    const unsubscribe = subscribeAdsSettings((updated) => {
+      setAdsSettings(updated);
+    });
+    fetchAdsSettingsAsync();
     return () => {
-      isMounted = false;
+      unsubscribe();
     };
   }, []);
 
