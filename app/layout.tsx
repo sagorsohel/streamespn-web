@@ -16,12 +16,61 @@ const fontMono = Geist_Mono({
 import { Suspense } from "react";
 import { TopLoadingBar } from "@/components/layout/TopLoadingBar";
 import { HeadScriptInjector } from "@/components/ads/HeadScriptInjector";
+import { JsonLdSchema } from "@/components/seo/JsonLdSchema";
 import type { Metadata } from "next";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://streamespn.org';
+
 export const metadata: Metadata = {
-  title: "StreamESPN | Enjoy Live Sports & ALL Events",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "StreamESPN | Watch Live Sports & All Events Online FREE",
+    template: "%s | StreamESPN",
+  },
   description:
-    "Watch Your Favorite Sports Live Stream Online for FREE, TV Coverage, Replays, Highlights from Anywhere at Anytime. Optimized for PC, Mac, iPad, iPhone, Android ...",
+    "Watch Your Favorite Sports Live Streams Online for FREE, TV Coverage, Replays, and Highlights from Anywhere at Anytime. Fast HLS streaming CDN optimized for PC, Mac, iPad, iPhone, and Android.",
+  keywords: [
+    "live sports streaming",
+    "soccer live stream",
+    "free sports stream",
+    "hd sports stream",
+    "nba live stream",
+    "nfl live stream",
+    "f1 live stream",
+    "streamespn",
+  ],
+  authors: [{ name: "StreamESPN" }],
+  creator: "StreamESPN",
+  publisher: "StreamESPN",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: siteUrl,
+    title: "StreamESPN | Watch Live Sports & All Events Online FREE",
+    description:
+      "Watch Your Favorite Sports Live Streams Online for FREE, TV Coverage, Replays, and Highlights from Anywhere at Anytime.",
+    siteName: "StreamESPN",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "StreamESPN | Watch Live Sports & All Events Online FREE",
+    description:
+      "Watch Your Favorite Sports Live Streams Online for FREE, TV Coverage, Replays, and Highlights from Anywhere at Anytime.",
+  },
+  alternates: {
+    canonical: siteUrl,
+  },
 };
 
 export default function RootLayout({
@@ -35,7 +84,9 @@ export default function RootLayout({
       suppressHydrationWarning
       className={cn("antialiased", fontMono.variable, "font-sans", geist.variable)}
     >
-      <head />
+      <head>
+        <JsonLdSchema type="website" />
+      </head>
       <body suppressHydrationWarning className="min-h-screen bg-[var(--bg-main)] text-[var(--text-white)] flex flex-col font-sans">
         <ThemeProvider>
           <HeadScriptInjector />

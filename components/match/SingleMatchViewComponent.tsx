@@ -6,6 +6,7 @@ import api from '@/lib/api';
 import { slugify } from '@/lib/utils';
 import { MatchCard, MatchItem } from '@/components/home/MatchCard';
 import { AdRenderer } from '@/components/ads/AdRenderer';
+import { JsonLdSchema } from '@/components/seo/JsonLdSchema';
 import {
   getAdsSettingsSync,
   subscribeAdsSettings,
@@ -223,6 +224,17 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-3 pb-12 flex-1 w-full">
+      {match && (
+        <JsonLdSchema
+          type="event"
+          name={matchTitle}
+          startDate={match.matchTime ? new Date(match.matchTime).toISOString() : undefined}
+          homeTeam={match.homeTeam || undefined}
+          awayTeam={match.awayTeam || undefined}
+          categoryName={match.categoryName || categorySlug}
+          isLive={isLive}
+        />
+      )}
 
 
 
