@@ -127,7 +127,7 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
               fetched = catFallback.data.data.matches;
               setSelectedSubcategory(null);
             }
-          } catch (e) {}
+          } catch (e) { }
         }
 
         if (pageNum === 1) {
@@ -217,7 +217,7 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
             }
             if (isMounted) setSelectedSubcategory(initialSubId);
           }
-        } catch (e) {}
+        } catch (e) { }
 
         if (!isMounted) return;
 
@@ -239,7 +239,7 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
                 fetchedMatches = fallbackRes.data.data.matches;
                 setSelectedSubcategory(null);
               }
-            } catch (e) {}
+            } catch (e) { }
           }
 
 
@@ -353,12 +353,14 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
       <TopLoadingBar isLoading={matchesLoading} />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-6 pb-12 flex-1 w-full space-y-6">
 
-        <div className="relative overflow-hidden rounded-2xl border border-[var(--border-glass)] bg-[var(--bg-card)] p-5 sm:p-6  flex items-center justify-between gap-4 transition-all duration-300">
-          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/15 via-yellow-500/5 to-transparent opacity-80 pointer-events-none" />
+        <div className="relative overflow-hidden rounded-2xl border border-[var(--border-glass)] bg-[var(--bg-card)] p-5 sm:p-6 flex items-center justify-between gap-4 transition-all duration-300 ">
+          {/* Soft, eye-pleasing background gradient (no glare in light mode) */}
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-amber-500/[0.02] to-transparent dark:from-amber-500/15 dark:via-amber-500/5 dark:to-transparent pointer-events-none" />
 
           <div className="relative z-10 flex items-center justify-between w-full">
             <div className="flex items-center gap-3.5 sm:gap-5 min-w-0">
-              <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 text-black text-2xl sm:text-3xl shrink-0 shadow-lg shadow-amber-500/20 font-black">
+              {/* Soft, aesthetic sport icon badge */}
+              <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-[#F8C831] text-2xl sm:text-3xl shrink-0 shadow-sm font-black">
                 {selectedSubcatObj?.logoUrl || category?.iconUrl ? (
                   <img
                     src={selectedSubcatObj?.logoUrl || category?.iconUrl}
@@ -379,8 +381,9 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
               </div>
             </div>
 
-            <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-main)] border border-[var(--border-glass)] text-xs font-bold text-[#F8C831] shadow-inner shrink-0">
-              <Sparkles className="h-3.5 w-3.5 text-[#F8C831]" />
+            {/* Soft Events Pill */}
+            <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 text-xs font-extrabold text-amber-600 dark:text-[#F8C831] shrink-0">
+              <Sparkles className="h-3.5 w-3.5 text-amber-500 dark:text-[#F8C831]" />
               <span>{uniqueMatches.length} Events</span>
             </div>
           </div>
