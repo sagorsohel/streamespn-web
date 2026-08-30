@@ -98,6 +98,16 @@ const DEFAULT_CATEGORIES: Category[] = [
   { id: 11, sportName: 'Others' },
 ];
 
+const getInitialAdsSettings = (): AdsSettings => {
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('streamespn_ads_settings');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+  }
+  return {};
+};
+
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
@@ -105,7 +115,7 @@ export const Navbar: React.FC = () => {
   const [mounted, setMounted] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
 
-  const [adsSettings, setAdsSettings] = useState<AdsSettings>({});
+  const [adsSettings, setAdsSettings] = useState<AdsSettings>(getInitialAdsSettings);
   const [activeAdTab, setActiveAdTab] = useState<'nav' | 'modal'>('nav');
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [activeCategoryId, setActiveCategoryId] = useState<string>('home');
@@ -204,26 +214,30 @@ export const Navbar: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch Ads & Categories dynamically from Backend API (Cached in-memory)
+  // Fetch Ads & Categories dynamically from Backend API (Instant independent calls)
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [adsRes, sportsData] = await Promise.all([
-          api.get('/ads'),
-          getCategories(),
-        ]);
-
-        if (adsRes.data?.success && adsRes.data?.data?.settings) {
-          setAdsSettings(adsRes.data.data.settings);
+    // 1. Fetch Ads Immediately & update localStorage
+    api
+      .get('/ads')
+      .then((res) => {
+        if (res.data?.success && res.data?.data?.settings) {
+          const settings = res.data.data.settings;
+          setAdsSettings(settings);
+          try {
+            localStorage.setItem('streamespn_ads_settings', JSON.stringify(settings));
+          } catch (e) {}
         }
+      })
+      .catch(() => {});
+
+    // 2. Fetch Categories independently
+    getCategories()
+      .then((sportsData) => {
         if (sportsData && sportsData.length > 0) {
           setCategories(sportsData);
         }
-      } catch (err) {
-        // Keeps instant static default categories
-      }
-    };
-    fetchData();
+      })
+      .catch(() => {});
   }, []);
 
   // Search API Call
@@ -552,6 +566,7 @@ export const Navbar: React.FC = () => {
             <div className="mx-auto max-w-7xl w-full flex items-center justify-center">
               <AdRenderer
                 uniqueKey="nav-ad"
+                refreshKey={`${pathname}-${activeAdTab}`}
                 code={activeAdTab === 'nav' ? (adsSettings.navAds || adsSettings.modalSignupAds) : (adsSettings.modalSignupAds || adsSettings.navAds)}
               />
             </div>

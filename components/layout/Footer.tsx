@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import api from '@/lib/api';
 import { AdRenderer } from '../ads/AdRenderer';
 import { Tv, Shield, Globe, Radio, Sparkles, Lock, X } from 'lucide-react';
@@ -17,6 +18,7 @@ const formatExternalUrl = (url?: string) => {
 };
 
 export const Footer: React.FC = () => {
+  const pathname = usePathname();
   const [adsSettings, setAdsSettings] = useState<AdsSettings>({});
   const [showFloatDesktop, setShowFloatDesktop] = useState<boolean>(true);
 
@@ -65,7 +67,7 @@ export const Footer: React.FC = () => {
       {adsSettings.footerAds && (
         <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-6">
           <div className="rounded-2xl border border-[var(--border-glass)] bg-[var(--bg-card)] p-2 shadow-sm flex items-center justify-center overflow-hidden">
-            <AdRenderer code={adsSettings.footerAds} />
+            <AdRenderer code={adsSettings.footerAds} uniqueKey="footer-ad" refreshKey={pathname} />
           </div>
         </div>
       )}
@@ -73,7 +75,7 @@ export const Footer: React.FC = () => {
       {/* FLOATING MOBILE AD SLOT */}
       {adsSettings.floatMobileAds && (
         <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-slate-950/95 border-t border-slate-800 p-1 flex justify-center shadow-2xl">
-          <AdRenderer code={adsSettings.floatMobileAds} />
+          <AdRenderer code={adsSettings.floatMobileAds} uniqueKey="float-mobile-ad" refreshKey={pathname} />
         </div>
       )}
 
@@ -90,7 +92,7 @@ export const Footer: React.FC = () => {
               <X className="h-3 w-3" />
             </button>
           </div>
-          <AdRenderer code={adsSettings.floatDesktopAds} />
+          <AdRenderer code={adsSettings.floatDesktopAds} uniqueKey="float-desktop-ad" refreshKey={pathname} />
         </div>
       )}
 
