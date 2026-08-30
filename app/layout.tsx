@@ -73,11 +73,31 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  let initialAdsSettings: any = {};
+  try {
+    const rawUrl =
+      process.env.BACKEND_API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      'http://localhost:5000/api';
+    const res = await fetch(`${rawUrl.replace(/\/$/, '')}/ads/fast`, {
+      cache: 'no-store',
+      next: { revalidate: 0 },
+    }).catch(() => null);
+    if (res && res.ok) {
+      const json = await res.json().catch(() => null);
+      if (json?.success && json?.data?.settings) {
+        initialAdsSettings = json.data.settings;
+      }
+    }
+  } catch (e) {
+    // silent catch
+  }
+
   return (
     <html
       lang="en"
@@ -93,13 +113,13 @@ export default function RootLayout({
           <Suspense fallback={null}>
             <TopLoadingBar />
           </Suspense>
-          <Navbar />
+          <Navbar initialAdsSettings={initialAdsSettings} />
           <div className="flex-1 flex flex-col">
             {children}
           </div>
-          <Footer />
+          <Footer initialAdsSettings={initialAdsSettings} />
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }

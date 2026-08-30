@@ -22,9 +22,18 @@ const formatExternalUrl = (url?: string) => {
   return `https://${trimmed}`;
 };
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  initialAdsSettings?: AdsSettings;
+}
+
+export const Footer: React.FC<FooterProps> = ({ initialAdsSettings }) => {
   const pathname = usePathname();
-  const [adsSettings, setAdsSettings] = useState<AdsSettings>(() => getAdsSettingsSync());
+  const [adsSettings, setAdsSettings] = useState<AdsSettings>(() => {
+    if (initialAdsSettings && (initialAdsSettings.footerAds || initialAdsSettings.membershipReferralLink)) {
+      return initialAdsSettings;
+    }
+    return getAdsSettingsSync();
+  });
   const [showFloatDesktop, setShowFloatDesktop] = useState<boolean>(true);
 
   useEffect(() => {

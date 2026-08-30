@@ -94,13 +94,22 @@ const DEFAULT_CATEGORIES: Category[] = [
   { id: 11, sportName: 'Others' },
 ];
 
-export const Navbar: React.FC = () => {
+interface NavbarProps {
+  initialAdsSettings?: AdsSettings;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
   const pathname = usePathname();
   const router = useRouter();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
-  const [adsSettings, setAdsSettings] = useState<AdsSettings>({});
+  const [adsSettings, setAdsSettings] = useState<AdsSettings>(() => {
+    if (initialAdsSettings && (initialAdsSettings.navAds || initialAdsSettings.modalSignupAds)) {
+      return initialAdsSettings;
+    }
+    return getAdsSettingsSync();
+  });
   const [activeAdTab, setActiveAdTab] = useState<'nav' | 'modal'>('nav');
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [activeCategoryId, setActiveCategoryId] = useState<string>('home');
@@ -539,17 +548,15 @@ export const Navbar: React.FC = () => {
         </div>
 
         {/* 3. NAVBAR AD BANNER SLOT (STICKY ALONG WITH NAVBAR ON MOBILE & DESKTOP) */}
-        {(adsSettings.navAds || adsSettings.modalSignupAds) && (
-          <div suppressHydrationWarning className="w-full border-t border-[var(--border-glass)] bg-[var(--bg-header)] px-4 py-1.5 flex justify-center items-center">
-            <div className="mx-auto max-w-7xl w-full flex items-center justify-center">
-              <AdRenderer
-                uniqueKey="nav-ad"
-                refreshKey={`${pathname}-${activeAdTab}`}
-                code={activeAdTab === 'nav' ? (adsSettings.navAds || adsSettings.modalSignupAds) : (adsSettings.modalSignupAds || adsSettings.navAds)}
-              />
-            </div>
+        <div suppressHydrationWarning className="w-full border-t border-[var(--border-glass)] bg-[var(--bg-header)] px-4 py-1.5 flex justify-center items-center">
+          <div className="mx-auto max-w-7xl w-full flex items-center justify-center">
+            <AdRenderer
+              uniqueKey="nav-ad"
+              refreshKey={activeAdTab}
+              code={activeAdTab === 'nav' ? (adsSettings.navAds || adsSettings.modalSignupAds) : (adsSettings.modalSignupAds || adsSettings.navAds)}
+            />
           </div>
-        )}
+        </div>
 
       </header>
 

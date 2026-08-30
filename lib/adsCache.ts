@@ -55,7 +55,7 @@ export const subscribeAdsSettings = (callback: (settings: AdsSettings) => void) 
 
 export const fetchAdsSettingsAsync = async (): Promise<AdsSettings> => {
   try {
-    const res = await api.get('/ads');
+    const res = await api.get('/ads/fast');
     if (res.data?.success && res.data?.data?.settings) {
       const settings = res.data.data.settings;
       setAdsSettingsCache(settings);

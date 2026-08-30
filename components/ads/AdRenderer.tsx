@@ -18,20 +18,21 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
   autoRefreshSeconds = 25,
 }) => {
   const rawCode = (code || '').trim();
-  // Helper to construct HTML for iframe with cache-busting on refresh to force fresh ad impression
-  const prepareAdHtml = (htmlCode: string, seed: number) => {
+  const [adLoaded, setAdLoaded] = useState<boolean>(false);
+
+  // Helper to construct HTML for iframe with high-priority script execution and browser HTTP caching
+  const prepareAdHtml = (htmlCode: string) => {
     if (!htmlCode) return '';
-    let finalCode = htmlCode;
-    if (seed > 1) {
-      finalCode = htmlCode.replace(
-        /(<script\s+[^>]*src=["'])([^"']+)(["'][^>]*>)/gi,
-        (match, p1, p2, p3) => {
-          const joinChar = p2.includes('?') ? '&' : '?';
-          return `${p1}${p2}${joinChar}_cb=${seed}${p3}`;
+    const optimizedHtml = htmlCode.replace(
+      /(<script\s+[^>]*src=["'])([^"']+)(["'][^>]*>)/gi,
+      (match, p1, p2, p3) => {
+        if (!match.includes('fetchpriority')) {
+          return `${p1}${p2}${p3.replace('>', ' fetchpriority="high">')}`;
         }
-      );
-    }
-    return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body{margin:0;padding:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;}</style></head><body>${finalCode}</body></html>`;
+        return match;
+      }
+    );
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body{margin:0;padding:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;}</style></head><body>${optimizedHtml}</body></html>`;
   };
 
   // Dual Slot Contents & Seeds - Initialize slot0 synchronously with rawCode & seed 1 for instant 0ms rendering!
@@ -49,6 +50,13 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
   const pendingSlotRef = useRef<0 | 1 | null>(null);
 
   const fallbackTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Mounted check to prevent SSR hydration mismatch while mounting iframe in 0ms on client
+  const [isMounted, setIsMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Sync slot content if rawCode prop changes
   useEffect(() => {
@@ -120,8 +128,6 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
     }
   };
 
-  if (!rawCode) return null;
-
   const codeForSizing = rawCode;
   let extractedHeight = 50;
   let extractedWidth = 320;
@@ -140,18 +146,27 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
 
   return (
     <div
+      suppressHydrationWarning
       className={`overflow-hidden flex items-center justify-center py-1 max-w-full w-full relative ${className}`}
       style={{ minHeight: `${extractedHeight}px`, height: `${extractedHeight}px` }}
     >
+      {/* Pure Clean Skeleton Pulse Placeholder */}
+      {!adLoaded && (
+        <div className="absolute inset-0 bg-[var(--bg-card-hover)] opacity-70 animate-pulse rounded-xl pointer-events-none" />
+      )}
+
       {/* SLOT 0 IFRAME */}
-      {slot0Seed > 0 && (
+      {isMounted && slot0Seed > 0 && (
         <iframe
           key={`${baseKey}-slot0-${slot0Seed}`}
-          srcDoc={prepareAdHtml(slot0Content, slot0Seed)}
+          srcDoc={prepareAdHtml(slot0Content)}
           scrolling="no"
           frameBorder="0"
           aria-label="Advertisement Slot 0"
-          onLoad={() => handleSlotLoad(0)}
+          onLoad={() => {
+            setAdLoaded(true);
+            handleSlotLoad(0);
+          }}
           style={{
             position: 'absolute',
             top: 0,
@@ -171,14 +186,17 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
       )}
 
       {/* SLOT 1 IFRAME */}
-      {slot1Seed > 0 && (
+      {isMounted && slot1Seed > 0 && (
         <iframe
           key={`${baseKey}-slot1-${slot1Seed}`}
-          srcDoc={prepareAdHtml(slot1Content, slot1Seed)}
+          srcDoc={prepareAdHtml(slot1Content)}
           scrolling="no"
           frameBorder="0"
           aria-label="Advertisement Slot 1"
-          onLoad={() => handleSlotLoad(1)}
+          onLoad={() => {
+            setAdLoaded(true);
+            handleSlotLoad(1);
+          }}
           style={{
             position: 'absolute',
             top: 0,
