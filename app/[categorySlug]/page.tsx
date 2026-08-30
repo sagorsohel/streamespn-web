@@ -249,26 +249,8 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
           setPage(1);
           setHasMore(uniqueMatches.length >= 20);
 
-          const combinedSubMap = new Map<number, Subcategory>();
-          fetchedSubList.filter((s: Subcategory) => Boolean(s.status) === true).forEach((s) => {
-            combinedSubMap.set(s.id, s);
-          });
-
-          uniqueMatches.forEach((m) => {
-            if (m.subcategoryId && m.subcategoryName) {
-              if (!combinedSubMap.has(m.subcategoryId)) {
-                combinedSubMap.set(m.subcategoryId, {
-                  id: m.subcategoryId,
-                  categoryId: targetCategory.id,
-                  name: m.subcategoryName,
-                  logoUrl: m.subcategoryLogo || undefined,
-                  status: true,
-                });
-              }
-            }
-          });
-
-          if (isMounted) setSubcategories(Array.from(combinedSubMap.values()));
+          const activeSubList = fetchedSubList.filter((s: Subcategory) => Boolean(s.status) === true);
+          if (isMounted) setSubcategories(activeSubList);
         }
       } catch (err) {
         if (isMounted && !matches.length) setNotFound(true);
