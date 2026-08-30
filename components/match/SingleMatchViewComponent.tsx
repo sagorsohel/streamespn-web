@@ -66,6 +66,13 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
   const [activeAdTab, setActiveAdTab] = useState<'nav' | 'modal'>('nav');
 
   useEffect(() => {
+    try {
+      const stored = localStorage.getItem('streamespn_ads_settings');
+      if (stored) {
+        setAdsSettings(JSON.parse(stored));
+      }
+    } catch (e) { }
+
     let isMounted = true;
     const fetchAds = async () => {
       try {
@@ -321,12 +328,12 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
             <div className="relative w-full h-[240px] xs:h-[340px] sm:h-[420px] md:h-[500px] bg-black flex items-center justify-center overflow-hidden">
               {/* Stadium backdrop image */}
               <div
-                className="absolute inset-0 bg-cover bg-center opacity-60 scale-105 transition-transform duration-700 group-hover:scale-100"
+                className="absolute inset-0 bg-cover bg-center opacity-90 scale-105 transition-transform duration-700 group-hover:scale-100"
                 style={{
                   backgroundImage: `url(${playerBackdrop})`,
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/50 to-slate-950/70" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/15 to-black/25" />
 
               {/* 2A. UNSTARTED OVERLAY SCREEN */}
               {!isPlaying ? (
@@ -340,13 +347,8 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
                 </div>
               ) : isConnecting ? (
                 /* 2B. CONNECTING SPINNER PHASE */
-                <div className="relative z-20 w-full h-full flex items-center justify-center bg-[var(--bg-card)]/90 backdrop-blur-sm">
-                  <div className="text-center p-6 space-y-4">
-                    <div className="h-14 w-14 rounded-full border-4 border-[#F8C831] border-t-transparent animate-spin mx-auto shadow-lg" />
-                    <p className="text-sm sm:text-lg font-extrabold text-[var(--text-white)] tracking-wide">
-                      Connecting to Stream Server {activeServer} HD...
-                    </p>
-                  </div>
+                <div className="relative z-20 w-full h-full flex items-center justify-center bg-black/25 backdrop-blur-[2px]">
+                  <div className="h-14 w-14 rounded-full border-4 border-[#F8C831] border-t-transparent animate-spin drop-shadow-[0_0_12px_rgba(248,200,49,0.8)]" />
                 </div>
               ) : null}
 
@@ -354,8 +356,8 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
               <div
                 className={`fixed sm:absolute inset-0 z-[999999] sm:z-30 items-center justify-center bg-black/75 dark:bg-black/85 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none p-4 sm:p-0 overflow-y-auto no-scrollbar transition-all duration-200 ${
                   showStreamModal && !isConnecting && isPlaying
-                    ? 'flex opacity-100 pointer-events-auto'
-                    : 'hidden opacity-0 pointer-events-none'
+                    ? 'flex opacity-100 pointer-events-auto visible'
+                    : 'flex opacity-0 pointer-events-none invisible'
                 }`}
               >
                 <div className="w-full max-w-sm sm:max-w-none sm:w-full sm:h-full rounded-2xl sm:rounded-none border border-[var(--border-glass)] sm:border-none bg-[var(--bg-card)] sm:bg-[var(--bg-card)]/95 text-[var(--text-white)] p-4 sm:p-6 shadow-2xl sm:shadow-none flex flex-col justify-between my-auto sm:my-0 space-y-3 sm:space-y-4">
