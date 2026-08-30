@@ -98,16 +98,6 @@ const DEFAULT_CATEGORIES: Category[] = [
   { id: 11, sportName: 'Others' },
 ];
 
-const getInitialAdsSettings = (): AdsSettings => {
-  if (typeof window !== 'undefined') {
-    try {
-      const stored = localStorage.getItem('streamespn_ads_settings');
-      if (stored) return JSON.parse(stored);
-    } catch (e) { }
-  }
-  return {};
-};
-
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
@@ -115,7 +105,7 @@ export const Navbar: React.FC = () => {
   const [mounted, setMounted] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
 
-  const [adsSettings, setAdsSettings] = useState<AdsSettings>(getInitialAdsSettings);
+  const [adsSettings, setAdsSettings] = useState<AdsSettings>({});
   const [activeAdTab, setActiveAdTab] = useState<'nav' | 'modal'>('nav');
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [activeCategoryId, setActiveCategoryId] = useState<string>('home');
@@ -216,6 +206,14 @@ export const Navbar: React.FC = () => {
 
   // Fetch Ads & Categories dynamically from Backend API (Instant independent calls)
   useEffect(() => {
+    // Load cached ads from localStorage on client mount (prevents SSR hydration mismatch)
+    try {
+      const stored = localStorage.getItem('streamespn_ads_settings');
+      if (stored) {
+        setAdsSettings(JSON.parse(stored));
+      }
+    } catch (e) { }
+
     // 1. Fetch Ads Immediately & update localStorage
     api
       .get('/ads')

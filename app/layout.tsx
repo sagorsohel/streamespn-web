@@ -35,11 +35,10 @@ export default function RootLayout({
       suppressHydrationWarning
       className={cn("antialiased", fontMono.variable, "font-sans", geist.variable)}
     >
-      <head>
-        <HeadScriptInjector />
-      </head>
+      <head />
       <body suppressHydrationWarning className="min-h-screen bg-[var(--bg-main)] text-[var(--text-white)] flex flex-col font-sans">
         <ThemeProvider>
+          <HeadScriptInjector />
           <Suspense fallback={null}>
             <TopLoadingBar />
           </Suspense>
