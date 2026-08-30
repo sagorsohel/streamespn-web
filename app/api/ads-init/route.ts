@@ -15,7 +15,7 @@ export async function GET() {
     const data = await res.json();
     return NextResponse.json(data, {
       headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600',
       },
     });
   } catch (e) {
