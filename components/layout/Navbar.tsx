@@ -547,10 +547,13 @@ export const Navbar: React.FC = () => {
         </div>
 
         {/* 3. NAVBAR AD BANNER SLOT (STICKY ALONG WITH NAVBAR ON MOBILE & DESKTOP) */}
-        {adsSettings.navAds && (
+        {(adsSettings.navAds || adsSettings.modalSignupAds) && (
           <div className="w-full border-t border-[var(--border-glass)] bg-[var(--bg-header)] px-4 py-1.5 flex justify-center items-center">
             <div className="mx-auto max-w-7xl w-full flex items-center justify-center">
-              <AdRenderer uniqueKey={`nav-ad-${pathname}`} code={adsSettings.navAds} />
+              <AdRenderer
+                uniqueKey="nav-ad"
+                code={activeAdTab === 'nav' ? (adsSettings.navAds || adsSettings.modalSignupAds) : (adsSettings.modalSignupAds || adsSettings.navAds)}
+              />
             </div>
           </div>
         )}

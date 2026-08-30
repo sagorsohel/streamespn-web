@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 interface AdRendererProps {
   code?: string;
@@ -9,47 +9,68 @@ interface AdRendererProps {
 }
 
 export const AdRenderer: React.FC<AdRendererProps> = ({ code, className = '', uniqueKey }) => {
-  const mountTimeRef = useRef<number>(typeof window !== 'undefined' ? performance.now() : 0);
+  const currentCode = (code || '').trim();
+  const [activeCode, setActiveCode] = useState<string>(currentCode);
+  const [nextCode, setNextCode] = useState<string | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
 
-  if (!code || !code.trim()) return null;
+  // Sync / Double-buffer transition when code changes
+  useEffect(() => {
+    if (currentCode && currentCode !== activeCode) {
+      if (!activeCode) {
+        setActiveCode(currentCode);
+      } else {
+        setNextCode(currentCode);
+        setIsTransitioning(true);
+      }
+    }
+  }, [currentCode, activeCode]);
 
-  const trimmedCode = code.trim();
+  if (!currentCode && !activeCode) return null;
 
-  // Extract height and width
+  const activeForSizing = nextCode || activeCode;
+
+  // Extract height and width for zero layout shift
   let extractedHeight = 50;
   let extractedWidth = 320;
 
-  const heightMatch = trimmedCode.match(/['"]?height['"]?\s*:\s*(\d+)/i);
+  const heightMatch = activeForSizing.match(/['"]?height['"]?\s*:\s*(\d+)/i);
   if (heightMatch && heightMatch[1]) {
     extractedHeight = parseInt(heightMatch[1], 10);
   }
 
-  const widthMatch = trimmedCode.match(/['"]?width['"]?\s*:\s*(\d+)/i);
+  const widthMatch = activeForSizing.match(/['"]?width['"]?\s*:\s*(\d+)/i);
   if (widthMatch && widthMatch[1]) {
     extractedWidth = parseInt(widthMatch[1], 10);
   }
 
-  const htmlContent = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body{margin:0;padding:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;}</style></head><body>${trimmedCode}</body></html>`;
+  const generateHtml = (rawCode: string) =>
+    `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body{margin:0;padding:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;}</style></head><body>${rawCode}</body></html>`;
 
-  const iframeKey = uniqueKey ? `${uniqueKey}-${trimmedCode.length}` : `ad-${trimmedCode.length}`;
+  const baseKey = uniqueKey ? `${uniqueKey}` : `ad`;
+  const primaryKey = `${baseKey}-${activeCode.length}`;
+  const preloaderKey = nextCode ? `${baseKey}-${nextCode.length}-preload` : null;
+
+  const handleNextLoad = () => {
+    if (nextCode) {
+      setActiveCode(nextCode);
+      setNextCode(null);
+      setIsTransitioning(false);
+    }
+  };
 
   return (
     <div
-      className={`overflow-hidden flex items-center justify-center py-1 max-w-full w-full ${className}`}
-      style={{ minHeight: `${extractedHeight}px` }}
+      className={`overflow-hidden flex items-center justify-center py-1 max-w-full w-full relative ${className}`}
+      style={{ minHeight: `${extractedHeight}px`, height: `${extractedHeight}px` }}
     >
+      {/* Primary Visible Ad Iframe (Remains 100% visible while preloading next) */}
       <iframe
-        key={iframeKey}
-        srcDoc={htmlContent}
+        key={primaryKey}
+        srcDoc={generateHtml(activeCode)}
         scrolling="no"
         frameBorder="0"
         aria-label="Advertisement"
-        onLoad={() => {
-          if (typeof window !== 'undefined') {
-            const totalLoadTime = Math.round(performance.now() - mountTimeRef.current);
-            console.log(`[AdRenderer] 🎯 Ad iframe rendered for "${iframeKey}" in ${totalLoadTime}ms`);
-          }
-        }}
         style={{
           border: 'none',
           overflow: 'hidden',
@@ -58,8 +79,34 @@ export const AdRenderer: React.FC<AdRendererProps> = ({ code, className = '', un
           height: `${extractedHeight}px`,
           display: 'block',
           margin: '0 auto',
+          opacity: 1,
+          transition: 'opacity 150ms ease-in-out',
         }}
       />
+
+      {/* Invisible Preloader Iframe (Loads new ad in background, swaps instantly on load) */}
+      {isTransitioning && nextCode && (
+        <iframe
+          key={preloaderKey!}
+          srcDoc={generateHtml(nextCode)}
+          scrolling="no"
+          frameBorder="0"
+          aria-label="Advertisement Preloader"
+          onLoad={handleNextLoad}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            border: 'none',
+            overflow: 'hidden',
+            width: '100%',
+            maxWidth: `${extractedWidth}px`,
+            height: `${extractedHeight}px`,
+            opacity: 0.001,
+            pointerEvents: 'none',
+          }}
+        />
+      )}
     </div>
   );
 };
