@@ -23,6 +23,13 @@ export const Footer: React.FC = () => {
   const [showFloatDesktop, setShowFloatDesktop] = useState<boolean>(true);
 
   useEffect(() => {
+    try {
+      const stored = localStorage.getItem('streamespn_ads_settings');
+      if (stored) {
+        setAdsSettings(JSON.parse(stored));
+      }
+    } catch (e) { }
+
     let isMounted = true;
     const fetchAds = async () => {
       try {

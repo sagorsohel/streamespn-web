@@ -18,10 +18,25 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
   autoRefreshSeconds = 25,
 }) => {
   const rawCode = (code || '').trim();
+  // Helper to construct HTML for iframe with cache-busting on refresh to force fresh ad impression
+  const prepareAdHtml = (htmlCode: string, seed: number) => {
+    if (!htmlCode) return '';
+    let finalCode = htmlCode;
+    if (seed > 1) {
+      finalCode = htmlCode.replace(
+        /(<script\s+[^>]*src=["'])([^"']+)(["'][^>]*>)/gi,
+        (match, p1, p2, p3) => {
+          const joinChar = p2.includes('?') ? '&' : '?';
+          return `${p1}${p2}${joinChar}_cb=${seed}${p3}`;
+        }
+      );
+    }
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body{margin:0;padding:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;}</style></head><body>${finalCode}</body></html>`;
+  };
 
-  // Dual Slot Contents & Seeds
-  const [slot0Content, setSlot0Content] = useState<string>('');
-  const [slot0Seed, setSlot0Seed] = useState<number>(0);
+  // Dual Slot Contents & Seeds - Initialize slot0 synchronously with rawCode & seed 1 for instant 0ms rendering!
+  const [slot0Content, setSlot0Content] = useState<string>(rawCode);
+  const [slot0Seed, setSlot0Seed] = useState<number>(rawCode ? 1 : 0);
 
   const [slot1Content, setSlot1Content] = useState<string>('');
   const [slot1Seed, setSlot1Seed] = useState<number>(0);
@@ -33,34 +48,23 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
   const lastRefreshKeyRef = useRef<string | number | undefined>(refreshKey);
   const pendingSlotRef = useRef<0 | 1 | null>(null);
 
-  // Helper to inject cache-busting timestamp into script tags & document HTML
-  const prepareAdHtml = (htmlCode: string, seed: number) => {
-    if (!htmlCode) return '';
+  const fallbackTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Inject cache-busting query parameter into external script src URLs
-    const cacheBustedCode = htmlCode.replace(
-      /(<script\s+[^>]*src=["'])([^"']+)(["'][^>]*>)/gi,
-      (match, p1, p2, p3) => {
-        const joinChar = p2.includes('?') ? '&' : '?';
-        return `${p1}${p2}${joinChar}_cb=${seed}${p3}`;
-      }
-    );
-
-    return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body{margin:0;padding:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;}</style></head><body>${cacheBustedCode}<!-- seed:${seed} --></body></html>`;
-  };
-
-  // Initial Load on mount
+  // Sync slot content if rawCode prop changes
   useEffect(() => {
     if (!rawCode) return;
-    const initialSeed = Date.now();
-    setSlot0Content(rawCode);
-    setSlot0Seed(initialSeed);
-    setActiveSlot(0);
+    if (activeSlot === 0) {
+      setSlot0Content(rawCode);
+      if (slot0Seed === 0) setSlot0Seed(1);
+    } else {
+      setSlot1Content(rawCode);
+      if (slot1Seed === 0) setSlot1Seed(1);
+    }
     isMountedRef.current = true;
     lastRefreshKeyRef.current = refreshKey;
   }, [rawCode]);
 
-  // Function to trigger ad refresh into the inactive slot
+  // Function to trigger ad refresh into the inactive slot smoothly in background (less than 1 sec!)
   const triggerRefresh = () => {
     if (!rawCode) return;
     const newSeed = Date.now() + Math.floor(Math.random() * 100000);
@@ -75,22 +79,24 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
       setSlot1Seed(newSeed);
     }
 
-    // Safety fallback: If script onLoad doesn't fire within 2.5s, swap active slot anyway
-    setTimeout(() => {
+    // Fast 400ms timer to swap slots smoothly (less than 1 sec!)
+    if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
+    fallbackTimerRef.current = setTimeout(() => {
       if (pendingSlotRef.current === targetSlot) {
         setActiveSlot(targetSlot);
         pendingSlotRef.current = null;
       }
-    }, 2500);
+    }, 400);
   };
 
-  // Trigger ad refresh when refreshKey changes (e.g. on page navigation)
+  // Trigger ad refresh when refreshKey changes
   useEffect(() => {
-    if (!isMountedRef.current) return;
-
     if (refreshKey !== undefined && refreshKey !== lastRefreshKeyRef.current) {
+      const prevKey = lastRefreshKeyRef.current;
       lastRefreshKeyRef.current = refreshKey;
-      triggerRefresh();
+      if (prevKey !== undefined) {
+        triggerRefresh();
+      }
     }
   }, [refreshKey]);
 
@@ -108,6 +114,7 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
   // Handler when inactive slot iframe fires onLoad
   const handleSlotLoad = (slotIndex: 0 | 1) => {
     if (pendingSlotRef.current === slotIndex) {
+      if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
       setActiveSlot(slotIndex);
       pendingSlotRef.current = null;
     }

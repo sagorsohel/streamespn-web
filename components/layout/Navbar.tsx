@@ -104,7 +104,6 @@ export const Navbar: React.FC = () => {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
-
   const [adsSettings, setAdsSettings] = useState<AdsSettings>({});
   const [activeAdTab, setActiveAdTab] = useState<'nav' | 'modal'>('nav');
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
@@ -382,7 +381,7 @@ export const Navbar: React.FC = () => {
             {/* MEMBERSHIP SOLID BUTTON */}
             <a
               href={formatExternalUrl(adsSettings.membershipReferralLink)}
-
+              suppressHydrationWarning
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center rounded-xl bg-[#F8C831] px-4 py-2 text-xs sm:text-sm font-black text-black shadow-md hover:bg-yellow-400 transition-all cursor-pointer"
             >
@@ -560,7 +559,7 @@ export const Navbar: React.FC = () => {
 
         {/* 3. NAVBAR AD BANNER SLOT (STICKY ALONG WITH NAVBAR ON MOBILE & DESKTOP) */}
         {(adsSettings.navAds || adsSettings.modalSignupAds) && (
-          <div className="w-full border-t border-[var(--border-glass)] bg-[var(--bg-header)] px-4 py-1.5 flex justify-center items-center">
+          <div suppressHydrationWarning className="w-full border-t border-[var(--border-glass)] bg-[var(--bg-header)] px-4 py-1.5 flex justify-center items-center">
             <div className="mx-auto max-w-7xl w-full flex items-center justify-center">
               <AdRenderer
                 uniqueKey="nav-ad"
