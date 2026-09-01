@@ -152,10 +152,10 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
         <div className="absolute inset-0 bg-[var(--bg-card-hover)] opacity-70 animate-pulse rounded-xl pointer-events-none" />
       )}
 
-      {/* SLOT 0 IFRAME */}
-      {isMounted && slot0Seed > 0 && (
+      {/* SLOT 0 IFRAME (Rendered directly in initial SSR HTML for 0ms instant execution!) */}
+      {Boolean(slot0Content) && (
         <iframe
-          key={`${baseKey}-slot0-${slot0Seed}`}
+          key={`${baseKey}-slot0-${slot0Seed || 1}`}
           srcDoc={prepareAdHtml(slot0Content)}
           loading="eager"
           scrolling="no"
@@ -183,8 +183,8 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
         />
       )}
 
-      {/* SLOT 1 IFRAME */}
-      {isMounted && slot1Seed > 0 && (
+      {/* SLOT 1 IFRAME (For smooth silent background refreshes) */}
+      {isMounted && slot1Seed > 0 && Boolean(slot1Content) && (
         <iframe
           key={`${baseKey}-slot1-${slot1Seed}`}
           srcDoc={prepareAdHtml(slot1Content)}
