@@ -227,19 +227,23 @@ export default function HomePage() {
         <aside className="hidden lg:block w-full lg:w-64 shrink-0 space-y-4">
 
           <div className="border-b border-[var(--border-glass)] ">
-            <h2 className="text-base font-black text-[var(--text-white)] border-b-2 border-[#F8C831] pb-1 inline-flex">
-              Trending
+            <h2 className="text-base font-black text-[var(--text-white)] border-b-2 border-[#F8C831] pb-1 inline-flex items-center gap-1.5">
+              <Flame className="h-4 w-4 text-[#F8C831] fill-[#F8C831]" />
+              <span>Trending</span>
             </h2>
           </div>
 
           {trendingSubcategories.length === 0 ? (
-            <div className="p-4  border border-[var(--border-glass)] bg-[var(--bg-card)] text-xs text-[var(--text-muted)] text-center">
-              No trending leagues toggled in admin panel yet.
+            <div className="p-4 rounded-xl border border-[var(--border-glass)] bg-[var(--bg-card)] text-xs text-[var(--text-muted)] text-center">
+              No trending leagues available right now.
             </div>
           ) : (
             <div className="flex flex-col gap-1 max-h-[75vh] overflow-y-auto no-scrollbar">
               {trendingSubcategories.map((subcat) => {
                 const isSelected = selectedSubcategory === String(subcat.id);
+                const hasLive = Boolean(subcat.liveMatchCount && subcat.liveMatchCount > 0);
+                const hasMatches = Boolean(subcat.matchCount && subcat.matchCount > 0);
+
                 return (
                   <button
                     key={subcat.id}
@@ -250,14 +254,15 @@ export default function HomePage() {
                         setSelectedSubcategory(String(subcat.id));
                       }
                     }}
-                    className={`w-full flex items-center justify-between p-2.5  text-[14px] font-semibold leading-[1.5] transition-all group  ${isSelected
-                      ? 'bg-[#F8C831] text-black shadow-md border-[#F8C831]'
-                      : 'bg-[var(--bg-card)] text-[#555555] dark:text-zinc-200 border-[var(--border-glass)] hover:bg-[var(--bg-card-hover)]'
-                      }`}
+                    className={`w-full flex items-center justify-between p-2.5 rounded-xl text-[14px] font-semibold leading-[1.5] transition-all group ${
+                      isSelected
+                        ? 'bg-[#F8C831] text-black shadow-md border border-[#F8C831]'
+                        : 'bg-[var(--bg-card)] text-[#555555] dark:text-zinc-200 border border-[var(--border-glass)] hover:bg-[var(--bg-card-hover)]'
+                    }`}
                   >
-                    <div className="flex items-center gap-2.5 truncate flex-1 min-w-0">
+                    <div className="flex items-center gap-2.5 truncate flex-1 min-w-0 mr-1.5">
                       {subcat.logoUrl ? (
-                        <img src={subcat.logoUrl} alt="" className="h-5 w-5 object-contain shrink-0" />
+                        <img src={subcat.logoUrl} alt="" className="h-5 w-5 object-contain shrink-0 rounded-sm" />
                       ) : (
                         <span className="text-sm shrink-0">🏆</span>
                       )}
@@ -265,7 +270,12 @@ export default function HomePage() {
                         {subcat.name}
                       </span>
                     </div>
-                    <ChevronRight className={`h-4 w-4 shrink-0 transition-transform ${isSelected ? 'text-black' : 'text-slate-400 dark:text-zinc-400 group-hover:translate-x-0.5'}`} />
+
+                    <ChevronRight
+                      className={`h-4 w-4 shrink-0 transition-transform ${
+                        isSelected ? 'text-black' : 'text-slate-400 dark:text-zinc-400 group-hover:translate-x-0.5'
+                      }`}
+                    />
                   </button>
                 );
               })}
