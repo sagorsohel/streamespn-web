@@ -32,7 +32,7 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
         return match;
       }
     );
-    return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body{margin:0;padding:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;}</style></head><body>${optimizedHtml}</body></html>`;
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="preconnect" href="https://www.highperformanceformat.com" crossorigin><link rel="dns-prefetch" href="https://www.highperformanceformat.com"><style>html,body{margin:0;padding:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;}</style></head><body>${optimizedHtml}</body></html>`;
   };
 
   // Dual Slot Contents & Seeds - Initialize slot0 synchronously with rawCode & seed 1 for instant 0ms rendering!
@@ -157,6 +157,7 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
         <iframe
           key={`${baseKey}-slot0-${slot0Seed}`}
           srcDoc={prepareAdHtml(slot0Content)}
+          loading="eager"
           scrolling="no"
           frameBorder="0"
           aria-label="Advertisement Slot 0"
@@ -187,6 +188,7 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
         <iframe
           key={`${baseKey}-slot1-${slot1Seed}`}
           srcDoc={prepareAdHtml(slot1Content)}
+          loading="eager"
           scrolling="no"
           frameBorder="0"
           aria-label="Advertisement Slot 1"

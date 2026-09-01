@@ -11,10 +11,21 @@ import { AdRenderer } from '../ads/AdRenderer';
 import { startTopLoader } from './TopLoadingBar';
 
 import type { AdsSettings } from '@/lib/adsCache';
+import { getAdsSettingsSync, setAdsSettingsCache } from '@/lib/adsCache';
 
-// Module-level memory — survives client-side navigation, gives 0ms instant display
+// Module-level memory — initialized from cache for instant 0ms display on load
 let _adCode = '';
 let _membershipLink = '';
+
+if (typeof window !== 'undefined') {
+  try {
+    const cached = getAdsSettingsSync();
+    if (cached) {
+      _adCode = cached.navAds || cached.modalSignupAds || '';
+      _membershipLink = cached.membershipReferralLink || '';
+    }
+  } catch (e) {}
+}
 
 const fetchAdData = (signal?: AbortSignal): Promise<void> =>
   fetch('/api/ads/fast', signal ? { signal } : {})
@@ -24,6 +35,7 @@ const fetchAdData = (signal?: AbortSignal): Promise<void> =>
       if (s) {
         _adCode = s.navAds || s.modalSignupAds || '';
         _membershipLink = s.membershipReferralLink || '';
+        setAdsSettingsCache(s);
       }
     })
     .catch(() => {});
@@ -117,13 +129,28 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
-  // Read from module memory instantly (0ms) — populated after first fetch
-  const [navAdCode, setNavAdCode] = useState<string>(() => _adCode);
-  const [membershipLink, setMembershipLink] = useState<string>(() => _membershipLink);
+  // Read from initial SSR settings or module memory instantly (0ms) — populated on first HTML load!
+  const [navAdCode, setNavAdCode] = useState<string>(
+    () => initialAdsSettings?.navAds || initialAdsSettings?.modalSignupAds || _adCode
+  );
+  const [membershipLink, setMembershipLink] = useState<string>(
+    () => initialAdsSettings?.membershipReferralLink || _membershipLink
+  );
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [activeCategoryId, setActiveCategoryId] = useState<string>('home');
 
-  // Fetch ad data on mount AND on every page navigation (pathname change)
+  // Sync initial SSR settings into memory immediately if provided
+  useEffect(() => {
+    if (initialAdsSettings && (initialAdsSettings.navAds || initialAdsSettings.membershipReferralLink)) {
+      _adCode = initialAdsSettings.navAds || initialAdsSettings.modalSignupAds || _adCode;
+      _membershipLink = initialAdsSettings.membershipReferralLink || _membershipLink;
+      setNavAdCode(_adCode);
+      setMembershipLink(_membershipLink);
+      setAdsSettingsCache(initialAdsSettings);
+    }
+  }, [initialAdsSettings]);
+
+  // Fetch fresh ad data on mount AND on every page navigation (pathname change)
   useEffect(() => {
     // 1. Show cached memory data instantly (0ms) while fresh fetch is in-flight
     if (_adCode) {

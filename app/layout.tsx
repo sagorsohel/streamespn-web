@@ -73,13 +73,29 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+async function getInitialAds() {
+  try {
+    const rawUrl =
+      process.env.BACKEND_API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      'http://localhost:5000/api';
+    const res = await fetch(`${rawUrl.replace(/\/$/, '')}/ads/fast`, {
+      next: { revalidate: 30 },
+    });
+    if (!res.ok) return {};
+    const data = await res.json();
+    return data?.data?.settings || {};
+  } catch (e) {
+    return {};
+  }
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
-  // NOTE: ads are loaded client-side instantly — no blocking SSR fetch here
-  const initialAdsSettings: any = {};
+  const initialAdsSettings = await getInitialAds();
 
   return (
     <html
@@ -88,6 +104,8 @@ export default function RootLayout({
       className={cn("antialiased", fontMono.variable, "font-sans", geist.variable)}
     >
       <head>
+        <link rel="preconnect" href="https://www.highperformanceformat.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://www.highperformanceformat.com" />
         <JsonLdSchema type="website" />
       </head>
       <body suppressHydrationWarning className="min-h-screen bg-[var(--bg-main)] text-[var(--text-white)] flex flex-col font-sans">
