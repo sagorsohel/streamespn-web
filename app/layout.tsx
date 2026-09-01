@@ -73,30 +73,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  let initialAdsSettings: any = {};
-  try {
-    const rawUrl =
-      process.env.BACKEND_API_URL ||
-      process.env.NEXT_PUBLIC_API_URL ||
-      'http://localhost:5000/api';
-    const res = await fetch(`${rawUrl.replace(/\/$/, '')}/ads/fast`, {
-      cache: 'no-store',
-      next: { revalidate: 0 },
-    }).catch(() => null);
-    if (res && res.ok) {
-      const json = await res.json().catch(() => null);
-      if (json?.success && json?.data?.settings) {
-        initialAdsSettings = json.data.settings;
-      }
-    }
-  } catch (e) {
-    // silent catch
-  }
+  // NOTE: ads are loaded client-side instantly — no blocking SSR fetch here
+  const initialAdsSettings: any = {};
 
   return (
     <html

@@ -34,6 +34,21 @@ export const getAdsSettingsSync = (): AdsSettings => {
   return {};
 };
 
+// Prime the cache with SSR-provided data (no listener notification needed — called before mount)
+export const primeAdsCache = (settings: AdsSettings) => {
+  if (!settings || (!settings.navAds && !settings.headAds && !settings.footerAds && !settings.floatMobileAds && !settings.floatDesktopAds && !settings.membershipReferralLink)) return;
+  if (memoryAdsSettings) return; // already populated
+  memoryAdsSettings = settings;
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('streamespn_ads_settings', JSON.stringify(settings));
+    } catch (e) {
+      // ignore
+    }
+  }
+};
+
+
 export const setAdsSettingsCache = (settings: AdsSettings) => {
   memoryAdsSettings = settings;
   if (typeof window !== 'undefined') {

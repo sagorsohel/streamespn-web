@@ -210,14 +210,18 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
 
   // Fetch Ads & Categories dynamically from Backend API (Instant independent calls)
   useEffect(() => {
-    // Instant cache load & subscription
+    // 1. Read from localStorage instantly (0ms) for immediate render
     setAdsSettings(getAdsSettingsSync());
+
+    // 2. Subscribe to future updates
     const unsubscribe = subscribeAdsSettings((updated) => {
       setAdsSettings(updated);
     });
+
+    // 3. Fire async fetch immediately — updates ads as soon as backend responds
     fetchAdsSettingsAsync();
 
-    // 2. Fetch Categories independently
+    // 4. Fetch Categories independently (parallel, non-blocking)
     getCategories()
       .then((sportsData) => {
         if (sportsData && sportsData.length > 0) {
@@ -225,6 +229,8 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
         }
       })
       .catch(() => { });
+
+    return () => { unsubscribe(); };
   }, []);
 
   // Search API Call
