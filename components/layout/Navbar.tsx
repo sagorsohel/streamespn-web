@@ -9,12 +9,25 @@ import { getCategories } from '@/lib/categories';
 import { slugify } from '@/lib/utils';
 import { AdRenderer } from '../ads/AdRenderer';
 import { startTopLoader } from './TopLoadingBar';
-import {
-  getAdsSettingsSync,
-  subscribeAdsSettings,
-  fetchAdsSettingsAsync,
-  AdsSettings,
-} from '@/lib/adsCache';
+
+import type { AdsSettings } from '@/lib/adsCache';
+
+// Module-level memory — survives client-side navigation, gives 0ms instant display
+let _adCode = '';
+let _membershipLink = '';
+
+const fetchAdData = (signal?: AbortSignal): Promise<void> =>
+  fetch('/api/ads/fast', signal ? { signal } : {})
+    .then((r) => r.json())
+    .then((data) => {
+      const s = data?.data?.settings;
+      if (s) {
+        _adCode = s.navAds || s.modalSignupAds || '';
+        _membershipLink = s.membershipReferralLink || '';
+      }
+    })
+    .catch(() => {});
+
 import {
   Search,
   Tv,
@@ -104,39 +117,31 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
-  const [adsSettings, setAdsSettings] = useState<AdsSettings>(() => {
-    if (initialAdsSettings && (initialAdsSettings.navAds || initialAdsSettings.modalSignupAds)) {
-      return initialAdsSettings;
-    }
-    return getAdsSettingsSync();
-  });
-  const [activeAdTab, setActiveAdTab] = useState<'nav' | 'modal'>('nav');
+  // Read from module memory instantly (0ms) — populated after first fetch
+  const [navAdCode, setNavAdCode] = useState<string>(() => _adCode);
+  const [membershipLink, setMembershipLink] = useState<string>(() => _membershipLink);
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [activeCategoryId, setActiveCategoryId] = useState<string>('home');
 
-  // 🔄 40 SECONDS NAVBAR AD <-> 20 SECONDS MODAL SIGNUP AD ROTATION LOOP
+  // Fetch ad data on mount AND on every page navigation (pathname change)
   useEffect(() => {
-    const hasNav = !!adsSettings.navAds;
-    const hasModal = !!adsSettings.modalSignupAds;
-
-    if (hasNav && hasModal) {
-      let timer: NodeJS.Timeout;
-      if (activeAdTab === 'nav') {
-        timer = setTimeout(() => {
-          setActiveAdTab('modal');
-        }, 40000); // 40 Seconds Navbar Ad
-      } else {
-        timer = setTimeout(() => {
-          setActiveAdTab('nav');
-        }, 20000); // 20 Seconds Modal Signup Ad
-      }
-      return () => clearTimeout(timer);
-    } else if (hasNav) {
-      setActiveAdTab('nav');
-    } else if (hasModal) {
-      setActiveAdTab('modal');
+    // 1. Show cached memory data instantly (0ms) while fresh fetch is in-flight
+    if (_adCode) {
+      setNavAdCode(_adCode);
+      setMembershipLink(_membershipLink);
     }
-  }, [adsSettings.navAds, adsSettings.modalSignupAds, activeAdTab]);
+
+    // 2. Fetch fresh data from backend (silent background update)
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 1500);
+    fetchAdData(controller.signal).then(() => {
+      setNavAdCode(_adCode);
+      setMembershipLink(_membershipLink);
+      clearTimeout(timer);
+    });
+
+    return () => { controller.abort(); clearTimeout(timer); };
+  }, [pathname]);
 
   const navigateToCategory = (catSlug: string) => {
     startTopLoader();
@@ -208,29 +213,13 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch Ads & Categories dynamically from Backend API (Instant independent calls)
+  // Fetch Categories
   useEffect(() => {
-    // 1. Read from localStorage instantly (0ms) for immediate render
-    setAdsSettings(getAdsSettingsSync());
-
-    // 2. Subscribe to future updates
-    const unsubscribe = subscribeAdsSettings((updated) => {
-      setAdsSettings(updated);
-    });
-
-    // 3. Fire async fetch immediately — updates ads as soon as backend responds
-    fetchAdsSettingsAsync();
-
-    // 4. Fetch Categories independently (parallel, non-blocking)
     getCategories()
       .then((sportsData) => {
-        if (sportsData && sportsData.length > 0) {
-          setCategories(sportsData);
-        }
+        if (sportsData && sportsData.length > 0) setCategories(sportsData);
       })
       .catch(() => { });
-
-    return () => { unsubscribe(); };
   }, []);
 
   // Search API Call
@@ -376,7 +365,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
 
             {/* MEMBERSHIP SOLID BUTTON */}
             <a
-              href={formatExternalUrl(adsSettings.membershipReferralLink)}
+              href={formatExternalUrl(membershipLink)}
               suppressHydrationWarning
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center rounded-xl bg-[#F8C831] px-4 py-2 text-xs sm:text-sm font-black text-black shadow-md hover:bg-yellow-400 transition-all cursor-pointer"
@@ -553,13 +542,13 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
           </div>
         </div>
 
-        {/* 3. NAVBAR AD BANNER SLOT (STICKY ALONG WITH NAVBAR ON MOBILE & DESKTOP) */}
+        {/* 3. NAVBAR AD BANNER SLOT */}
         <div suppressHydrationWarning className="w-full border-t border-[var(--border-glass)] bg-[var(--bg-header)] px-4 py-1.5 flex justify-center items-center">
           <div className="mx-auto max-w-7xl w-full flex items-center justify-center">
             <AdRenderer
               uniqueKey="nav-ad"
-              refreshKey={activeAdTab}
-              code={activeAdTab === 'nav' ? (adsSettings.navAds || adsSettings.modalSignupAds) : (adsSettings.modalSignupAds || adsSettings.navAds)}
+              refreshKey={pathname}
+              code={navAdCode}
             />
           </div>
         </div>
@@ -620,7 +609,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
               {/* MEMBERSHIP SOLID BUTTON */}
               <div className="pt-2">
                 <a
-                  href={formatExternalUrl(adsSettings.membershipReferralLink)}
+                  href={formatExternalUrl(membershipLink)}
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 w-full rounded-xl bg-[#F8C831] py-3 text-xs font-extrabold text-black shadow-lg shadow-yellow-500/20 hover:bg-yellow-400 transition-all cursor-pointer"
                 >

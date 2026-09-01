@@ -51,12 +51,9 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
 
   const fallbackTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Mounted check to prevent SSR hydration mismatch while mounting iframe in 0ms on client
+  // Track client mount via ref — no extra state/render cycle needed
   const [isMounted, setIsMounted] = useState<boolean>(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  useEffect(() => { setIsMounted(true); }, []);
 
   // Sync slot content if rawCode prop changes
   useEffect(() => {
