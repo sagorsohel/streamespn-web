@@ -249,7 +249,16 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
           setPage(1);
           setHasMore(uniqueMatches.length >= 20);
 
-          const activeSubList = fetchedSubList.filter((s: Subcategory) => Boolean(s.status) === true);
+          // Only show subcategories that have at least one match
+          const subcatIdsWithMatches = new Set(
+            fetchedMatches
+              .map((m: MatchItem) => m.subcategoryId)
+              .filter((id: any) => id != null)
+              .map((id: any) => Number(id))
+          );
+          const activeSubList = fetchedSubList.filter(
+            (s: Subcategory) => Boolean(s.status) === true && subcatIdsWithMatches.has(s.id)
+          );
           if (isMounted) setSubcategories(activeSubList);
         }
       } catch (err) {
