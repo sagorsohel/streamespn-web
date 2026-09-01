@@ -112,7 +112,7 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
     }
 
     try {
-      let url = `/matches?limit=50&page=${pageNum}&categoryId=${catId}`;
+      let url = `/matches?limit=20&page=${pageNum}&categoryId=${catId}`;
       if (subId) url += `&subcategoryId=${subId}`;
 
       const res = await api.get(url);
@@ -122,7 +122,7 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
         // Fallback 1: If subcategory returns 0 matches, fallback to category matches
         if (pageNum === 1 && fetched.length === 0 && subId) {
           try {
-            const catFallback = await api.get(`/matches?limit=50&page=1&categoryId=${catId}`);
+            const catFallback = await api.get(`/matches?limit=20&page=1&categoryId=${catId}`);
             if (catFallback.data?.success && Array.isArray(catFallback.data?.data?.matches) && catFallback.data.data.matches.length > 0) {
               fetched = catFallback.data.data.matches;
               setSelectedSubcategory(null);
@@ -143,7 +143,7 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
         }
 
         setPage(pageNum);
-        setHasMore(fetched.length >= 50);
+        setHasMore(fetched.length >= 20);
       } else {
         if (pageNum === 1) setMatches([]);
         setHasMore(false);

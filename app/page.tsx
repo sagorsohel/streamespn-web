@@ -85,7 +85,7 @@ export default function HomePage() {
     isFetchingRef.current = true;
 
     try {
-      let url = `/matches?limit=50&page=${pageNum}&`;
+      let url = `/matches?limit=20&page=${pageNum}&`;
       if (selectedCategory !== 'all') url += `categoryId=${selectedCategory}&`;
       if (selectedSubcategory) url += `subcategoryId=${selectedSubcategory}&`;
 
@@ -96,7 +96,7 @@ export default function HomePage() {
         // Auto Fallback for Home Page ONLY if selectedCategory is 'all' and selectedSubcategory is set
         if (pageNum === 1 && fetchedMatches.length === 0 && selectedCategory === 'all' && selectedSubcategory !== null) {
           try {
-            const fallbackRes = await api.get('/matches?limit=50&page=1');
+            const fallbackRes = await api.get('/matches?limit=20&page=1');
             if (fallbackRes.data?.success && Array.isArray(fallbackRes.data?.data?.matches) && fallbackRes.data.data.matches.length > 0) {
               fetchedMatches = fallbackRes.data.data.matches;
               setSelectedSubcategory(null);
@@ -117,7 +117,7 @@ export default function HomePage() {
         }
 
         setPage(pageNum);
-        setHasMore(fetchedMatches.length >= 50);
+        setHasMore(fetchedMatches.length >= 20);
       } else {
         if (pageNum === 1) setMatches([]);
         setHasMore(false);
@@ -139,14 +139,25 @@ export default function HomePage() {
     fetchMatches(page + 1);
   };
 
+  const isInitialMount = useRef<boolean>(true);
+
   useEffect(() => {
-    fetchCategories();
-    fetchTrendingSubcategories();
+    // Ad-first priority: Let top navbar ad initialize and execute first with maximum network priority
+    const timer = setTimeout(() => {
+      fetchCategories();
+      fetchTrendingSubcategories();
+      fetchMatches(1);
+      isInitialMount.current = false;
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Re-fetch matches whenever selectedCategory or selectedSubcategory changes
   useEffect(() => {
-    fetchMatches(1);
+    if (!isInitialMount.current) {
+      fetchMatches(1);
+    }
   }, [selectedCategory, selectedSubcategory]);
 
   // Infinite Scroll IntersectionObserver

@@ -98,7 +98,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
           <div className="flex items-center gap-1.5 min-w-0 flex-1 pr-2">
             <div className="h-4 w-4 shrink-0 flex items-center justify-center">
               {match.subcategoryLogo || match.categoryLogo ? (
-                <img src={match.subcategoryLogo || match.categoryLogo} alt="" className="max-h-full max-w-full object-contain" />
+                <img src={match.subcategoryLogo || match.categoryLogo} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain" />
               ) : (
                 <span className="text-[10px]">🏆</span>
               )}
@@ -137,7 +137,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
               {/* Home Team Logo */}
               <div className="h-6 w-6 shrink-0 flex items-center justify-center">
                 {match.homeTeamLogo ? (
-                  <img src={match.homeTeamLogo} alt="" className="max-h-full max-w-full object-contain" />
+                  <img src={match.homeTeamLogo} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain" />
                 ) : (
                   <span className="text-[10px]">🛡️</span>
                 )}
@@ -151,7 +151,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
               {/* Away Team Logo */}
               <div className="h-6 w-6 shrink-0 flex items-center justify-center">
                 {match.awayTeamLogo ? (
-                  <img src={match.awayTeamLogo} alt="" className="max-h-full max-w-full object-contain" />
+                  <img src={match.awayTeamLogo} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain" />
                 ) : (
                   <span className="text-[10px]">🛡️</span>
                 )}
@@ -180,7 +180,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
         <div className="flex items-center gap-3 w-[170px] xs:w-[210px] sm:w-[250px] shrink-0 min-w-0">
           <div className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 flex items-center justify-center">
             {match.subcategoryLogo || match.categoryLogo ? (
-              <img src={match.subcategoryLogo || match.categoryLogo} alt="" className="max-h-full max-w-full object-contain" />
+              <img src={match.subcategoryLogo || match.categoryLogo} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain" />
             ) : (
               <span className="text-base">🏆</span>
             )}
@@ -216,7 +216,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
               {/* Home Team Logo */}
               <div className="h-7 w-7 sm:h-8 sm:w-8 shrink-0 flex items-center justify-center">
                 {match.homeTeamLogo ? (
-                  <img src={match.homeTeamLogo} alt="" className="max-h-full max-w-full object-contain" />
+                  <img src={match.homeTeamLogo} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain" />
                 ) : (
                   <span className="text-xs">🛡️</span>
                 )}
@@ -249,7 +249,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
               {/* Away Team Logo */}
               <div className="h-7 w-7 sm:h-8 sm:w-8 shrink-0 flex items-center justify-center">
                 {match.awayTeamLogo ? (
-                  <img src={match.awayTeamLogo} alt="" className="max-h-full max-w-full object-contain" />
+                  <img src={match.awayTeamLogo} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain" />
                 ) : (
                   <span className="text-xs">🛡️</span>
                 )}

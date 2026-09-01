@@ -106,7 +106,6 @@ export default async function RootLayout({
       <head>
         <link rel="preconnect" href="https://www.highperformanceformat.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://www.highperformanceformat.com" />
-        <link rel="preload" href="https://www.highperformanceformat.com/275772ab76e5165205cbb67523a42086/invoke.js" as="script" fetchPriority="high" />
         <JsonLdSchema type="website" />
       </head>
       <body suppressHydrationWarning className="min-h-screen bg-[var(--bg-main)] text-[var(--text-white)] flex flex-col font-sans">
