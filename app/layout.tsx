@@ -73,18 +73,60 @@ export const metadata: Metadata = {
   },
 };
 
+function parseScriptTags(html: string) {
+  const scripts: Array<{ src?: string; content?: string; async?: boolean; defer?: boolean }> = [];
+  const scriptRegex = /<script([^>]*)>([\s\S]*?)<\/script>/gi;
+  let match;
+  while ((match = scriptRegex.exec(html)) !== null) {
+    const attrsStr = match[1];
+    const content = match[2].trim();
+    const srcMatch = attrsStr.match(/src=["']([^"']+)["']/i);
+    const asyncMatch = /\basync\b/i.test(attrsStr);
+    const deferMatch = /\bdefer\b/i.test(attrsStr);
+    scripts.push({
+      src: srcMatch ? srcMatch[1] : undefined,
+      content: content || undefined,
+      async: asyncMatch,
+      defer: deferMatch,
+    });
+  }
+  return scripts;
+}
+
+function getNonScriptHtml(html: string) {
+  return html.replace(/<script([^>]*)>([\s\S]*?)<\/script>/gi, "").trim();
+}
+
 async function getInitialAds() {
   try {
-    const rawUrl =
-      process.env.BACKEND_API_URL ||
-      process.env.NEXT_PUBLIC_API_URL ||
-      'http://localhost:5000/api';
-    const res = await fetch(`${rawUrl.replace(/\/$/, '')}/ads/fast`, {
-      next: { revalidate: 30 },
-    });
-    if (!res.ok) return {};
-    const data = await res.json();
-    return data?.data?.settings || {};
+    const urls = [
+      process.env.BACKEND_API_URL,
+      process.env.NEXT_PUBLIC_API_URL,
+      'http://localhost:5000/api',
+      'https://backendapi.streamespn.org/api',
+    ].filter(Boolean) as string[];
+
+    for (const rawUrl of urls) {
+      try {
+        const cleanUrl = rawUrl.replace(/\/$/, '');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1500);
+        const res = await fetch(`${cleanUrl}/ads/fast`, {
+          next: { revalidate: 30 },
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.data?.settings) {
+            return data.data.settings;
+          }
+        }
+      } catch {
+        // Try next fallback URL
+      }
+    }
+    return {};
   } catch (e) {
     return {};
   }
@@ -97,6 +139,14 @@ export default async function RootLayout({
 }>) {
   const initialAdsSettings = await getInitialAds();
 
+  const headAdsHtml = initialAdsSettings?.headAds || '';
+  const headScripts = parseScriptTags(headAdsHtml);
+  const headNonScriptHtml = getNonScriptHtml(headAdsHtml);
+
+  const histatsHtml = initialAdsSettings?.histatsScript || '';
+  const bodyScripts = parseScriptTags(histatsHtml);
+  const bodyNonScriptHtml = getNonScriptHtml(histatsHtml);
+
   return (
     <html
       lang="en"
@@ -107,10 +157,34 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://www.highperformanceformat.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://www.highperformanceformat.com" />
         <JsonLdSchema type="website" />
+        {headNonScriptHtml && (
+          <div dangerouslySetInnerHTML={{ __html: headNonScriptHtml }} />
+        )}
+        {headScripts.map((s, idx) => {
+          if (s.src) {
+            return (
+              <script
+                key={`head-scr-${idx}`}
+                src={s.src}
+                async={s.async}
+                defer={s.defer}
+              />
+            );
+          }
+          if (s.content) {
+            return (
+              <script
+                key={`head-scr-inline-${idx}`}
+                dangerouslySetInnerHTML={{ __html: s.content }}
+              />
+            );
+          }
+          return null;
+        })}
       </head>
       <body suppressHydrationWarning className="min-h-screen bg-[var(--bg-main)] text-[var(--text-white)] flex flex-col font-sans">
         <ThemeProvider>
-          <HeadScriptInjector />
+          <HeadScriptInjector hasSsrHeadAds={headScripts.length > 0} />
           <Suspense fallback={null}>
             <TopLoadingBar />
           </Suspense>
@@ -120,6 +194,30 @@ export default async function RootLayout({
           </div>
           <Footer initialAdsSettings={initialAdsSettings} />
         </ThemeProvider>
+        {bodyNonScriptHtml && (
+          <div dangerouslySetInnerHTML={{ __html: bodyNonScriptHtml }} />
+        )}
+        {bodyScripts.map((s, idx) => {
+          if (s.src) {
+            return (
+              <script
+                key={`body-scr-${idx}`}
+                src={s.src}
+                async={s.async}
+                defer={s.defer}
+              />
+            );
+          }
+          if (s.content) {
+            return (
+              <script
+                key={`body-scr-inline-${idx}`}
+                dangerouslySetInnerHTML={{ __html: s.content }}
+              />
+            );
+          }
+          return null;
+        })}
       </body>
     </html>
   );

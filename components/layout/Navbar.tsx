@@ -150,7 +150,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
     }
   }, [initialAdsSettings]);
 
-  // Fetch fresh ad data on mount AND on every page navigation (pathname change)
+  // Fetch fresh ad data on mount (silent background update)
   useEffect(() => {
     // 1. Show cached memory data instantly (0ms) while fresh fetch is in-flight
     if (_adCode) {
@@ -168,7 +168,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
     });
 
     return () => { controller.abort(); clearTimeout(timer); };
-  }, [pathname]);
+  }, []);
 
   const navigateToCategory = (catSlug: string) => {
     startTopLoader();
@@ -574,7 +574,6 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
           <div className="mx-auto max-w-7xl w-full flex items-center justify-center">
             <AdRenderer
               uniqueKey="nav-ad"
-              refreshKey={pathname}
               code={navAdCode}
             />
           </div>

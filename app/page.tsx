@@ -142,15 +142,10 @@ export default function HomePage() {
   const isInitialMount = useRef<boolean>(true);
 
   useEffect(() => {
-    // Ad-first priority: Let top navbar ad initialize and execute first with maximum network priority
-    const timer = setTimeout(() => {
-      fetchCategories();
-      fetchTrendingSubcategories();
-      fetchMatches(1);
-      isInitialMount.current = false;
-    }, 100);
-
-    return () => clearTimeout(timer);
+    fetchCategories();
+    fetchTrendingSubcategories();
+    fetchMatches(1);
+    isInitialMount.current = false;
   }, []);
 
   // Re-fetch matches whenever selectedCategory or selectedSubcategory changes

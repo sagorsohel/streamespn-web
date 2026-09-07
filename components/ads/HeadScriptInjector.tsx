@@ -3,20 +3,24 @@
 import React, { useEffect } from 'react';
 import api from '@/lib/api';
 
-export const HeadScriptInjector: React.FC = () => {
+interface HeadScriptInjectorProps {
+  hasSsrHeadAds?: boolean;
+}
+
+export const HeadScriptInjector: React.FC<HeadScriptInjectorProps> = ({ hasSsrHeadAds = false }) => {
   useEffect(() => {
+    // If SSR already rendered head ads directly into <head>, skip client fetch to save bandwidth and prevent duplicate scripts
+    if (hasSsrHeadAds) return;
+
     let isMounted = true;
 
     const fetchAndInjectHeadAds = async () => {
       try {
-        const res = await api.get('/ads');
+        const res = await api.get('/ads/fast');
         if (!isMounted) return;
 
         const headAds = res.data?.data?.settings?.headAds;
-        const histatsScript = res.data?.data?.settings?.histatsScript;
-
-        const combined = [headAds, histatsScript].filter(Boolean).join('\n');
-        if (!combined.trim()) return;
+        if (!headAds || !headAds.trim()) return;
 
         // Container in document.head to manage injected scripts
         let headContainer = document.getElementById('streamespn-head-scripts');
@@ -29,7 +33,7 @@ export const HeadScriptInjector: React.FC = () => {
         headContainer.innerHTML = '';
 
         const wrapper = document.createElement('div');
-        wrapper.innerHTML = combined;
+        wrapper.innerHTML = headAds;
 
         // Execute all <script> tags dynamically inside <head>
         const scripts = wrapper.querySelectorAll('script');
@@ -60,7 +64,8 @@ export const HeadScriptInjector: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [hasSsrHeadAds]);
 
   return null;
 };
+
