@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { MatchItem } from './MatchCard';
+import { slugify } from '@/lib/utils';
 import { Radio } from 'lucide-react';
 
 interface MobileLiveSliderProps {
@@ -69,8 +70,10 @@ export const MobileLiveSlider: React.FC<MobileLiveSliderProps> = ({ matches }) =
         }}
       >
         {sliderMatches.map((m) => {
-          const targetLink = m.referralLink || `/match/${m.slug || m.id}`;
-          const isExternal = !!m.referralLink;
+          const catSlug = slugify(m.categoryName || 'sport');
+          const subSlug = slugify(m.subcategoryName || 'all');
+          const matchSlug = m.slug || String(m.id);
+          const targetLink = `/${catSlug}/${subSlug}/${matchSlug}`;
 
           const CardContent = (
             <div className="relative w-[290px] xs:w-[320px] shrink-0 snap-center rounded-[24px] bg-gradient-to-br from-[#37003c] via-[#2d0032] to-[#1a001d] text-white p-4.5 shadow-xl border border-purple-500/30 overflow-hidden group">
@@ -147,11 +150,7 @@ export const MobileLiveSlider: React.FC<MobileLiveSliderProps> = ({ matches }) =
             </div>
           );
 
-          return isExternal ? (
-            <a key={m.id} href={targetLink} target="_blank" rel="noopener noreferrer" className="block">
-              {CardContent}
-            </a>
-          ) : (
+          return (
             <Link key={m.id} href={targetLink} className="block">
               {CardContent}
             </Link>

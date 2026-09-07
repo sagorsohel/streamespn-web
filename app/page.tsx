@@ -301,22 +301,9 @@ export default function HomePage() {
             const heroCatSlug = slugify(featuredMatch.categoryName || 'sport');
             const heroSubSlug = slugify(featuredMatch.subcategoryName || 'all');
             const heroMatchSlug = featuredMatch.slug || String(featuredMatch.id);
-            const heroTargetLink = featuredMatch.referralLink || `/${heroCatSlug}/${heroSubSlug}/${heroMatchSlug}`;
-            const isHeroExternal = !!featuredMatch.referralLink;
+            const heroTargetLink = `/${heroCatSlug}/${heroSubSlug}/${heroMatchSlug}`;
 
             const HeroWrapper = ({ children }: { children: React.ReactNode }) => {
-              if (isHeroExternal) {
-                return (
-                  <a
-                    href={heroTargetLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hidden sm:block relative overflow-hidden rounded-2xl border border-[var(--border-glass)] bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 shadow-2xl min-h-[220px] flex items-center justify-center p-6 text-white group cursor-pointer hover:border-[#F8C831]/50 transition-all"
-                  >
-                    {children}
-                  </a>
-                );
-              }
               return (
                 <Link
                   href={heroTargetLink}

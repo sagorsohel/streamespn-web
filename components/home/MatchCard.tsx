@@ -63,26 +63,12 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
   const catSlug = slugify(match.categoryName || 'sport');
   const subSlug = slugify(match.subcategoryName || 'all');
   const matchSlug = match.slug || String(match.id);
-  const targetLink = match.referralLink || `/${catSlug}/${subSlug}/${matchSlug}`;
-  const isExternal = !!match.referralLink;
-
-  const RenderCardWrapper = ({ children, className }: { children: React.ReactNode; className: string }) => {
-    if (isExternal) {
-      return (
-        <a href={targetLink} target="_blank" rel="noopener noreferrer" className={className}>
-          {children}
-        </a>
-      );
-    }
-    return (
-      <Link href={targetLink} className={className}>
-        {children}
-      </Link>
-    );
-  };
+  const targetLink = `/${catSlug}/${subSlug}/${matchSlug}`;
 
   return (
-    <RenderCardWrapper className={`group relative block w-full rounded-[3px] border border-[var(--border-glass)] px-3.5 sm:px-5 py-3 transition-all duration-200 overflow-hidden cursor-pointer hover:border-[#F8C831]/60  ${isLive
+    <Link
+      href={targetLink}
+      className={`group relative block w-full rounded-[3px] border border-[var(--border-glass)] px-3.5 sm:px-5 py-3 transition-all duration-200 overflow-hidden cursor-pointer hover:border-[#F8C831]/60  ${isLive
       ? 'border-l-2 border-l-[#40b857] bg-[#f2f9f4] dark:bg-emerald-950/20'
       : 'bg-[var(--bg-card)]'
       }`}>
@@ -289,6 +275,6 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
 
       </div>
 
-    </RenderCardWrapper>
+    </Link>
   );
 };
