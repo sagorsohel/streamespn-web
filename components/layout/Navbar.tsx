@@ -150,7 +150,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
     }
   }, [initialAdsSettings]);
 
-  // Fetch fresh ad data on mount (silent background update)
+  // Fetch & sync fresh ad data on mount and on route navigation (category, subcategory, single match)
   useEffect(() => {
     // 1. Show cached memory data instantly (0ms) while fresh fetch is in-flight
     if (_adCode) {
@@ -162,13 +162,13 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 1500);
     fetchAdData(controller.signal).then(() => {
-      setNavAdCode(_adCode);
-      setMembershipLink(_membershipLink);
+      if (_adCode) setNavAdCode(_adCode);
+      if (_membershipLink) setMembershipLink(_membershipLink);
       clearTimeout(timer);
     });
 
     return () => { controller.abort(); clearTimeout(timer); };
-  }, []);
+  }, [pathname]);
 
   const navigateToCategory = (catSlug: string) => {
     startTopLoader();
@@ -574,6 +574,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
           <div className="mx-auto max-w-7xl w-full flex items-center justify-center">
             <AdRenderer
               uniqueKey="nav-ad"
+              refreshKey={pathname}
               code={navAdCode}
             />
           </div>

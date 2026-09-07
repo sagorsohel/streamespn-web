@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 
 interface AdRendererProps {
   code?: string;
@@ -13,8 +13,11 @@ interface AdRendererProps {
 export const AdRenderer: React.FC<AdRendererProps> = ({
   code,
   className = '',
+  refreshKey,
 }) => {
   const rawCode = (code || '').trim();
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const isFirstMount = useRef(true);
 
   const { extractedWidth, extractedHeight } = useMemo(() => {
     if (!rawCode) return { extractedWidth: 320, extractedHeight: 50 };
@@ -42,6 +45,8 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://www.highperformanceformat.com" crossorigin>
+    <link rel="dns-prefetch" href="https://www.highperformanceformat.com">
     <style>
       html, body {
         margin: 0;
@@ -62,6 +67,21 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
 </html>`;
   }, [rawCode]);
 
+  // When refreshKey changes (page navigation to cat/subcat/match), reload the ad in-place smoothly with 0ms blank time!
+  useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
+    if (iframeRef.current && rawCode) {
+      try {
+        iframeRef.current.srcdoc = iframeSrcDoc;
+      } catch (e) {
+        // silent catch
+      }
+    }
+  }, [refreshKey, iframeSrcDoc, rawCode]);
+
   if (!rawCode) {
     return null;
   }
@@ -73,6 +93,7 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
       style={{ minHeight: `${extractedHeight}px`, height: `${extractedHeight}px` }}
     >
       <iframe
+        ref={iframeRef}
         srcDoc={iframeSrcDoc}
         width={extractedWidth ? `${extractedWidth}px` : '100%'}
         height={`${extractedHeight}px`}

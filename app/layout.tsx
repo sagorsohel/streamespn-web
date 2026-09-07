@@ -143,6 +143,19 @@ export default async function RootLayout({
   const headScripts = parseScriptTags(headAdsHtml);
   const headNonScriptHtml = getNonScriptHtml(headAdsHtml);
 
+  const navScripts = parseScriptTags(initialAdsSettings?.navAds || '');
+  const modalScripts = parseScriptTags(initialAdsSettings?.modalSignupAds || '');
+
+  const preloadScriptUrls = Array.from(
+    new Set(
+      [
+        ...headScripts.map((s) => s.src),
+        ...navScripts.map((s) => s.src),
+        ...modalScripts.map((s) => s.src),
+      ].filter(Boolean) as string[]
+    )
+  );
+
   const histatsHtml = initialAdsSettings?.histatsScript || '';
   const bodyScripts = parseScriptTags(histatsHtml);
   const bodyNonScriptHtml = getNonScriptHtml(histatsHtml);
@@ -156,6 +169,15 @@ export default async function RootLayout({
       <head>
         <link rel="preconnect" href="https://www.highperformanceformat.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://www.highperformanceformat.com" />
+        {preloadScriptUrls.map((url, idx) => (
+          <link
+            key={`preload-ad-scr-${idx}`}
+            rel="preload"
+            href={url}
+            as="script"
+            crossOrigin="anonymous"
+          />
+        ))}
         <JsonLdSchema type="website" />
         {headNonScriptHtml && (
           <div dangerouslySetInnerHTML={{ __html: headNonScriptHtml }} />
