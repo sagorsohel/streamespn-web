@@ -225,29 +225,27 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
         }
 
         try {
-          if (fetchedSubList.length === 0) {
-            const subRes = await api.get(`/subcategories?categoryId=${targetCategory.id}`);
-            if (subRes.data?.success && Array.isArray(subRes.data?.data?.subcategories)) {
-              fetchedSubList = subRes.data.data.subcategories;
-              setCachedSubcategories(String(targetCategory.id), fetchedSubList);
-              const activeSubs = fetchedSubList.filter(
-                (s: Subcategory) =>
-                  Boolean(s.status) === true &&
-                  (Number(s.matchCount || 0) > 0 || Number(s.totalMatchCount || 0) > 0)
-              );
+          const subRes = await api.get(`/subcategories?categoryId=${targetCategory.id}`);
+          if (subRes.data?.success && Array.isArray(subRes.data?.data?.subcategories)) {
+            fetchedSubList = subRes.data.data.subcategories;
+            setCachedSubcategories(String(targetCategory.id), fetchedSubList);
+            const activeSubs = fetchedSubList.filter(
+              (s: Subcategory) =>
+                Boolean(s.status) === true &&
+                (Number(s.matchCount || 0) > 0 || Number(s.totalMatchCount || 0) > 0)
+            );
 
-              if (subcategorySlug && activeSubs.length > 0) {
-                const matchedSubcat = activeSubs.find(
-                  (s: Subcategory) => slugify(s.name) === subcategorySlug.toLowerCase() || String(s.id) === subcategorySlug
-                );
-                if (matchedSubcat) {
-                  initialSubId = String(matchedSubcat.id);
-                }
+            if (subcategorySlug && activeSubs.length > 0) {
+              const matchedSubcat = activeSubs.find(
+                (s: Subcategory) => slugify(s.name) === subcategorySlug.toLowerCase() || String(s.id) === subcategorySlug
+              );
+              if (matchedSubcat) {
+                initialSubId = String(matchedSubcat.id);
               }
-              if (isMounted) {
-                setSelectedSubcategory(initialSubId);
-                setSubcategories(activeSubs);
-              }
+            }
+            if (isMounted) {
+              setSelectedSubcategory(initialSubId);
+              setSubcategories(activeSubs);
             }
           }
         } catch (e) { }
