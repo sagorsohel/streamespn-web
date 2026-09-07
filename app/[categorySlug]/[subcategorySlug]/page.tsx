@@ -10,35 +10,39 @@ interface NestedPageProps {
 export async function generateMetadata({ params }: NestedPageProps): Promise<Metadata> {
   const { categorySlug, subcategorySlug } = await params;
 
-  try {
-    const matchRes = await api.get(`/matches/${subcategorySlug}`, { timeout: 25000 });
-    if (matchRes.data?.success && matchRes.data?.data?.match) {
-      const match = matchRes.data.data.match;
-      let displayTitle = '';
-      let displayDescription = '';
+  const isLikelyMatch = subcategorySlug?.includes('-vs-') || /-\d{4}-\d{2}-\d{2}/.test(subcategorySlug || '');
 
-      if (match.matchType === 'team_vs_team') {
-        const teamA = match.homeTeam || 'Team A';
-        const teamB = match.awayTeam || 'Team B';
-        displayTitle = `LIVE: ${teamA} vs ${teamB} Match Stream | StreamESPN`;
-        displayDescription = `Stream "${teamA} vs ${teamB}" live match including scores, standings, and highlights.`;
-      } else {
-        const matchTitle = match.title || 'Live Stream';
-        displayTitle = `${matchTitle} | StreamESPN`;
-        displayDescription = `Stream ${matchTitle} live on StreamESPN. Unlock all high-speed HD streams.`;
-      }
+  if (isLikelyMatch) {
+    try {
+      const matchRes = await api.get(`/matches/${subcategorySlug}`, { timeout: 25000 });
+      if (matchRes.data?.success && matchRes.data?.data?.match) {
+        const match = matchRes.data.data.match;
+        let displayTitle = '';
+        let displayDescription = '';
 
-      return {
-        title: displayTitle,
-        description: displayDescription,
-        openGraph: {
+        if (match.matchType === 'team_vs_team') {
+          const teamA = match.homeTeam || 'Team A';
+          const teamB = match.awayTeam || 'Team B';
+          displayTitle = `LIVE: ${teamA} vs ${teamB} Match Stream | StreamESPN`;
+          displayDescription = `Stream "${teamA} vs ${teamB}" live match including scores, standings, and highlights.`;
+        } else {
+          const matchTitle = match.title || 'Live Stream';
+          displayTitle = `${matchTitle} | StreamESPN`;
+          displayDescription = `Stream ${matchTitle} live on StreamESPN. Unlock all high-speed HD streams.`;
+        }
+
+        return {
           title: displayTitle,
           description: displayDescription,
-        },
-      };
+          openGraph: {
+            title: displayTitle,
+            description: displayDescription,
+          },
+        };
+      }
+    } catch (e) {
+      // silent catch
     }
-  } catch (e) {
-    // silent catch
   }
 
   const cleanCat = categorySlug ? categorySlug.replace(/-/g, ' ') : 'Sports';

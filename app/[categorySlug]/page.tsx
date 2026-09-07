@@ -60,6 +60,9 @@ interface Subcategory {
   logoUrl?: string;
   status: boolean | number;
   isTrending?: boolean;
+  matchCount?: number;
+  liveMatchCount?: number;
+  totalMatchCount?: number;
 }
 
 interface PageProps {
@@ -199,23 +202,53 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
         setLoading(false);
 
         let initialSubId: string | null = null;
-        let fetchedSubList: Subcategory[] = [];
+        let fetchedSubList: Subcategory[] = getCachedSubcategories(String(targetCategory.id)) || [];
+
+        if (fetchedSubList.length > 0) {
+          const activeSubs = fetchedSubList.filter(
+            (s: Subcategory) =>
+              Boolean(s.status) === true &&
+              (Number(s.matchCount || 0) > 0 || Number(s.totalMatchCount || 0) > 0)
+          );
+          if (subcategorySlug && activeSubs.length > 0) {
+            const matchedSubcat = activeSubs.find(
+              (s: Subcategory) => slugify(s.name) === subcategorySlug.toLowerCase() || String(s.id) === subcategorySlug
+            );
+            if (matchedSubcat) {
+              initialSubId = String(matchedSubcat.id);
+            }
+          }
+          if (isMounted) {
+            setSelectedSubcategory(initialSubId);
+            setSubcategories(activeSubs);
+          }
+        }
 
         try {
-          const subRes = await api.get(`/subcategories?categoryId=${targetCategory.id}`);
-          if (subRes.data?.success && Array.isArray(subRes.data?.data?.subcategories)) {
-            fetchedSubList = subRes.data.data.subcategories;
-            const activeSubs = fetchedSubList.filter((s: Subcategory) => Boolean(s.status) === true);
-
-            if (subcategorySlug && activeSubs.length > 0) {
-              const matchedSubcat = activeSubs.find(
-                (s: Subcategory) => slugify(s.name) === subcategorySlug.toLowerCase() || String(s.id) === subcategorySlug
+          if (fetchedSubList.length === 0) {
+            const subRes = await api.get(`/subcategories?categoryId=${targetCategory.id}`);
+            if (subRes.data?.success && Array.isArray(subRes.data?.data?.subcategories)) {
+              fetchedSubList = subRes.data.data.subcategories;
+              setCachedSubcategories(String(targetCategory.id), fetchedSubList);
+              const activeSubs = fetchedSubList.filter(
+                (s: Subcategory) =>
+                  Boolean(s.status) === true &&
+                  (Number(s.matchCount || 0) > 0 || Number(s.totalMatchCount || 0) > 0)
               );
-              if (matchedSubcat) {
-                initialSubId = String(matchedSubcat.id);
+
+              if (subcategorySlug && activeSubs.length > 0) {
+                const matchedSubcat = activeSubs.find(
+                  (s: Subcategory) => slugify(s.name) === subcategorySlug.toLowerCase() || String(s.id) === subcategorySlug
+                );
+                if (matchedSubcat) {
+                  initialSubId = String(matchedSubcat.id);
+                }
+              }
+              if (isMounted) {
+                setSelectedSubcategory(initialSubId);
+                setSubcategories(activeSubs);
               }
             }
-            if (isMounted) setSelectedSubcategory(initialSubId);
           }
         } catch (e) { }
 
@@ -242,24 +275,10 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
             } catch (e) { }
           }
 
-
-
           const uniqueMatches = Array.from(new Map(fetchedMatches.map((m) => [m.id, m])).values());
           setMatches(uniqueMatches);
           setPage(1);
           setHasMore(uniqueMatches.length >= 20);
-
-          // Only show subcategories that have at least one match
-          const subcatIdsWithMatches = new Set(
-            fetchedMatches
-              .map((m: MatchItem) => m.subcategoryId)
-              .filter((id: any) => id != null)
-              .map((id: any) => Number(id))
-          );
-          const activeSubList = fetchedSubList.filter(
-            (s: Subcategory) => Boolean(s.status) === true && subcatIdsWithMatches.has(s.id)
-          );
-          if (isMounted) setSubcategories(activeSubList);
         }
       } catch (err) {
         if (isMounted && !matches.length) setNotFound(true);
@@ -275,7 +294,7 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
     return () => {
       isMounted = false;
     };
-  }, [categorySlug, subcategorySlug]);
+  }, [categorySlug]);
 
   useEffect(() => {
     if (!subcategories.length || !category) return;

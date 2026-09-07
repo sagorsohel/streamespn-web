@@ -16,9 +16,14 @@ export function SubcategoryOrMatchView({ categorySlug, subcategorySlug }: Subcat
     return raw.includes('-vs-') || /-\d{4}-\d{2}-\d{2}/.test(raw);
   }, [subcategorySlug]);
 
-  const [isMatch, setIsMatch] = useState<boolean | null>(isLikelyMatchSlug ? true : null);
+  const [isMatch, setIsMatch] = useState<boolean>(false);
 
   useEffect(() => {
+    if (!isLikelyMatchSlug) {
+      setIsMatch(false);
+      return;
+    }
+
     let isMounted = true;
     const checkIsMatch = async () => {
       try {
@@ -40,12 +45,12 @@ export function SubcategoryOrMatchView({ categorySlug, subcategorySlug }: Subcat
         if (isMounted) {
           if (res.data?.success && res.data?.data?.match) {
             setIsMatch(true);
-          } else if (!isLikelyMatchSlug) {
+          } else {
             setIsMatch(false);
           }
         }
       } catch (err) {
-        if (isMounted && !isLikelyMatchSlug) {
+        if (isMounted) {
           setIsMatch(false);
         }
       }
