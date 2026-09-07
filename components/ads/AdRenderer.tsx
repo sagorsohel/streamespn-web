@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 
 interface AdRendererProps {
   code?: string;
@@ -16,8 +16,13 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
   refreshKey,
 }) => {
   const rawCode = (code || '').trim();
+  const [mounted, setMounted] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const isFirstMount = useRef(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { extractedWidth, extractedHeight } = useMemo(() => {
     if (!rawCode) return { extractedWidth: 320, extractedHeight: 50 };
@@ -45,8 +50,23 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://www.highperformanceformat.com" crossorigin>
-    <link rel="dns-prefetch" href="https://www.highperformanceformat.com">
+    <script>
+      try {
+        if (!window.performance) window.performance = {};
+        var p = window.performance;
+        var orig = p.getEntriesByType;
+        p.getEntriesByType = function(t) {
+          if (t === 'navigation') {
+            var res = orig ? orig.call(p, t) : [];
+            if (!res || !res.length) {
+              return [{ startTime: 0, responseStart: 0, domContentLoadedEventEnd: 0, loadEventEnd: 0 }];
+            }
+            return res;
+          }
+          return orig ? orig.call(p, t) : [];
+        };
+      } catch (e) {}
+    </script>
     <style>
       html, body {
         margin: 0;
@@ -67,22 +87,22 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
 </html>`;
   }, [rawCode]);
 
-  // When refreshKey changes (page navigation to cat/subcat/match), reload the ad in-place smoothly with 0ms blank time!
+  // When refreshKey changes (page navigation to cat/subcat/match), reload in-place smoothly
   useEffect(() => {
     if (isFirstMount.current) {
       isFirstMount.current = false;
       return;
     }
-    if (iframeRef.current && rawCode) {
+    if (iframeRef.current && rawCode && mounted) {
       try {
         iframeRef.current.srcdoc = iframeSrcDoc;
       } catch (e) {
         // silent catch
       }
     }
-  }, [refreshKey, iframeSrcDoc, rawCode]);
+  }, [refreshKey, iframeSrcDoc, rawCode, mounted]);
 
-  if (!rawCode) {
+  if (!rawCode || !mounted) {
     return null;
   }
 

@@ -7,8 +7,8 @@ export async function GET() {
     const urls = [
       process.env.BACKEND_API_URL,
       process.env.NEXT_PUBLIC_API_URL,
-      'http://localhost:5000/api',
       'https://backendapi.streamespn.org/api',
+      'http://localhost:5000/api',
     ].filter(Boolean) as string[];
 
     for (const rawUrl of urls) {
