@@ -143,10 +143,6 @@ export default async function RootLayout({
   const headScripts = parseScriptTags(headAdsHtml);
   const headNonScriptHtml = getNonScriptHtml(headAdsHtml);
 
-  const histatsHtml = initialAdsSettings?.histatsScript || '';
-  const bodyScripts = parseScriptTags(histatsHtml);
-  const bodyNonScriptHtml = getNonScriptHtml(histatsHtml);
-
   return (
     <html
       lang="en"
@@ -194,30 +190,6 @@ export default async function RootLayout({
           </div>
           <Footer initialAdsSettings={initialAdsSettings} />
         </ThemeProvider>
-        {bodyNonScriptHtml && (
-          <div dangerouslySetInnerHTML={{ __html: bodyNonScriptHtml }} />
-        )}
-        {bodyScripts.map((s, idx) => {
-          if (s.src) {
-            return (
-              <script
-                key={`body-scr-${idx}`}
-                src={s.src}
-                async={s.async}
-                defer={s.defer}
-              />
-            );
-          }
-          if (s.content) {
-            return (
-              <script
-                key={`body-scr-inline-${idx}`}
-                dangerouslySetInnerHTML={{ __html: s.content }}
-              />
-            );
-          }
-          return null;
-        })}
       </body>
     </html>
   );

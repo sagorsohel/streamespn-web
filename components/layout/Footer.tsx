@@ -28,15 +28,17 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ initialAdsSettings }) => {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState<boolean>(false);
   const [adsSettings, setAdsSettings] = useState<AdsSettings>(() => {
     if (initialAdsSettings && (initialAdsSettings.footerAds || initialAdsSettings.membershipReferralLink)) {
       return initialAdsSettings;
     }
-    return getAdsSettingsSync();
+    return {};
   });
   const [showFloatDesktop, setShowFloatDesktop] = useState<boolean>(true);
 
   useEffect(() => {
+    setMounted(true);
     setAdsSettings(getAdsSettingsSync());
     const unsubscribe = subscribeAdsSettings((updated) => {
       setAdsSettings(updated);
@@ -51,7 +53,7 @@ export const Footer: React.FC<FooterProps> = ({ initialAdsSettings }) => {
     <footer className="w-full border-t border-[var(--border-glass)] bg-[var(--bg-main)] text-[var(--text-muted)] text-xs mt-16 pb-12 relative">
 
       {/* 📊 HISTATS / ANALYTICS TRACKING CODE INJECTOR (Invisible 1px Container for 100% Tracking Accuracy) */}
-      {adsSettings.histatsScript && (
+      {mounted && adsSettings.histatsScript && (
         <div
           id="histats-analytics-container"
           aria-hidden="true"
@@ -71,7 +73,7 @@ export const Footer: React.FC<FooterProps> = ({ initialAdsSettings }) => {
       )}
 
       {/* FOOTER AD BANNER SLOT */}
-      {adsSettings.footerAds && (
+      {mounted && adsSettings.footerAds && (
         <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-6">
           <div className="rounded-2xl border border-[var(--border-glass)] bg-[var(--bg-card)] p-2 shadow-sm flex items-center justify-center overflow-hidden">
             <AdRenderer code={adsSettings.footerAds} uniqueKey="footer-ad" refreshKey={pathname} />
@@ -80,14 +82,14 @@ export const Footer: React.FC<FooterProps> = ({ initialAdsSettings }) => {
       )}
 
       {/* FLOATING MOBILE AD SLOT */}
-      {adsSettings.floatMobileAds && (
+      {mounted && adsSettings.floatMobileAds && (
         <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-slate-950/95 border-t border-slate-800 p-1 flex justify-center shadow-2xl">
           <AdRenderer code={adsSettings.floatMobileAds} uniqueKey="float-mobile-ad" refreshKey={pathname} />
         </div>
       )}
 
       {/* FLOATING DESKTOP AD SLOT WITH DISMISS BUTTON */}
-      {adsSettings.floatDesktopAds && showFloatDesktop && (
+      {mounted && adsSettings.floatDesktopAds && showFloatDesktop && (
         <div className="hidden lg:flex flex-col fixed bottom-4 right-4 z-40 bg-slate-950/95 border border-slate-800 rounded-2xl p-2 shadow-2xl backdrop-blur-md">
           <div className="flex items-center justify-between px-1 pb-1 text-[10px] text-slate-400 font-bold">
             <span>Advertisement</span>

@@ -30,12 +30,12 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
     let width = 320;
     let height = 50;
 
-    const widthMatch = rawCode.match(/['"]?width['"]?\s*:\s*(\d+)/i);
+    const widthMatch = rawCode.match(/['"]?width['"]?\s*[:=]\s*['"]?(\d+)/i);
     if (widthMatch && widthMatch[1]) {
       width = parseInt(widthMatch[1], 10);
     }
 
-    const heightMatch = rawCode.match(/['"]?height['"]?\s*:\s*(\d+)/i);
+    const heightMatch = rawCode.match(/['"]?height['"]?\s*[:=]\s*['"]?(\d+)/i);
     if (heightMatch && heightMatch[1]) {
       height = parseInt(heightMatch[1], 10);
     }

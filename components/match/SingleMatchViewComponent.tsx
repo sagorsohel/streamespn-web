@@ -67,9 +67,8 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
   const [loading, setLoading] = useState<boolean>(true);
   const [notFound, setNotFound] = useState<boolean>(false);
 
-  // Ads Settings & 40s/20s Rotation Loop State
+  // Ads Settings State
   const [adsSettings, setAdsSettings] = useState<AdsSettings>(() => getAdsSettingsSync());
-  const [activeAdTab, setActiveAdTab] = useState<'nav' | 'modal'>('nav');
 
   useEffect(() => {
     setAdsSettings(getAdsSettingsSync());
@@ -81,30 +80,6 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
       unsubscribe();
     };
   }, []);
-
-  // 🔄 40 SECONDS NAVBAR AD <-> 20 SECONDS MODAL SIGNUP AD ROTATION LOOP
-  useEffect(() => {
-    const hasNav = !!adsSettings.navAds;
-    const hasModal = !!adsSettings.modalSignupAds;
-
-    if (hasNav && hasModal) {
-      let timer: NodeJS.Timeout;
-      if (activeAdTab === 'nav') {
-        timer = setTimeout(() => {
-          setActiveAdTab('modal');
-        }, 40000); // 40 Seconds Navbar Ad
-      } else {
-        timer = setTimeout(() => {
-          setActiveAdTab('nav');
-        }, 20000); // 20 Seconds Modal Signup Ad
-      }
-      return () => clearTimeout(timer);
-    } else if (hasNav) {
-      setActiveAdTab('nav');
-    } else if (hasModal) {
-      setActiveAdTab('modal');
-    }
-  }, [adsSettings.navAds, adsSettings.modalSignupAds, activeAdTab]);
 
   // Player & Stream Modal States
   const [activeServer, setActiveServer] = useState<number>(1);
@@ -413,10 +388,14 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
                       );
                     })()}
 
-                    {/* SIGNUP AD BANNER (PRE-RENDERED IMMEDIATELY ON PAGE LOAD) */}
-                    {adsSettings.modalSignupAds && (
-                      <div className="w-full max-w-xs bg-transparent p-1 flex items-center justify-center overflow-hidden my-1 min-h-[55px]">
-                        <AdRenderer uniqueKey={`modal-inner-ad-${matchSlug}`} code={adsSettings.modalSignupAds} />
+                    {/* SIGNUP AD BANNER - SHOWN UNDER SIGN UP BUTTON WHEN PLAYER MODAL OPENS */}
+                    {showStreamModal && !isConnecting && isPlaying && (adsSettings.modalSignupAds || adsSettings.navAds) && (
+                      <div className="w-full max-w-[340px] bg-transparent flex items-center justify-center my-1.5 min-h-[52px]">
+                        <AdRenderer
+                          key={`modal-ad-${matchSlug}-${showStreamModal}`}
+                          refreshKey={`modal-${showStreamModal}`}
+                          code={adsSettings.modalSignupAds || adsSettings.navAds}
+                        />
                       </div>
                     )}
 
