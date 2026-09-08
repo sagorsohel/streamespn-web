@@ -21,11 +21,11 @@ export async function generateMetadata({ params }: SingleMatchProps): Promise<Me
       if (match.matchType === 'team_vs_team') {
         const teamA = match.homeTeam || 'Team A';
         const teamB = match.awayTeam || 'Team B';
-        displayTitle = `LIVE: ${teamA} vs ${teamB} Match Stream | StreamESPN`;
+        displayTitle = `LIVE: ${teamA} vs ${teamB} Match Stream`;
         displayDescription = `Stream "${teamA} vs ${teamB}" live match including scores, standings, and highlights.`;
       } else {
         const matchTitle = match.title || 'Live Stream';
-        displayTitle = `${matchTitle} | StreamESPN`;
+        displayTitle = `${matchTitle}`;
         displayDescription = `Stream ${matchTitle} live on StreamESPN. Unlock all high-speed HD streams.`;
       }
 
@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: SingleMatchProps): Promise<Me
         title: displayTitle,
         description: displayDescription,
         openGraph: {
-          title: displayTitle,
+          title: `${displayTitle} | StreamESPN`,
           description: displayDescription,
         },
       };
@@ -43,8 +43,12 @@ export async function generateMetadata({ params }: SingleMatchProps): Promise<Me
   }
 
   return {
-    title: 'Live Match Stream | StreamESPN',
+    title: 'Live Match Stream',
     description: 'Stream live match events live on StreamESPN. Unlock all high-speed HD streams.',
+    openGraph: {
+      title: 'Live Match Stream | StreamESPN',
+      description: 'Stream live match events live on StreamESPN. Unlock all high-speed HD streams.',
+    },
   };
 }
 

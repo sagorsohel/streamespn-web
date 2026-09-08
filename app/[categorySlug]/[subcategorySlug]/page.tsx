@@ -23,11 +23,11 @@ export async function generateMetadata({ params }: NestedPageProps): Promise<Met
         if (match.matchType === 'team_vs_team') {
           const teamA = match.homeTeam || 'Team A';
           const teamB = match.awayTeam || 'Team B';
-          displayTitle = `LIVE: ${teamA} vs ${teamB} Match Stream | StreamESPN`;
+          displayTitle = `LIVE: ${teamA} vs ${teamB} Match Stream`;
           displayDescription = `Stream "${teamA} vs ${teamB}" live match including scores, standings, and highlights.`;
         } else {
           const matchTitle = match.title || 'Live Stream';
-          displayTitle = `${matchTitle} | StreamESPN`;
+          displayTitle = `${matchTitle}`;
           displayDescription = `Stream ${matchTitle} live on StreamESPN. Unlock all high-speed HD streams.`;
         }
 
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: NestedPageProps): Promise<Met
           title: displayTitle,
           description: displayDescription,
           openGraph: {
-            title: displayTitle,
+            title: `${displayTitle} | StreamESPN`,
             description: displayDescription,
           },
         };
@@ -47,13 +47,17 @@ export async function generateMetadata({ params }: NestedPageProps): Promise<Met
 
   const cleanCat = categorySlug ? categorySlug.replace(/-/g, ' ') : 'Sports';
   const cleanSub = subcategorySlug ? subcategorySlug.replace(/-/g, ' ') : '';
-  const title = cleanSub
-    ? `${cleanSub.toUpperCase()} (${cleanCat.toUpperCase()}) Live Streams | StreamESPN`
-    : `${cleanCat.toUpperCase()} Live Streams | StreamESPN`;
+  const pageTitle = cleanSub
+    ? `${cleanSub.toUpperCase()} (${cleanCat.toUpperCase()}) Live Streams`
+    : `${cleanCat.toUpperCase()} Live Streams`;
 
   return {
-    title,
+    title: pageTitle,
     description: `Watch ${cleanSub || cleanCat} live streams HD. Enjoy fast and lag-free sports coverage.`,
+    openGraph: {
+      title: `${pageTitle} | StreamESPN`,
+      description: `Watch ${cleanSub || cleanCat} live streams HD. Enjoy fast and lag-free sports coverage.`,
+    },
   };
 }
 
