@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import api from '@/lib/api';
@@ -30,12 +30,14 @@ export const Footer: React.FC<FooterProps> = ({ initialAdsSettings }) => {
   const pathname = usePathname();
   const [mounted, setMounted] = useState<boolean>(false);
   const [adsSettings, setAdsSettings] = useState<AdsSettings>(() => {
-    if (initialAdsSettings && (initialAdsSettings.footerAds || initialAdsSettings.membershipReferralLink)) {
+    if (initialAdsSettings && (initialAdsSettings.footerAds || initialAdsSettings.membershipReferralLink || initialAdsSettings.histatsScript)) {
       return initialAdsSettings;
     }
     return {};
   });
   const [showFloatDesktop, setShowFloatDesktop] = useState<boolean>(true);
+  const histatsContainerRef = useRef<HTMLDivElement>(null);
+  const injectedHistatsRef = useRef<string>('');
 
   useEffect(() => {
     setMounted(true);
@@ -49,13 +51,58 @@ export const Footer: React.FC<FooterProps> = ({ initialAdsSettings }) => {
     };
   }, []);
 
+  // Inject Histats / Analytics tracking code directly into main window context (NOT inside an iframe)
+  useEffect(() => {
+    if (!mounted || !adsSettings.histatsScript) return;
+    if (injectedHistatsRef.current === adsSettings.histatsScript) return;
+
+    const container = histatsContainerRef.current;
+    if (!container) return;
+
+    injectedHistatsRef.current = adsSettings.histatsScript;
+    container.innerHTML = '';
+
+    const temp = document.createElement('div');
+    temp.innerHTML = adsSettings.histatsScript;
+
+    // Dynamically create script tags so the browser executes them in the window context with actual URL
+    temp.querySelectorAll('script').forEach((oldScript) => {
+      const newScript = document.createElement('script');
+      Array.from(oldScript.attributes).forEach((attr) => {
+        newScript.setAttribute(attr.name, attr.value);
+      });
+      if (oldScript.innerHTML) {
+        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+      }
+      container.appendChild(newScript);
+    });
+
+    // Also support noscript / pixel images
+    temp.querySelectorAll('noscript, img, a').forEach((node) => {
+      container.appendChild(node.cloneNode(true));
+    });
+  }, [mounted, adsSettings.histatsScript]);
+
+  // Track page hits across Next.js SPA client-side route navigation
+  useEffect(() => {
+    if (!mounted) return;
+    if (typeof window !== 'undefined' && (window as any)._Hasync) {
+      try {
+        (window as any)._Hasync.push(['Histats.track_hits', '']);
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, [pathname, mounted]);
+
   return (
     <footer className="w-full border-t border-[var(--border-glass)] bg-[var(--bg-main)] text-[var(--text-muted)] text-xs mt-16 pb-12 relative">
 
-      {/* 📊 HISTATS / ANALYTICS TRACKING CODE INJECTOR (Invisible 1px Container for 100% Tracking Accuracy) */}
+      {/* 📊 HISTATS / ANALYTICS TRACKING CODE INJECTOR (Direct Window Execution for 100% Tracking Accuracy & Real URLs) */}
       {mounted && adsSettings.histatsScript && (
         <div
           id="histats-analytics-container"
+          ref={histatsContainerRef}
           aria-hidden="true"
           style={{
             position: 'absolute',
@@ -67,9 +114,7 @@ export const Footer: React.FC<FooterProps> = ({ initialAdsSettings }) => {
             bottom: 0,
             left: 0,
           }}
-        >
-          <AdRenderer code={adsSettings.histatsScript} />
-        </div>
+        />
       )}
 
       {/* FOOTER AD BANNER SLOT */}
