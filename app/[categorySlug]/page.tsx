@@ -7,8 +7,7 @@ import { getCategories, clearCategoriesCache } from '@/lib/categories';
 import { getCachedMatches, setCachedMatches, getCachedSubcategories, setCachedSubcategories } from '@/lib/matchesCache';
 import { motion, AnimatePresence } from 'framer-motion';
 import { slugify } from '@/lib/utils';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
+
 import { TopLoadingBar, startTopLoader, stopTopLoader } from '@/components/layout/TopLoadingBar';
 import { useLiveScoreSync } from '@/lib/useLiveScoreSync';
 import { MatchCard, MatchItem } from '@/components/home/MatchCard';

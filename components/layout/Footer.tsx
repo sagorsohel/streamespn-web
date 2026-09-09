@@ -128,24 +128,14 @@ export const Footer: React.FC<FooterProps> = ({ initialAdsSettings }) => {
 
       {/* FLOATING MOBILE AD SLOT */}
       {mounted && adsSettings.floatMobileAds && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-slate-950/95 border-t border-slate-800 p-1 flex justify-center shadow-2xl">
+        <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden  p-1 flex justify-center shadow-2xl">
           <AdRenderer code={adsSettings.floatMobileAds} uniqueKey="float-mobile-ad" refreshKey={pathname} />
         </div>
       )}
 
-      {/* FLOATING DESKTOP AD SLOT WITH DISMISS BUTTON */}
+      {/* FLOATING DESKTOP AD SLOT CENTERED AT BOTTOM */}
       {mounted && adsSettings.floatDesktopAds && showFloatDesktop && (
-        <div className="hidden lg:flex flex-col fixed bottom-4 right-4 z-40 bg-slate-950/95 border border-slate-800 rounded-2xl p-2 shadow-2xl backdrop-blur-md">
-          <div className="flex items-center justify-between px-1 pb-1 text-[10px] text-slate-400 font-bold">
-            <span>Advertisement</span>
-            <button
-              onClick={() => setShowFloatDesktop(false)}
-              className="hover:text-white transition-colors p-0.5 rounded-full hover:bg-slate-800"
-              title="Close Ad"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </div>
+        <div className="hidden lg:flex flex-col fixed bottom-4 left-1/2 -translate-x-1/2 z-40 rounded-2xl backdrop-blur-md">
           <AdRenderer code={adsSettings.floatDesktopAds} uniqueKey="float-desktop-ad" refreshKey={pathname} />
         </div>
       )}
