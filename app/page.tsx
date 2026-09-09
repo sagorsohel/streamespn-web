@@ -13,6 +13,7 @@ import { SportsFilter, Category } from '@/components/home/SportsFilter';
 import { MatchCard, MatchItem } from '@/components/home/MatchCard';
 import { useLiveScoreSync } from '@/lib/useLiveScoreSync';
 import { MatchCardSkeleton } from '@/components/home/MatchCardSkeleton';
+import { BannerSkeleton } from '@/components/home/BannerSkeleton';
 import { MobileLiveSlider } from '@/components/home/MobileLiveSlider';
 import { HeroBannerCarousel } from '@/components/home/HeroBannerCarousel';
 import { AdRenderer } from '@/components/ads/AdRenderer';
@@ -247,11 +248,18 @@ export default function HomePage() {
       transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] }}
       className="mx-auto max-w-7xl px-4 sm:px-6 pt-3 pb-12 flex-1 w-full"
     >
-      {/* MOBILE ONLY: FEATURED MATCHES AUTO-SLIDING CAROUSEL (SAME AS DESKTOP BANNER) */}
-      <MobileLiveSlider matches={displayedBannerMatches} />
+      {/* BANNER / SLIDER LOADING SKELETON (MOBILE & DESKTOP STYLED) */}
+      {loading && displayedBannerMatches.length === 0 ? (
+        <BannerSkeleton />
+      ) : (
+        <>
+          {/* MOBILE ONLY: FEATURED MATCHES AUTO-SLIDING CAROUSEL (SAME AS DESKTOP BANNER) */}
+          <MobileLiveSlider matches={displayedBannerMatches} />
 
-      {/* FULL-WIDTH FEATURED MATCH BANNER CAROUSEL (DESKTOP / TABLET ONLY - FULL NAVBAR WIDTH) */}
-      <HeroBannerCarousel matches={displayedBannerMatches} />
+          {/* FULL-WIDTH FEATURED MATCH BANNER CAROUSEL (DESKTOP / TABLET ONLY - FULL NAVBAR WIDTH) */}
+          <HeroBannerCarousel matches={displayedBannerMatches} />
+        </>
+      )}
 
       <div className="flex flex-col lg:flex-row gap-6">
 

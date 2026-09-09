@@ -13,6 +13,7 @@ import { TopLoadingBar, startTopLoader, stopTopLoader } from '@/components/layou
 import { useLiveScoreSync } from '@/lib/useLiveScoreSync';
 import { MatchCard, MatchItem } from '@/components/home/MatchCard';
 import { MatchCardSkeleton } from '@/components/home/MatchCardSkeleton';
+import { BannerSkeleton } from '@/components/home/BannerSkeleton';
 import { HeroBannerCarousel } from '@/components/home/HeroBannerCarousel';
 import { MobileLiveSlider } from '@/components/home/MobileLiveSlider';
 import {
@@ -389,12 +390,19 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
       <TopLoadingBar isLoading={matchesLoading} />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-6 pb-12 flex-1 w-full space-y-6">
 
-        {/* MOBILE ONLY: SLIDING LIVE / TOP EVENTS CAROUSEL */}
-        <MobileLiveSlider matches={categoryBannerMatches.length > 0 ? categoryBannerMatches : matches} />
+        {/* BANNER / SLIDER LOADING SKELETON (MOBILE & DESKTOP STYLED) */}
+        {(loading || (matchesLoading && matches.length === 0)) ? (
+          <BannerSkeleton />
+        ) : (
+          <>
+            {/* MOBILE ONLY: SLIDING LIVE / TOP EVENTS CAROUSEL */}
+            <MobileLiveSlider matches={categoryBannerMatches.length > 0 ? categoryBannerMatches : matches} />
 
-        {/* FULL-WIDTH FEATURED MATCH BANNER CAROUSEL (DESKTOP / TABLET ONLY - HIDDEN ON MOBILE) */}
-        {categoryBannerMatches.length > 0 && (
-          <HeroBannerCarousel matches={categoryBannerMatches} />
+            {/* FULL-WIDTH FEATURED MATCH BANNER CAROUSEL (DESKTOP / TABLET ONLY - HIDDEN ON MOBILE) */}
+            {categoryBannerMatches.length > 0 && (
+              <HeroBannerCarousel matches={categoryBannerMatches} />
+            )}
+          </>
         )}
 
 
