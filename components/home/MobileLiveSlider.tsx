@@ -46,6 +46,8 @@ export const MobileLiveSlider: React.FC<MobileLiveSliderProps> = ({ matches }) =
 
   if (sliderMatches.length === 0) return null;
 
+  const isSingle = sliderMatches.length === 1;
+
   return (
     <div className="block lg:hidden space-y-3 pt-2 mb-6">
 
@@ -80,8 +82,13 @@ export const MobileLiveSlider: React.FC<MobileLiveSliderProps> = ({ matches }) =
       {/* SWIPEABLE & AUTO-SLIDING CAROUSEL CONTAINER */}
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar py-1 px-1 scroll-smooth"
+        className={
+          isSingle
+            ? "w-full py-1 px-1"
+            : "flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar py-1 px-1 scroll-smooth"
+        }
         onScroll={(e) => {
+          if (isSingle) return;
           const target = e.currentTarget;
           const cardWidth = target.firstElementChild?.clientWidth || 290;
           const index = Math.round(target.scrollLeft / (cardWidth + 16));
@@ -97,7 +104,11 @@ export const MobileLiveSlider: React.FC<MobileLiveSliderProps> = ({ matches }) =
           const targetLink = `/${catSlug}/${subSlug}/${matchSlug}`;
 
           const CardContent = (
-            <div className="relative w-[290px] xs:w-[320px] shrink-0 snap-center rounded-[24px] bg-gradient-to-br from-[#37003c] via-[#2d0032] to-[#1a001d] text-white p-4.5 shadow-xl border border-purple-500/30 overflow-hidden group">
+            <div
+              className={`relative ${
+                isSingle ? 'w-full' : 'w-[290px] xs:w-[320px] shrink-0 snap-center'
+              } rounded-[24px] bg-gradient-to-br from-[#37003c] via-[#2d0032] to-[#1a001d] text-white p-4.5 shadow-xl border border-purple-500/30 overflow-hidden group`}
+            >
 
               {/* Subtle background emblem pattern */}
               <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none">
@@ -118,7 +129,9 @@ export const MobileLiveSlider: React.FC<MobileLiveSliderProps> = ({ matches }) =
               {m.matchType === 'team_vs_team' && (m.homeTeam || m.awayTeam) ? (
                 <div className="flex items-center justify-between relative z-10 px-1 gap-2">
                   {/* HOME TEAM */}
-                  <div className="flex flex-col items-center text-center flex-1 min-w-0 max-w-[105px] xs:max-w-[115px]">
+                  <div className={`flex flex-col items-center text-center flex-1 min-w-0 ${
+                    isSingle ? 'max-w-[140px] xs:max-w-[170px]' : 'max-w-[105px] xs:max-w-[115px]'
+                  }`}>
                     <div className="h-11 w-11 sm:h-12 sm:w-12 flex items-center justify-center mb-1">
                       {m.homeTeamLogo ? (
                         <img src={m.homeTeamLogo} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain drop-shadow-md" />
@@ -158,7 +171,9 @@ export const MobileLiveSlider: React.FC<MobileLiveSliderProps> = ({ matches }) =
                   </div>
 
                   {/* AWAY TEAM */}
-                  <div className="flex flex-col items-center text-center flex-1 min-w-0 max-w-[105px] xs:max-w-[115px]">
+                  <div className={`flex flex-col items-center text-center flex-1 min-w-0 ${
+                    isSingle ? 'max-w-[140px] xs:max-w-[170px]' : 'max-w-[105px] xs:max-w-[115px]'
+                  }`}>
                     <div className="h-11 w-11 sm:h-12 sm:w-12 flex items-center justify-center mb-1">
                       {m.awayTeamLogo ? (
                         <img src={m.awayTeamLogo} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain drop-shadow-md" />
@@ -193,7 +208,7 @@ export const MobileLiveSlider: React.FC<MobileLiveSliderProps> = ({ matches }) =
           );
 
           return (
-            <Link key={m.id} href={targetLink} className="block">
+            <Link key={m.id} href={targetLink} className={isSingle ? "w-full block" : "block"}>
               {CardContent}
             </Link>
           );
