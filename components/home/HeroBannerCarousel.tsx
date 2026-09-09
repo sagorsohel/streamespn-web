@@ -59,7 +59,7 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({ matches 
     <div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="hidden sm:block w-full mb-6 relative group"
+      className="hidden md:block w-full mb-6 relative group"
     >
       <Link
         href={targetLink}

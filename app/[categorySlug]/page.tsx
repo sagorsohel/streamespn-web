@@ -13,6 +13,8 @@ import { TopLoadingBar, startTopLoader, stopTopLoader } from '@/components/layou
 import { useLiveScoreSync } from '@/lib/useLiveScoreSync';
 import { MatchCard, MatchItem } from '@/components/home/MatchCard';
 import { MatchCardSkeleton } from '@/components/home/MatchCardSkeleton';
+import { HeroBannerCarousel } from '@/components/home/HeroBannerCarousel';
+import { MobileLiveSlider } from '@/components/home/MobileLiveSlider';
 import {
   Radio,
   Clock3,
@@ -374,46 +376,28 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
 
   const selectedSubcatObj = subcategories.find((s) => String(s.id) === selectedSubcategory);
 
+  // Category Banner Matches: Prioritize Live matches first, then Upcoming matches
+  const categoryBannerMatches = React.useMemo(() => {
+    const live = uniqueMatches.filter((m) => m.status === 'live');
+    const upcoming = uniqueMatches.filter((m) => m.status !== 'live');
+    const combined = [...live, ...upcoming];
+    return combined.slice(0, 10);
+  }, [uniqueMatches]);
+
   return (
     <>
       <TopLoadingBar isLoading={matchesLoading} />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-6 pb-12 flex-1 w-full space-y-6">
 
-        <div className="relative overflow-hidden rounded-2xl border border-[var(--border-glass)] bg-[var(--bg-card)] p-5 sm:p-6 flex items-center justify-between gap-4 transition-all duration-300 ">
-          {/* Soft, eye-pleasing background gradient (no glare in light mode) */}
-          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-amber-500/[0.02] to-transparent dark:from-amber-500/15 dark:via-amber-500/5 dark:to-transparent pointer-events-none" />
+        {/* MOBILE ONLY: SLIDING LIVE / TOP EVENTS CAROUSEL */}
+        <MobileLiveSlider matches={categoryBannerMatches.length > 0 ? categoryBannerMatches : matches} />
 
-          <div className="relative z-10 flex items-center justify-between w-full">
-            <div className="flex items-center gap-3.5 sm:gap-5 min-w-0">
-              {/* Soft, aesthetic sport icon badge */}
-              <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-[#F8C831] text-2xl sm:text-3xl shrink-0 shadow-sm font-black">
-                {selectedSubcatObj?.logoUrl || category?.iconUrl ? (
-                  <img
-                    src={selectedSubcatObj?.logoUrl || category?.iconUrl}
-                    alt=""
-                    className="h-7 w-7 sm:h-8 sm:w-8 object-contain"
-                  />
-                ) : (
-                  <span>{getSportIcon(selectedSubcatObj?.name || category?.sportName || categorySlug)}</span>
-                )}
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[var(--text-white)] truncate capitalize">
-                  {selectedSubcatObj ? selectedSubcatObj.name : (category ? `${category.sportName} Events` : `${categorySlug.replace(/-/g, ' ')} Events`)}
-                </h1>
-                <p className="text-xs sm:text-sm font-semibold text-[var(--text-muted)] mt-1">
-                  Live streaming schedules, active leagues & results
-                </p>
-              </div>
-            </div>
+        {/* FULL-WIDTH FEATURED MATCH BANNER CAROUSEL (DESKTOP / TABLET ONLY - HIDDEN ON MOBILE) */}
+        {categoryBannerMatches.length > 0 && (
+          <HeroBannerCarousel matches={categoryBannerMatches} />
+        )}
 
-            {/* Soft Events Pill */}
-            <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 text-xs font-extrabold text-amber-600 dark:text-[#F8C831] shrink-0">
-              <Sparkles className="h-3.5 w-3.5 text-amber-500 dark:text-[#F8C831]" />
-              <span>{uniqueMatches.length} Events</span>
-            </div>
-          </div>
-        </div>
+
 
         {!notFound && category && subcategories.length > 0 && (
           <div className="lg:hidden flex items-center gap-2.5 w-full">
@@ -452,9 +436,9 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
             </p>
           </div>
         ) : (
-          <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex flex-col lg:flex-row gap-6 ">
 
-            <aside className="hidden lg:block w-64 shrink-0 space-y-4">
+            <aside className="hidden lg:block w-64 shrink-0 space-y-4 pt-2">
               <div className="flex items-center justify-between border-b border-[var(--border-glass)] pb-3">
                 <h2 className="text-sm font-black text-[var(--text-white)] uppercase tracking-wider flex items-center gap-2">
                   <Layers className="h-4 w-4 text-[#F8C831]" /> Active Leagues

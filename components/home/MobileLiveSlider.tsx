@@ -14,8 +14,14 @@ export const MobileLiveSlider: React.FC<MobileLiveSliderProps> = ({ matches }) =
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Take up to 10 live matches (or top featured matches)
-  const sliderMatches = matches.slice(0, 10);
+  // Prioritize live matches first, then upcoming (up to 10)
+  const sliderMatches = React.useMemo(() => {
+    const live = matches.filter((m) => m.status === 'live');
+    const upcoming = matches.filter((m) => m.status !== 'live');
+    return [...live, ...upcoming].slice(0, 10);
+  }, [matches]);
+
+  const liveCount = sliderMatches.filter((m) => m.status === 'live').length;
 
   // Auto-slide effect every 3.5 seconds
   useEffect(() => {
@@ -46,13 +52,28 @@ export const MobileLiveSlider: React.FC<MobileLiveSliderProps> = ({ matches }) =
       {/* HEADER TITLE */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <Radio className="h-4 w-4 text-[#40b857] animate-pulse" />
-          <h2 className="text-base font-black text-[var(--text-white)]">
-            Live Event
-          </h2>
+          {liveCount > 0 ? (
+            <>
+              <Radio className="h-4 w-4 text-[#40b857] animate-pulse" />
+              <h2 className="text-base font-black text-[var(--text-white)]">
+                Live Events
+              </h2>
+            </>
+          ) : (
+            <>
+              <span className="text-base">📅</span>
+              <h2 className="text-base font-black text-[var(--text-white)]">
+                Upcoming Events
+              </h2>
+            </>
+          )}
         </div>
-        <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-          {sliderMatches.length} Live
+        <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${
+          liveCount > 0 
+            ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' 
+            : 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20'
+        }`}>
+          {liveCount > 0 ? `${liveCount} Live` : `${sliderMatches.length} Upcoming`}
         </span>
       </div>
 
@@ -110,15 +131,30 @@ export const MobileLiveSlider: React.FC<MobileLiveSliderProps> = ({ matches }) =
                     </span>
                   </div>
 
-                  {/* CENTER SCORE & LIVE MINUTE BADGE */}
+                  {/* CENTER SCORE & LIVE / UPCOMING BADGE */}
                   <div className="flex flex-col items-center justify-center shrink-0 min-w-[70px] px-1">
-                    <span className="text-2xl xs:text-3xl font-black tracking-wider text-[#F8C831] font-sans whitespace-nowrap leading-none mb-1.5 drop-shadow-md">
-                      {m.homeScore ?? 0} : {m.awayScore ?? 0}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 bg-purple-900/90 text-purple-100 border border-purple-400/40 text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-lg whitespace-nowrap">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      LIVE
-                    </span>
+                    {m.status === 'live' ? (
+                      <>
+                        <span className="text-2xl xs:text-3xl font-black tracking-wider text-[#F8C831] font-sans whitespace-nowrap leading-none mb-1.5 drop-shadow-md">
+                          {m.homeScore ?? 0} : {m.awayScore ?? 0}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 bg-purple-900/90 text-purple-100 border border-purple-400/40 text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-lg whitespace-nowrap">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          LIVE
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-lg xs:text-xl font-black tracking-wider text-[#F8C831] font-sans whitespace-nowrap leading-none mb-1.5 drop-shadow-md">
+                          {m.matchTime
+                            ? new Date(m.matchTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            : 'VS'}
+                        </span>
+                        <span className="inline-flex items-center gap-1 bg-purple-900/90 text-purple-200 border border-purple-400/30 text-[9px] font-bold px-2 py-0.5 rounded-full shadow-lg whitespace-nowrap">
+                          UPCOMING
+                        </span>
+                      </>
+                    )}
                   </div>
 
                   {/* AWAY TEAM */}
@@ -140,10 +176,16 @@ export const MobileLiveSlider: React.FC<MobileLiveSliderProps> = ({ matches }) =
                   <h4 className="text-sm font-black text-white px-3 py-1.5 bg-purple-900/80 rounded-xl border border-purple-400/30 truncate max-w-full">
                     {m.title || 'Live Stream Highlight Event'}
                   </h4>
-                  <span className="inline-flex items-center gap-1.5 bg-purple-900/90 text-purple-100 border border-purple-400/40 text-[10px] font-bold px-3 py-1 rounded-full shadow-lg whitespace-nowrap">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    LIVE
-                  </span>
+                  {m.status === 'live' ? (
+                    <span className="inline-flex items-center gap-1.5 bg-purple-900/90 text-purple-100 border border-purple-400/40 text-[10px] font-bold px-3 py-1 rounded-full shadow-lg whitespace-nowrap">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      LIVE
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 bg-purple-900/90 text-purple-200 border border-purple-400/30 text-[9px] font-bold px-2.5 py-0.5 rounded-full shadow-lg whitespace-nowrap">
+                      UPCOMING
+                    </span>
+                  )}
                 </div>
               )}
 

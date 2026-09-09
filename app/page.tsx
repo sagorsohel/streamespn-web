@@ -208,10 +208,12 @@ export default function HomePage() {
     return Array.from(new Map(matches.map((m) => [m.id, m])).values());
   }, [matches]);
 
-  // Featured Hero Matches Carousel (from banner API or fallback to top matches)
+  // Featured Hero Matches Carousel (from banner API or fallback to top matches with live priority)
   const displayedBannerMatches = React.useMemo(() => {
     if (bannerMatches.length > 0) return bannerMatches;
-    return uniqueMatches.slice(0, 10);
+    const live = uniqueMatches.filter((m) => m.status === 'live');
+    const upcoming = uniqueMatches.filter((m) => m.status !== 'live');
+    return [...live, ...upcoming].slice(0, 10);
   }, [bannerMatches, uniqueMatches]);
 
   // Filter 3 Sections: Live, Today's Upcoming, Future Dated
@@ -245,8 +247,8 @@ export default function HomePage() {
       transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] }}
       className="mx-auto max-w-7xl px-4 sm:px-6 pt-3 pb-12 flex-1 w-full"
     >
-      {/* MOBILE ONLY: LATEST 10 LIVE MATCHES AUTO-SLIDING CAROUSEL */}
-      <MobileLiveSlider matches={matches} />
+      {/* MOBILE ONLY: FEATURED MATCHES AUTO-SLIDING CAROUSEL (SAME AS DESKTOP BANNER) */}
+      <MobileLiveSlider matches={displayedBannerMatches} />
 
       {/* FULL-WIDTH FEATURED MATCH BANNER CAROUSEL (DESKTOP / TABLET ONLY - FULL NAVBAR WIDTH) */}
       <HeroBannerCarousel matches={displayedBannerMatches} />
