@@ -114,7 +114,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const initialAdsSettings = await getInitialAds();
-  const headAdsHtml = initialAdsSettings?.headAds || '';
+  const isHeadAdsEnabled = initialAdsSettings?.isHeadAdsEnabled !== false;
+  const headAdsHtml = isHeadAdsEnabled ? (initialAdsSettings?.headAds || '') : '';
 
   return (
     <html
@@ -129,7 +130,7 @@ export default async function RootLayout({
       </head>
       <body suppressHydrationWarning className="min-h-screen bg-[var(--bg-main)] text-[var(--text-white)] flex flex-col font-sans">
         <ThemeProvider>
-          <HeadScriptInjector initialHeadAds={headAdsHtml} />
+          <HeadScriptInjector initialHeadAds={headAdsHtml} isEnabled={isHeadAdsEnabled} />
           <Suspense fallback={null}>
             <TopLoadingBar />
           </Suspense>

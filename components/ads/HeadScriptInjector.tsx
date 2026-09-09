@@ -5,12 +5,21 @@ import api from '@/lib/api';
 
 interface HeadScriptInjectorProps {
   initialHeadAds?: string;
-  hasSsrHeadAds?: boolean;
+  isEnabled?: boolean;
 }
 
-export const HeadScriptInjector: React.FC<HeadScriptInjectorProps> = ({ initialHeadAds }) => {
+export const HeadScriptInjector: React.FC<HeadScriptInjectorProps> = ({ initialHeadAds, isEnabled = true }) => {
   useEffect(() => {
     let isMounted = true;
+
+    // If disabled, remove any existing scripts from head and exit immediately
+    if (isEnabled === false) {
+      const existingContainer = document.getElementById('streamespn-head-scripts');
+      if (existingContainer) {
+        existingContainer.remove();
+      }
+      return;
+    }
 
     const injectScripts = (headAds?: string) => {
       if (!headAds || !headAds.trim()) return;
@@ -58,7 +67,10 @@ export const HeadScriptInjector: React.FC<HeadScriptInjectorProps> = ({ initialH
         const res = await api.get('/ads/fast');
         if (!isMounted) return;
 
-        const headAds = res.data?.data?.settings?.headAds;
+        const settings = res.data?.data?.settings;
+        if (settings?.isHeadAdsEnabled === false) return;
+
+        const headAds = settings?.headAds;
         injectScripts(headAds);
       } catch (err) {
         // silent catch
@@ -70,7 +82,7 @@ export const HeadScriptInjector: React.FC<HeadScriptInjectorProps> = ({ initialH
     return () => {
       isMounted = false;
     };
-  }, [initialHeadAds]);
+  }, [initialHeadAds, isEnabled]);
 
   return null;
 };
