@@ -38,6 +38,7 @@ interface MatchDetailProps {
   categorySlug: string;
   subcategorySlug: string;
   matchSlug: string;
+  initialAdsSettings?: AdsSettings;
 }
 
 const formatExternalUrl = (url?: string) => {
@@ -49,7 +50,7 @@ const formatExternalUrl = (url?: string) => {
   return `https://${trimmed}`;
 };
 
-export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchSlug }: MatchDetailProps) {
+export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchSlug, initialAdsSettings }: MatchDetailProps) {
   const [match, setMatch] = useState<MatchItem | null>(null);
   const [relatedMatches, setRelatedMatches] = useState<MatchItem[]>([]);
 
@@ -67,8 +68,8 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
   const [loading, setLoading] = useState<boolean>(true);
   const [notFound, setNotFound] = useState<boolean>(false);
 
-  // Ads Settings State
-  const [adsSettings, setAdsSettings] = useState<AdsSettings>(() => getAdsSettingsSync());
+  // Ads Settings State (Prefilled with initialAdsSettings for instant 0ms display)
+  const [adsSettings, setAdsSettings] = useState<AdsSettings>(() => initialAdsSettings || getAdsSettingsSync());
 
   useEffect(() => {
     setAdsSettings(getAdsSettingsSync());
@@ -215,7 +216,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
 
       {/* NOT FOUND STATE */}
       {notFound ? (
-        <div className="p-12 text-center border border-[var(--border-glass)] rounded-2xl bg-[var(--bg-card)] space-y-4">
+        <div className="p-12 text-center border border-slate-200/80 dark:border-white/10 rounded-2xl bg-[var(--bg-card)] space-y-4">
           <div className="text-5xl">🏆</div>
           <h2 className="text-xl font-bold text-[var(--text-white)]">Event Not Found</h2>
           <p className="text-xs sm:text-sm text-[var(--text-muted)]">
@@ -240,7 +241,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
           {/* ========================================================================= */}
           {/* 1. TOP SECTION: TEAMS SCOREBOARD BANNER                                   */}
           {/* ========================================================================= */}
-          <div className="rounded-2xl sm:rounded-[22px] border border-[var(--border-glass)] bg-[var(--bg-card)] p-4 sm:p-5 flex items-center justify-between gap-4 w-full mx-auto max-w-[891px]">
+          <div className="rounded-2xl sm:rounded-[22px] border border-slate-200/80 dark:border-white/10 shadow-sm bg-[var(--bg-card)] p-4 sm:p-5 flex items-center justify-between gap-4 w-full mx-auto max-w-[891px]">
             {match.matchType === 'team_vs_team' && (match.homeTeam || match.awayTeam) ? (
               <>
                 {/* HOME TEAM: LOGO + NAME (LEFT) */}
@@ -259,7 +260,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
 
                 {/* CENTER: VS / LIVE SCORE PILL */}
                 <div className="shrink-0 flex flex-col items-center">
-                  <div className="flex items-center justify-center px-4 sm:px-6 py-2 sm:py-2.5 rounded-2xl bg-[var(--bg-main)] border border-[var(--border-glass)] font-black text-sm sm:text-lg font-mono text-[#F8C831]">
+                  <div className="flex items-center justify-center px-4 sm:px-6 py-2 sm:py-2.5 rounded-2xl bg-[var(--bg-main)] border border-slate-200/80 dark:border-white/10 font-black text-sm sm:text-lg font-mono text-[#F8C831]">
                     {isLive || isFinished
                       ? `${match.homeScore ?? 0} - ${match.awayScore ?? 0}`
                       : 'VS'}
@@ -300,7 +301,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
           {/* ========================================================================= */}
           {/* 2. MIDDLE SECTION: VIDEO STREAM PLAYER (891px WIDTH x 500px HEIGHT)        */}
           {/* ========================================================================= */}
-          <div className="relative overflow-hidden rounded-2xl sm:rounded-[24px] border border-[var(--border-glass)] bg-slate-950 group mx-auto w-full max-w-[891px]">
+          <div className="relative overflow-hidden rounded-2xl sm:rounded-[24px] border border-slate-200/80 dark:border-white/10 shadow-sm bg-slate-950 group mx-auto w-full max-w-[891px]">
 
             {/* VIDEO PLAYER CANVAS: 891px x 500px */}
             <div className="relative w-full h-[240px] xs:h-[340px] sm:h-[420px] md:h-[500px] bg-black flex items-center justify-center overflow-hidden">
@@ -332,16 +333,15 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
 
               {/* 2C. STREAM SIGN UP (PRE-RENDERED ON PAGE LOAD FOR INSTANT ZERO-DELAY AD DISPLAY) */}
               <div
-                className={`fixed sm:absolute inset-0 z-[999999] sm:z-30 items-center justify-center bg-black/75 dark:bg-black/85 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none p-4 sm:p-0 overflow-y-auto no-scrollbar transition-all duration-200 ${
-                  showStreamModal && !isConnecting && isPlaying
-                    ? 'flex opacity-100 pointer-events-auto visible'
-                    : 'flex opacity-0 pointer-events-none invisible'
-                }`}
+                className={`fixed sm:absolute inset-0 z-[999999] sm:z-30 items-center justify-center bg-black/75 dark:bg-black/85 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none p-4 sm:p-0 overflow-y-auto no-scrollbar transition-all duration-200 ${showStreamModal && !isConnecting && isPlaying
+                  ? 'flex opacity-100 pointer-events-auto visible'
+                  : 'flex opacity-0 pointer-events-none invisible'
+                  }`}
               >
-                <div className="w-full max-w-sm sm:max-w-none sm:w-full sm:h-full rounded-2xl sm:rounded-none border border-[var(--border-glass)] sm:border-none bg-[var(--bg-card)] sm:bg-[var(--bg-card)]/95 text-[var(--text-white)] p-4 sm:p-6 shadow-2xl sm:shadow-none flex flex-col justify-between my-auto sm:my-0 space-y-3 sm:space-y-4">
+                <div className="w-full max-w-sm sm:max-w-none sm:w-full sm:h-full rounded-2xl sm:rounded-none border border-slate-200 dark:border-white/10 sm:border-none bg-[var(--bg-card)] sm:bg-[var(--bg-card)]/95 text-[var(--text-white)] p-4 sm:p-6 shadow-2xl sm:shadow-none flex flex-col justify-between my-auto sm:my-0 space-y-3 sm:space-y-4">
 
                   {/* TOP BAR */}
-                  <div className="flex items-center justify-between border-b border-[var(--border-glass)] pb-2.5 shrink-0">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-2.5 shrink-0">
                     <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[var(--text-white)]">
                       <Tv className="h-4 w-4 text-[#008ba3] dark:text-cyan-400" />
                       <span className="uppercase tracking-wide font-extrabold truncate max-w-[200px] sm:max-w-md">
@@ -388,12 +388,11 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
                       );
                     })()}
 
-                    {/* SIGNUP AD BANNER - SHOWN UNDER SIGN UP BUTTON WHEN PLAYER MODAL OPENS */}
-                    {showStreamModal && !isConnecting && isPlaying && (adsSettings.modalSignupAds || adsSettings.navAds) && (
+                    {/* SIGNUP AD BANNER - PRE-RENDERED ON PAGE LOAD FOR ZERO DELAY */}
+                    {(adsSettings.modalSignupAds || adsSettings.navAds) && (
                       <div className="w-full max-w-[340px] bg-transparent flex items-center justify-center my-1.5 min-h-[52px]">
                         <AdRenderer
-                          key={`modal-ad-${matchSlug}-${showStreamModal}`}
-                          refreshKey={`modal-${showStreamModal}`}
+                          uniqueKey={`modal-ad-${matchSlug}`}
                           code={adsSettings.modalSignupAds || adsSettings.navAds}
                         />
                       </div>
@@ -401,19 +400,19 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
 
                     {/* 4 FEATURE PILLS GRID */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-xs text-[11px] font-bold text-[var(--text-white)] text-left pt-1">
-                      <div className="flex items-center gap-2 p-2 sm:p-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border-glass)] backdrop-blur-sm">
+                      <div className="flex items-center gap-2 p-2 sm:p-2.5 rounded-xl bg-[var(--bg-main)] border border-slate-200/80 dark:border-white/10 backdrop-blur-sm">
                         <Film className="h-3.5 w-3.5 text-[#008ba3] dark:text-cyan-400 shrink-0" />
                         <span className="truncate">High Quality Streaming</span>
                       </div>
-                      <div className="flex items-center gap-2 p-2 sm:p-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border-glass)] backdrop-blur-sm">
+                      <div className="flex items-center gap-2 p-2 sm:p-2.5 rounded-xl bg-[var(--bg-main)] border border-slate-200/80 dark:border-white/10 backdrop-blur-sm">
                         <Zap className="h-3.5 w-3.5 text-[#008ba3] dark:text-cyan-400 shrink-0" />
                         <span className="truncate">Watch Without Limits</span>
                       </div>
-                      <div className="flex items-center gap-2 p-2 sm:p-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border-glass)] backdrop-blur-sm">
+                      <div className="flex items-center gap-2 p-2 sm:p-2.5 rounded-xl bg-[var(--bg-main)] border border-slate-200/80 dark:border-white/10 backdrop-blur-sm">
                         <Ban className="h-3.5 w-3.5 text-[#008ba3] dark:text-cyan-400 shrink-0" />
                         <span className="truncate">No Ads, 100% Free Access</span>
                       </div>
-                      <div className="flex items-center gap-2 p-2 sm:p-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border-glass)] backdrop-blur-sm">
+                      <div className="flex items-center gap-2 p-2 sm:p-2.5 rounded-xl bg-[var(--bg-main)] border border-slate-200/80 dark:border-white/10 backdrop-blur-sm">
                         <Smartphone className="h-3.5 w-3.5 text-[#008ba3] dark:text-cyan-400 shrink-0" />
                         <span className="truncate">Watch on any device</span>
                       </div>
@@ -468,8 +467,8 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
           {/* ========================================================================= */}
           {/* 3. BOTTOM SECTION: MATCH DETAILS (TIME, LOCATION, LEAGUE, OTHERS)          */}
           {/* ========================================================================= */}
-          <div className="rounded-2xl border border-[var(--border-glass)] bg-[var(--bg-card)] p-5 sm:p-6 space-y-4 mx-auto w-full max-w-[891px]">
-            <div className="border-b border-[var(--border-glass)] pb-3">
+          <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-sm bg-[var(--bg-card)] p-5 sm:p-6 space-y-4 mx-auto w-full max-w-[891px]">
+            <div className="border-b border-slate-100 dark:border-white/10 pb-3">
               <h3 className="text-base font-black text-[var(--text-white)] flex items-center gap-2">
                 <Trophy className="h-4 w-4 text-[#F8C831]" /> Event Details & Schedule
               </h3>
@@ -477,7 +476,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs sm:text-sm">
               {/* Time */}
-              <div className="p-3.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border-glass)] space-y-1">
+              <div className="p-3.5 rounded-xl bg-[var(--bg-main)] border border-slate-200/80 dark:border-white/10 space-y-1">
                 <div className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
                   <Clock3 className="h-3.5 w-3.5 text-indigo-400" /> Match Time
                 </div>
@@ -485,7 +484,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
               </div>
 
               {/* Date */}
-              <div className="p-3.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border-glass)] space-y-1">
+              <div className="p-3.5 rounded-xl bg-[var(--bg-main)] border border-slate-200/80 dark:border-white/10 space-y-1">
                 <div className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
                   <CalendarDays className="h-3.5 w-3.5 text-[#F8C831]" /> Match Date
                 </div>
@@ -493,7 +492,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
               </div>
 
               {/* Location / Venue */}
-              <div className="p-3.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border-glass)] space-y-1">
+              <div className="p-3.5 rounded-xl bg-[var(--bg-main)] border border-slate-200/80 dark:border-white/10 space-y-1">
                 <div className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
                   <MapPin className="h-3.5 w-3.5 text-emerald-400" /> Location / Venue
                 </div>
@@ -511,7 +510,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
                 return (
                   <Link
                     href={subcategoryLink}
-                    className="p-3.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border-glass)] space-y-1 hover:border-[#F8C831] hover:bg-[var(--bg-card-hover)] transition-all block group cursor-pointer"
+                    className="p-3.5 rounded-xl bg-[var(--bg-main)] border border-slate-200/80 dark:border-white/10 space-y-1 hover:border-[#F8C831] hover:bg-[var(--bg-card-hover)] transition-all block group cursor-pointer"
                   >
                     <div className="text-[11px] font-bold text-[var(--text-muted)] group-hover:text-[#F8C831] uppercase tracking-wider flex items-center gap-1.5 transition-colors">
                       <Trophy className="h-3.5 w-3.5 text-amber-400 shrink-0" />

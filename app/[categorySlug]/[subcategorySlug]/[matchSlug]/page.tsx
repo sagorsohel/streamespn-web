@@ -52,13 +52,51 @@ export async function generateMetadata({ params }: SingleMatchProps): Promise<Me
   };
 }
 
+async function getInitialAds() {
+  try {
+    const urls = [
+      process.env.BACKEND_API_URL,
+      process.env.NEXT_PUBLIC_API_URL,
+      'https://backendapi.streamespn.org/api',
+      'http://localhost:5000/api',
+    ].filter(Boolean) as string[];
+
+    for (const rawUrl of urls) {
+      try {
+        const cleanUrl = rawUrl.replace(/\/$/, '');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1500);
+        const res = await fetch(`${cleanUrl}/ads/fast`, {
+          next: { revalidate: 30 },
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.data?.settings) {
+            return data.data.settings;
+          }
+        }
+      } catch {
+        // Try next fallback URL
+      }
+    }
+    return {};
+  } catch (e) {
+    return {};
+  }
+}
+
 export default async function SingleMatchPage({ params }: SingleMatchProps) {
   const { categorySlug, subcategorySlug, matchSlug } = await params;
+  const initialAdsSettings = await getInitialAds();
+
   return (
     <SingleMatchViewComponent
       categorySlug={categorySlug}
       subcategorySlug={subcategorySlug}
       matchSlug={matchSlug}
+      initialAdsSettings={initialAdsSettings}
     />
   );
 }
