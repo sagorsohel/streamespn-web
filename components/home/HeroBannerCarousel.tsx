@@ -43,6 +43,13 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({ matches 
   const matchSlug = currentMatch.slug || String(currentMatch.id);
   const targetLink = `/${catSlug}/${subSlug}/${matchSlug}`;
 
+  const subcatLogo =
+    currentMatch.subcategoryLogo &&
+    !currentMatch.subcategoryLogo.includes('/event/poster/') &&
+    !currentMatch.subcategoryLogo.includes('/event/thumb/')
+      ? currentMatch.subcategoryLogo
+      : currentMatch.categoryLogo || null;
+
   const handlePrev = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -141,7 +148,11 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({ matches 
             ) : (
               <div className="flex flex-col items-center justify-center space-y-2 py-1 max-w-2xl mx-auto">
                 <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#F8C831]/20 border border-[#F8C831]/40 text-[#F8C831] text-xs font-black uppercase tracking-wider">
-                  <span>🏆</span>
+                  {subcatLogo ? (
+                    <img src={subcatLogo} alt="" className="h-4 w-4 object-contain" />
+                  ) : (
+                    <span>🏆</span>
+                  )}
                   <span>{currentMatch.subcategoryName || currentMatch.categoryName || 'Special Live Event'}</span>
                 </div>
                 <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight drop-shadow-md">
@@ -152,7 +163,10 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({ matches 
 
             {/* TIME & WATCH STREAM BUTTON */}
             <div className="flex flex-wrap items-center justify-center gap-4 pt-1">
-              <span className="text-xs font-extrabold text-amber-300 font-mono">
+              <span className="text-xs font-extrabold text-amber-300 font-mono inline-flex items-center gap-1.5">
+                {subcatLogo && (
+                  <img src={subcatLogo} alt="" className="h-3.5 w-3.5 object-contain inline-block" />
+                )}
                 {currentMatch.matchTime
                   ? new Date(currentMatch.matchTime).toLocaleTimeString('en-US', {
                     hour: '2-digit',

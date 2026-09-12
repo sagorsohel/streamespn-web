@@ -301,9 +301,13 @@ export default function HomePage() {
                   >
                     <div className="flex items-center gap-2.5 truncate flex-1 min-w-0 mr-1.5">
                       {subcat.logoUrl ? (
-                        <img src={subcat.logoUrl} alt="" className="h-5 w-5 object-contain shrink-0 rounded-sm" />
+                        <div className="h-6 w-6 rounded-full bg-white border border-[#F8C831] p-[3px] flex items-center justify-center shrink-0 shadow-sm">
+                          <img src={subcat.logoUrl} alt="" className="max-h-full max-w-full object-contain drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]" />
+                        </div>
                       ) : (
-                        <span className="text-sm shrink-0">🏆</span>
+                        <div className="h-6 w-6 rounded-full bg-white border border-[#F8C831] p-[3px] flex items-center justify-center shrink-0 shadow-sm">
+                          <span className="text-xs">🏆</span>
+                        </div>
                       )}
                       <span className="text-[14px] font-semibold leading-[1.5] truncate flex-1 text-left">
                         {subcat.name}

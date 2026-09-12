@@ -11,7 +11,7 @@ const getBaseUrl = () => {
     process.env.BACKEND_API_URL ||
     (process.env.NODE_ENV === 'production'
       ? 'https://backendapi.streamespn.org/api'
-      : 'http://localhost:5000/api');
+      : 'http://localhost:5001/api');
 
   return rawUrl.replace(/\/$/, '');
 };

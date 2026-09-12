@@ -14,7 +14,12 @@ const nextConfig: NextConfig = {
     '10.0.0.*'
   ],
   async rewrites() {
-    const rawBackend = process.env.BACKEND_API_URL || (process.env.NODE_ENV === 'production' ? 'https://backendapi.streamespn.org/api' : 'http://localhost:5000/api');
+    const rawBackend =
+      process.env.BACKEND_API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      (process.env.NODE_ENV === 'production'
+        ? 'https://backendapi.streamespn.org/api'
+        : 'http://localhost:5001/api');
     const cleanBackend = rawBackend.replace(/\/$/, '');
     const backendDestination = cleanBackend.endsWith('/:path*') ? cleanBackend : `${cleanBackend}/:path*`;
     return [

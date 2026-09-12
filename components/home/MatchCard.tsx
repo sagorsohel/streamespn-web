@@ -65,6 +65,13 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
   const matchSlug = match.slug || String(match.id);
   const targetLink = `/${catSlug}/${subSlug}/${matchSlug}`;
 
+  const leagueLogo =
+    match.subcategoryLogo &&
+    !match.subcategoryLogo.includes('/event/poster/') &&
+    !match.subcategoryLogo.includes('/event/thumb/')
+      ? match.subcategoryLogo
+      : match.categoryLogo || null;
+
   return (
     <Link
       href={targetLink}
@@ -82,9 +89,9 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
         <div className="flex items-center justify-between w-full">
           {/* Left: League Logo + League Name */}
           <div className="flex items-center gap-1.5 min-w-0 flex-1 pr-2">
-            <div className="h-4 w-4 shrink-0 flex items-center justify-center">
-              {match.subcategoryLogo || match.categoryLogo ? (
-                <img src={match.subcategoryLogo || match.categoryLogo} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain" />
+            <div className="h-5 w-5 rounded-full bg-white border border-[#F8C831] p-0.5 shrink-0 flex items-center justify-center shadow-xs">
+              {leagueLogo ? (
+                <img src={leagueLogo} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]" />
               ) : (
                 <span className="text-[10px]">🏆</span>
               )}
@@ -164,9 +171,9 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
 
         {/* LEFT COLUMN: LEAGUE LOGO + STATUS/TIME + LEAGUE NAME */}
         <div className="flex items-center gap-3 w-[170px] xs:w-[210px] sm:w-[250px] shrink-0 min-w-0">
-          <div className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 flex items-center justify-center">
-            {match.subcategoryLogo || match.categoryLogo ? (
-              <img src={match.subcategoryLogo || match.categoryLogo} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain" />
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-white border border-[#F8C831] p-1 shrink-0 flex items-center justify-center shadow-sm">
+            {leagueLogo ? (
+              <img src={leagueLogo} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]" />
             ) : (
               <span className="text-base">🏆</span>
             )}

@@ -290,7 +290,11 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
             ) : (
               <div className="w-full text-center py-2 space-y-1">
                 <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[#F8C831] font-black text-xs uppercase tracking-wider">
-                  <span>🏆</span>
+                  {match.subcategoryLogo || match.categoryLogo ? (
+                    <img src={match.subcategoryLogo || match.categoryLogo} alt="" className="h-4 w-4 object-contain" />
+                  ) : (
+                    <span>🏆</span>
+                  )}
                   <span>{match.subcategoryName || match.categoryName || 'Special Event'}</span>
                 </div>
                 <h1 className="text-lg sm:text-2xl font-black text-[var(--text-white)]">{match.title || match.homeTeam || 'Live Stream Event'}</h1>
