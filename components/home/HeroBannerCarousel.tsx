@@ -75,13 +75,12 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({ matches 
             transition={{ duration: 0.5 }}
             className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
             style={{
-              backgroundImage: `url(${
-                currentMatch.playerImage ||
+              backgroundImage: `url(${currentMatch.playerImage ||
                 currentMatch.bgImage ||
                 currentMatch.categoryPlayerImage ||
                 currentMatch.categoryThumbUrl ||
                 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80'
-              })`,
+                })`,
             }}
           />
         </AnimatePresence>
@@ -101,7 +100,7 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({ matches 
             {/* Status Badge */}
             <span className="inline-flex items-center gap-1.5 text-xs font-black text-white px-3.5 py-1 bg-[#40b857] rounded-full shadow-lg">
               <span className="h-2 w-2 rounded-full bg-white animate-ping" />
-              {currentMatch.status === 'live' ? 'Featured Live Event' : 'Upcoming Highlight'}
+              {currentMatch.status === 'live' ? 'Featured Live Event' : 'Upcoming '}
             </span>
 
             {/* Teams vs Banner or Title Event Banner */}
@@ -156,10 +155,10 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({ matches 
               <span className="text-xs font-extrabold text-amber-300 font-mono">
                 {currentMatch.matchTime
                   ? new Date(currentMatch.matchTime).toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: false,
-                    })
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false,
+                  })
                   : ''}{' '}
                 - {currentMatch.subcategoryName || currentMatch.categoryName || 'Tournament'}
               </span>
@@ -184,11 +183,10 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({ matches 
                   e.stopPropagation();
                   setCurrentIndex(idx);
                 }}
-                className={`transition-all rounded-full ${
-                  currentIndex === idx
+                className={`transition-all rounded-full ${currentIndex === idx
                     ? 'w-6 h-1.5 bg-[#F8C831]'
                     : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'
-                }`}
+                  }`}
                 title={`Slide ${idx + 1}`}
               />
             ))}
