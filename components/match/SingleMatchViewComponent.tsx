@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import HomePage from '@/app/page';
 import api from '@/lib/api';
 import { slugify } from '@/lib/utils';
 import { MatchCard, MatchItem } from '@/components/home/MatchCard';
@@ -198,6 +199,10 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
 
   const matchTitle = match?.matchType === 'team_vs_team' ? `${match.homeTeam} VS ${match.awayTeam}` : match?.title || 'Match Stream';
 
+  if (notFound) {
+    return <HomePage />;
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-3 pb-12 flex-1 w-full">
       {match && (
@@ -212,30 +217,13 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
         />
       )}
 
-
-
-      {/* NOT FOUND STATE */}
-      {notFound ? (
-        <div className="p-12 text-center border border-slate-200/80 dark:border-white/10 rounded-2xl bg-[var(--bg-card)] space-y-4">
-          <div className="text-5xl">🏆</div>
-          <h2 className="text-xl font-bold text-[var(--text-white)]">Event Not Found</h2>
-          <p className="text-xs sm:text-sm text-[var(--text-muted)]">
-            The requested event "{matchSlug}" could not be located or may have ended.
-          </p>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 rounded-xl bg-[#F8C831] px-5 py-2.5 text-xs font-black text-black shadow-md hover:bg-yellow-400"
-          >
-            Back to Live Events
-          </Link>
-        </div>
-      ) : loading ? (
+      {loading ? (
         <div className="space-y-6 mx-auto w-full max-w-[891px]">
           <div className="h-20 w-full rounded-2xl bg-slate-300 dark:bg-zinc-800 animate-pulse" />
           <div className="h-[320px] sm:h-[450px] w-full rounded-2xl bg-slate-300 dark:bg-zinc-800 animate-pulse" />
           <div className="h-44 w-full rounded-2xl bg-slate-300 dark:bg-zinc-800 animate-pulse" />
         </div>
-      ) : match && (
+      ) : match ? (
         <div className="space-y-6">
 
           {/* ========================================================================= */}
@@ -550,7 +538,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
             </div>
           )}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

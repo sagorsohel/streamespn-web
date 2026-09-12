@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import HomePage from '@/app/page';
 import api from '@/lib/api';
 import { getCategories, clearCategoriesCache } from '@/lib/categories';
 import { getCachedMatches, setCachedMatches, getCachedSubcategories, setCachedSubcategories } from '@/lib/matchesCache';
@@ -78,12 +79,9 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
   const [category, setCategory] = useState<Category | null>(null);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [matches, setMatches] = useState<MatchItem[]>([]);
-  const [recommendedMatches, setRecommendedMatches] = useState<MatchItem[]>([]);
-  const [recommendedLoading, setRecommendedLoading] = useState<boolean>(false);
 
   // 🔄 REAL-TIME SILENT LIVE SCORE & MINUTE SYNC (15s interval)
   useLiveScoreSync(matches, setMatches);
-  useLiveScoreSync(recommendedMatches, setRecommendedMatches);
 
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -189,7 +187,10 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
         }
 
         if (!sportsList || sportsList.length === 0) {
-          if (isMounted) setNotFound(true);
+          if (isMounted) {
+            setNotFound(true);
+            setLoading(false);
+          }
           return;
         }
 
@@ -198,7 +199,10 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
         );
 
         if (!targetCategory) {
-          if (isMounted) setNotFound(true);
+          if (isMounted) {
+            setNotFound(true);
+            setLoading(false);
+          }
           return;
         }
 
@@ -300,44 +304,7 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
     };
   }, [categorySlug]);
 
-  // Fetch 5 recommended matches (prioritizing live, then upcoming/random) when category is not found
-  useEffect(() => {
-    if (!notFound) return;
 
-    let isMounted = true;
-    const fetchRecommended = async () => {
-      setRecommendedLoading(true);
-      try {
-        const res = await api.get('/matches?limit=40');
-        if (res.data?.success && Array.isArray(res.data?.data?.matches)) {
-          const all: MatchItem[] = res.data.data.matches;
-          const live = all.filter((m) => m.status === 'live');
-          const upcoming = all.filter((m) => m.status === 'upcoming');
-          const others = all.filter((m) => m.status !== 'live' && m.status !== 'upcoming');
-
-          // Shuffle upcoming/others to give a pleasant random dynamic variety
-          const shuffledUpcoming = [...upcoming].sort(() => 0.5 - Math.random());
-          const shuffledOthers = [...others].sort(() => 0.5 - Math.random());
-
-          // Prioritize live matches, then upcoming, then others, taking top 5
-          const combined = [...live, ...shuffledUpcoming, ...shuffledOthers].slice(0, 5);
-
-          if (isMounted) {
-            setRecommendedMatches(combined);
-          }
-        }
-      } catch (err) {
-        // ignore
-      } finally {
-        if (isMounted) setRecommendedLoading(false);
-      }
-    };
-
-    fetchRecommended();
-    return () => {
-      isMounted = false;
-    };
-  }, [notFound]);
 
   useEffect(() => {
     if (!subcategories.length || !category) return;
@@ -427,6 +394,10 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
     return combined.slice(0, 10);
   }, [uniqueMatches]);
 
+  if (notFound) {
+    return <HomePage />;
+  }
+
   return (
     <>
       <TopLoadingBar isLoading={matchesLoading} />
@@ -479,83 +450,6 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
           </div>
         )}
 
-        {notFound ? (
-          <div className="space-y-6 w-full max-w-5xl mx-auto py-2">
-            {/* Compact, modern Category Not Found banner */}
-            <div className="relative overflow-hidden rounded-2xl border border-[var(--border-glass)] bg-[var(--bg-card)] p-4 sm:p-5 shadow-lg backdrop-blur-md">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/20 text-xl shadow-inner">
-                    🔍
-                  </div>
-                  <div className="min-w-0">
-                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-[10px] font-black text-rose-500 uppercase tracking-wider mb-0.5">
-                      Category Not Found
-                    </div>
-                    <h2 className="text-sm sm:text-base font-bold text-[var(--text-white)] truncate">
-                      The sports category &ldquo;{categorySlug}&rdquo; could not be located.
-                    </h2>
-                    <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                      Explore today&apos;s featured live &amp; upcoming streams below or browse all sports.
-                    </p>
-                  </div>
-                </div>
-
-                <Link
-                  href="/"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#F8C831] hover:bg-yellow-400 px-4 py-2 text-xs font-black text-black shadow-md transition-transform hover:scale-105 shrink-0"
-                >
-                  <span>Explore All Sports</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </div>
-
-            {/* 5 Recommended Live / Upcoming Match Cards */}
-            <div className="space-y-3 pt-1">
-              <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-2">
-                  {recommendedMatches.some((m) => m.status === 'live') ? (
-                    <>
-                      <Radio className="h-4 w-4 text-emerald-500 animate-pulse" />
-                      <h3 className="text-sm sm:text-base font-black text-[var(--text-white)] tracking-wide">
-                        Live &amp; Upcoming Matches
-                      </h3>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4 text-[#F8C831]" />
-                      <h3 className="text-sm sm:text-base font-black text-[var(--text-white)] tracking-wide">
-                        Top Upcoming Matches
-                      </h3>
-                    </>
-                  )}
-                </div>
-                <span className="text-[11px] font-bold text-[var(--text-muted)] bg-[var(--bg-card)] border border-[var(--border-glass)] px-2.5 py-0.5 rounded-full">
-                  5 Featured Matches
-                </span>
-              </div>
-
-              {recommendedLoading && recommendedMatches.length === 0 ? (
-                <div className="space-y-2.5">
-                  {[...Array(5)].map((_, i) => (
-                    <MatchCardSkeleton key={i} />
-                  ))}
-                </div>
-              ) : recommendedMatches.length > 0 ? (
-                <div className="space-y-2.5">
-                  {recommendedMatches.map((m) => (
-                    <MatchCard key={m.id} match={m} />
-                  ))}
-                </div>
-              ) : (
-                <div className="p-8 text-center border border-[var(--border-glass)] rounded-xl bg-[var(--bg-card)] text-xs text-[var(--text-muted)]">
-                  No matches currently scheduled. Check back shortly!
-                </div>
-              )}
-            </div>
-          </div>
-        ) : (
           <div className="flex flex-col lg:flex-row gap-6 ">
 
             <aside className="hidden lg:block w-64 shrink-0 space-y-4 pt-2">
@@ -746,7 +640,6 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
               )}
             </main>
           </div>
-        )}
       </div>
 
       {isMobileSubcatOpen && (
