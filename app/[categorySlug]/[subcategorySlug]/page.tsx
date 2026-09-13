@@ -102,7 +102,7 @@ export async function generateMetadata({ params }: NestedPageProps): Promise<Met
     // fallback
   }
 
-  const pageTitle = `${subName} - ${cateName} | StreamESPN`;
+  const pageTitle = `${subName} (${cateName}) Live | StreamESPN`;
 
   return {
     title: {

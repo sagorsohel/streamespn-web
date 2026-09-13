@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import HomePage from '@/app/page';
+import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { slugify } from '@/lib/utils';
 import { MatchCard, MatchItem } from '@/components/home/MatchCard';
@@ -52,8 +52,72 @@ const formatExternalUrl = (url?: string) => {
 };
 
 export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchSlug, initialAdsSettings }: MatchDetailProps) {
+  const router = useRouter();
   const [match, setMatch] = useState<MatchItem | null>(null);
   const [relatedMatches, setRelatedMatches] = useState<MatchItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [notFound, setNotFound] = useState<boolean>(false);
+
+  // Redirect hierarchically if match is not found: subcategory -> category -> home
+  useEffect(() => {
+    if (!notFound) return;
+
+    let isMounted = true;
+    const handleRedirect = async () => {
+      try {
+        const sportsRes = await api.get('/sports', { timeout: 5000 });
+        const sportsList = sportsRes.data?.success && Array.isArray(sportsRes.data?.data?.sports)
+          ? sportsRes.data.data.sports
+          : [];
+
+        const matchedCategory = sportsList.find(
+          (c: any) =>
+            slugify(c.sportName || '') === categorySlug.toLowerCase() ||
+            c.sportName?.toLowerCase().replace(/\s+/g, '-') === categorySlug.toLowerCase() ||
+            c.sportName?.toLowerCase() === categorySlug.replace(/-/g, ' ').toLowerCase() ||
+            String(c.id) === categorySlug
+        );
+
+        if (matchedCategory) {
+          const validCategorySlug = slugify(matchedCategory.sportName);
+
+          if (subcategorySlug && subcategorySlug !== 'all') {
+            try {
+              const subRes = await api.get(`/subcategories?categoryId=${matchedCategory.id}`, { timeout: 5000 });
+              const subList = subRes.data?.success && Array.isArray(subRes.data?.data?.subcategories)
+                ? subRes.data.data.subcategories
+                : [];
+
+              const matchedSub = subList.find(
+                (s: any) =>
+                  slugify(s.name || '') === subcategorySlug.toLowerCase() ||
+                  s.name?.toLowerCase().replace(/\s+/g, '-') === subcategorySlug.toLowerCase() ||
+                  s.name?.toLowerCase() === subcategorySlug.replace(/-/g, ' ').toLowerCase() ||
+                  String(s.id) === subcategorySlug
+              );
+
+              if (matchedSub) {
+                const validSubSlug = slugify(matchedSub.name);
+                if (isMounted) router.replace(`/${validCategorySlug}/${validSubSlug}`);
+                return;
+              }
+            } catch (e) { }
+          }
+
+          if (isMounted) router.replace(`/${validCategorySlug}`);
+          return;
+        }
+      } catch (e) { }
+
+      if (isMounted) router.replace('/');
+    };
+
+    handleRedirect();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [notFound, categorySlug, subcategorySlug, router]);
 
   // 🔄 REAL-TIME SILENT LIVE SCORE & MINUTE SYNC (15s interval)
   useLiveScoreSync(match ? [match] : [], (updatedArr) => {
@@ -65,9 +129,6 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
       });
     }
   });
-
-  const [loading, setLoading] = useState<boolean>(true);
-  const [notFound, setNotFound] = useState<boolean>(false);
 
   // Ads Settings State (Prefilled with initialAdsSettings for instant 0ms display)
   const [adsSettings, setAdsSettings] = useState<AdsSettings>(() => initialAdsSettings || getAdsSettingsSync());
@@ -257,7 +318,12 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
   const matchTitle = match?.matchType === 'team_vs_team' ? `${match.homeTeam} VS ${match.awayTeam}` : match?.title || 'Match Stream';
 
   if (notFound) {
-    return <HomePage />;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#070b13] text-white">
+        <div className="w-10 h-10 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-gray-400 text-sm font-medium">Redirecting to event category...</p>
+      </div>
+    );
   }
 
   return (

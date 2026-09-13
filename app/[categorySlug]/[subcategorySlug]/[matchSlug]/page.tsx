@@ -1,6 +1,8 @@
 import React from 'react';
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import api from '@/lib/api';
+import { slugify } from '@/lib/utils';
 import { SingleMatchViewComponent } from '@/components/match/SingleMatchViewComponent';
 
 interface SingleMatchProps {
@@ -87,8 +89,83 @@ async function getInitialAds() {
   }
 }
 
+async function getNotFoundFallback(categorySlug: string, subcategorySlug: string): Promise<string> {
+  try {
+    const sportsRes = await api.get('/sports', { timeout: 5000 });
+    const sportsList = sportsRes.data?.success && Array.isArray(sportsRes.data?.data?.sports)
+      ? sportsRes.data.data.sports
+      : [];
+
+    const matchedCategory = sportsList.find(
+      (c: any) =>
+        slugify(c.sportName || '') === categorySlug.toLowerCase() ||
+        c.sportName?.toLowerCase().replace(/\s+/g, '-') === categorySlug.toLowerCase() ||
+        c.sportName?.toLowerCase() === categorySlug.replace(/-/g, ' ').toLowerCase() ||
+        String(c.id) === categorySlug
+    );
+
+    if (matchedCategory) {
+      const validCategorySlug = slugify(matchedCategory.sportName);
+
+      if (subcategorySlug && subcategorySlug !== 'all') {
+        try {
+          const subRes = await api.get(`/subcategories?categoryId=${matchedCategory.id}`, { timeout: 5000 });
+          const subList = subRes.data?.success && Array.isArray(subRes.data?.data?.subcategories)
+            ? subRes.data.data.subcategories
+            : [];
+
+          const matchedSub = subList.find(
+            (s: any) =>
+              slugify(s.name || '') === subcategorySlug.toLowerCase() ||
+              s.name?.toLowerCase().replace(/\s+/g, '-') === subcategorySlug.toLowerCase() ||
+              s.name?.toLowerCase() === subcategorySlug.replace(/-/g, ' ').toLowerCase() ||
+              String(s.id) === subcategorySlug
+          );
+
+          if (matchedSub) {
+            const validSubSlug = slugify(matchedSub.name);
+            return `/${validCategorySlug}/${validSubSlug}`;
+          }
+        } catch (e) { }
+      }
+
+      return `/${validCategorySlug}`;
+    }
+  } catch (e) { }
+
+  return '/';
+}
+
 export default async function SingleMatchPage({ params }: SingleMatchProps) {
   const { categorySlug, subcategorySlug, matchSlug } = await params;
+
+  let matchFound = false;
+  try {
+    const rawSlug = matchSlug;
+    let decodedSlug = rawSlug;
+    try {
+      decodedSlug = decodeURIComponent(rawSlug);
+    } catch (e) { }
+
+    let res = await api.get(`/matches/${rawSlug}`, { timeout: 8000 });
+    if (!res.data?.success || !res.data?.data?.match) {
+      if (decodedSlug !== rawSlug) {
+        res = await api.get(`/matches/${decodedSlug}`, { timeout: 8000 });
+      }
+    }
+
+    if (res.data?.success && res.data?.data?.match) {
+      matchFound = true;
+    }
+  } catch (err: any) {
+    matchFound = false;
+  }
+
+  if (!matchFound) {
+    const fallbackUrl = await getNotFoundFallback(categorySlug, subcategorySlug);
+    redirect(fallbackUrl);
+  }
+
   const initialAdsSettings = await getInitialAds();
 
   return (

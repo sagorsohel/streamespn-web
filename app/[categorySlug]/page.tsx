@@ -55,7 +55,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { categorySlug } = await params;
   const categoryName = await getCategoryName(categorySlug);
-  const pageTitle = `${categoryName} | StreamESPN`;
+  const pageTitle = `(${categoryName}) Live | StreamESPN`;
 
   return {
     title: {

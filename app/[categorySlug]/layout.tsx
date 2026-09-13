@@ -55,7 +55,7 @@ interface CategoryLayoutProps {
 export async function generateMetadata({ params }: { params: Promise<{ categorySlug: string }> }): Promise<Metadata> {
   const { categorySlug } = await params;
   const categoryName = await getCategoryName(categorySlug);
-  const pageTitle = `${categoryName} | StreamESPN - Watch Live Sports & All Events Online FREE `;
+  const pageTitle = `(${categoryName}) Live | StreamESPN`;
 
   return {
     title: {
