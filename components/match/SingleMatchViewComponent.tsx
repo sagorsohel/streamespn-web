@@ -308,13 +308,25 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
 
               {/* 2A. UNSTARTED OVERLAY SCREEN */}
               {!isPlaying ? (
-                <div className="relative z-10 flex flex-col items-center justify-center p-6 text-center space-y-4">
-                  <button
-                    onClick={handlePlayClick}
-                    className="flex h-16 w-16 sm:h-24 sm:w-24 items-center justify-center rounded-full border-2 border-[#F8C831] bg-[#F8C831]/20 text-[#F8C831] shadow-[0_0_35px_rgba(248,200,49,0.4)] group-hover:scale-110 hover:border-yellow-300 hover:bg-[#F8C831]/30 transition-all cursor-pointer"
-                  >
-                    <Play className="h-8 w-8 sm:h-12 sm:w-12 fill-[#F8C831] text-[#F8C831] ml-1" />
-                  </button>
+                <div
+                  onClick={handlePlayClick}
+                  className="relative z-10 flex flex-col items-center justify-center p-6 text-center space-y-3 sm:space-y-4 cursor-pointer select-none"
+                >
+                  <div className="relative flex items-center justify-center">
+                    {/* Animated Pulsing Ambient Waves */}
+                    <div className="absolute -inset-3 sm:-inset-4 rounded-full border-2 border-[#F8C831] opacity-75 animate-ping pointer-events-none" />
+                    <div className="absolute -inset-2 sm:-inset-2.5 rounded-full bg-[#F8C831]/40 blur-md animate-pulse group-hover:bg-[#F8C831]/60 pointer-events-none" />
+
+                    {/* Main Highlighted & Filled Play Button */}
+                    <button
+                      type="button"
+                      onClick={handlePlayClick}
+                      className="relative flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-gradient-to-tr from-[#E5B520] via-[#F8C831] to-[#FFE066] text-black shadow-[0_0_35px_rgba(248,200,49,0.85),0_10px_25px_rgba(0,0,0,0.8)] border-2 border-white/90 transform transition-all duration-300 group-hover:scale-115 group-hover:shadow-[0_0_55px_rgba(248,200,49,1)] active:scale-95 cursor-pointer ring-4 ring-black/50"
+                      title="Click to Start Streaming"
+                    >
+                      <Play className="h-7 w-7 sm:h-9 sm:w-9 fill-black text-black ml-1 drop-shadow-md" />
+                    </button>
+                  </div>
                 </div>
               ) : isConnecting ? (
                 /* 2B. CONNECTING SPINNER PHASE */
