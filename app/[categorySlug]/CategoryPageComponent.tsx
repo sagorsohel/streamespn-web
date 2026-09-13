@@ -416,9 +416,38 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
     );
   };
 
+  const isFuture = (dateStr: string) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    const now = new Date();
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    return d.getTime() > endOfToday.getTime();
+  };
+
+  const isPastEnded = (dateStr: string) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    const now = new Date();
+    return d.getTime() < now.getTime() - 3.5 * 60 * 60 * 1000;
+  };
+
   const liveMatches = React.useMemo(() => uniqueMatches.filter((m) => m.status === 'live'), [uniqueMatches]);
-  const todayUpcomingMatches = React.useMemo(() => uniqueMatches.filter((m) => m.status !== 'live' && isToday(m.matchTime)), [uniqueMatches]);
-  const tomorrowUpcomingMatches = React.useMemo(() => uniqueMatches.filter((m) => m.status !== 'live' && !isToday(m.matchTime)), [uniqueMatches]);
+  const todayUpcomingMatches = React.useMemo(
+    () =>
+      uniqueMatches.filter((m) => {
+        if (m.status === 'live' || m.status === 'finished') return false;
+        return isToday(m.matchTime) && !isPastEnded(m.matchTime);
+      }),
+    [uniqueMatches]
+  );
+  const tomorrowUpcomingMatches = React.useMemo(
+    () =>
+      uniqueMatches.filter((m) => {
+        if (m.status === 'live' || m.status === 'finished') return false;
+        return isFuture(m.matchTime);
+      }),
+    [uniqueMatches]
+  );
 
   const selectedSubcatObj = subcategories.find((s) => String(s.id) === selectedSubcategory);
 
@@ -589,7 +618,7 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
                         </div>
                         <div className="relative inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--bg-card)] border border-[var(--border-glass)] text-[11px] font-black uppercase tracking-wider text-[var(--text-white)] shadow-sm">
                           <Radio className="h-3.5 w-3.5 text-[#40b857] animate-pulse" />
-                          <span>LIVE EVENTS</span>
+                          <span>Live Events</span>
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#40b857]/10 text-[#40b857] border border-[#40b857]/20 font-bold">
                             {liveMatches.length}
                           </span>
@@ -611,7 +640,7 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
                         </div>
                         <div className="relative inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--bg-card)] border border-[var(--border-glass)] text-[11px] font-black uppercase tracking-wider text-[var(--text-white)] shadow-sm">
                           <Clock3 className="h-3.5 w-3.5 text-indigo-400" />
-                          <span>UPCOMING</span>
+                          <span>Upcoming Today</span>
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold">
                             {todayUpcomingMatches.length}
                           </span>
@@ -626,40 +655,24 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
                   )}
 
                   {tomorrowUpcomingMatches.length > 0 && (
-                    <div className="space-y-6 pt-2">
-                      {(() => {
-                        const groupedTomorrow: { [key: string]: MatchItem[] } = {};
-                        tomorrowUpcomingMatches.forEach((m) => {
-                          const matchDate = m.matchTime ? new Date(m.matchTime) : new Date();
-                          const dateFormatted = matchDate.toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            month: 'long',
-                            day: 'numeric',
-                            year: 'numeric',
-                          }).toUpperCase();
-                          if (!groupedTomorrow[dateFormatted]) groupedTomorrow[dateFormatted] = [];
-                          groupedTomorrow[dateFormatted].push(m);
-                        });
-
-                        return Object.entries(groupedTomorrow).map(([dateHeader, items]) => (
-                          <div key={dateHeader} className="space-y-3">
-                            <div className="relative flex items-center justify-center my-6">
-                              <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-[var(--border-glass)]" />
-                              </div>
-                              <div className="relative inline-flex items-center gap-2 px-4.5 py-1.5 rounded-full bg-[var(--bg-card)] border border-[var(--border-glass)] text-[11px] font-black uppercase tracking-wider text-[var(--text-white)] shadow-sm font-mono">
-                                <CalendarDays className="h-3.5 w-3.5 text-[#F8C831]" />
-                                <span>{dateHeader}</span>
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              {items.map((m) => (
-                                <MatchCard key={m.id} match={m} />
-                              ))}
-                            </div>
-                          </div>
-                        ));
-                      })()}
+                    <div className="space-y-3 pt-2">
+                      <div className="relative flex items-center justify-center my-6">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-[var(--border-glass)]" />
+                        </div>
+                        <div className="relative inline-flex items-center gap-2 px-4.5 py-1.5 rounded-full bg-[var(--bg-card)] border border-[var(--border-glass)] text-[11px] font-black uppercase tracking-wider text-[var(--text-white)] shadow-sm">
+                          <CalendarDays className="h-3.5 w-3.5 text-[#F8C831]" />
+                          <span>Next Date</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F8C831]/10 text-[#F8C831] border border-[#F8C831]/20 font-bold">
+                            {tomorrowUpcomingMatches.length}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        {tomorrowUpcomingMatches.map((m) => (
+                          <MatchCard key={m.id} match={m} />
+                        ))}
+                      </div>
                     </div>
                   )}
 
