@@ -82,10 +82,11 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({ matches 
             transition={{ duration: 0.5 }}
             className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
             style={{
-              backgroundImage: `url(${currentMatch.playerImage ||
-                currentMatch.bgImage ||
-                currentMatch.categoryPlayerImage ||
-                currentMatch.categoryThumbUrl ||
+              backgroundImage: `url(${(currentMatch.bgImage && currentMatch.bgImage.trim()) ||
+                (currentMatch.categoryBgImage && currentMatch.categoryBgImage.trim()) ||
+                (currentMatch.playerImage && currentMatch.playerImage.trim()) ||
+                (currentMatch.categoryPlayerImage && currentMatch.categoryPlayerImage.trim()) ||
+                (currentMatch.categoryThumbUrl && currentMatch.categoryThumbUrl.trim()) ||
                 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80'
                 })`,
             }}

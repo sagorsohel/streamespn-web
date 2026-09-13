@@ -27,6 +27,7 @@ export interface MatchItem {
   categoryName?: string;
   categoryLogo?: string;
   categoryPlayerImage?: string | null;
+  categoryBgImage?: string | null;
   categoryThumbUrl?: string | null;
   categoryReferralLink?: string | null;
   subcategoryName?: string;

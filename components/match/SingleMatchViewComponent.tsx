@@ -125,15 +125,58 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
             setLoading(false); // ⚡ UNLOCK MAIN MATCH UI IMMEDIATELY (<100ms)
           }
 
-          // Fetch related matches asynchronously in background without blocking main player UI
+          // Fetch related matches: subcategory live -> subcategory upcoming -> category live -> category upcoming
+          const requests: Promise<any>[] = [];
+          if (matchData.subcategoryId) {
+            requests.push(api.get(`/matches?subcategoryId=${matchData.subcategoryId}&limit=25`).catch(() => null));
+          }
           if (matchData.categoryId) {
-            api
-              .get(`/matches?categoryId=${matchData.categoryId}&limit=10`)
-              .then((relatedRes) => {
-                if (isMounted && relatedRes.data?.success && Array.isArray(relatedRes.data?.data?.matches)) {
-                  const otherMatches = relatedRes.data.data.matches.filter((m: MatchItem) => m.id !== matchData.id && m.status !== 'finished');
-                  setRelatedMatches(otherMatches);
+            requests.push(api.get(`/matches?categoryId=${matchData.categoryId}&limit=30`).catch(() => null));
+          }
+
+          if (requests.length > 0) {
+            Promise.all(requests)
+              .then((responses) => {
+                if (!isMounted) return;
+
+                const subcatRes = matchData.subcategoryId ? responses[0] : null;
+                const catRes = matchData.subcategoryId ? responses[1] : responses[0];
+
+                const subcatMatches: MatchItem[] = subcatRes?.data?.success && Array.isArray(subcatRes?.data?.data?.matches)
+                  ? subcatRes.data.data.matches
+                  : [];
+                const catMatches: MatchItem[] = catRes?.data?.success && Array.isArray(catRes?.data?.data?.matches)
+                  ? catRes.data.data.matches
+                  : [];
+
+                // 1. Subcategory matches (exclude current match & finished)
+                const cleanSubcat = subcatMatches.filter((m: MatchItem) => m.id !== matchData.id && m.status !== 'finished');
+                const subcatLive = cleanSubcat.filter((m: MatchItem) => m.status === 'live');
+                const subcatUpcoming = cleanSubcat.filter((m: MatchItem) => m.status === 'upcoming');
+
+                // 2. Category matches (exclude current match & finished)
+                const cleanCat = catMatches.filter((m: MatchItem) => m.id !== matchData.id && m.status !== 'finished');
+                const catLive = cleanCat.filter((m: MatchItem) => m.status === 'live');
+                const catUpcoming = cleanCat.filter((m: MatchItem) => m.status === 'upcoming');
+
+                let finalEvents: MatchItem[] = [];
+
+                if (cleanSubcat.length > 0) {
+                  // Prioritize this subcategory: live first, then upcoming
+                  finalEvents = [...subcatLive, ...subcatUpcoming];
+
+                  // Supplement with category events if less than 10
+                  if (finalEvents.length < 10) {
+                    const existingIds = new Set(finalEvents.map((m) => m.id));
+                    const extraCat = [...catLive, ...catUpcoming].filter((m) => !existingIds.has(m.id));
+                    finalEvents = [...finalEvents, ...extraCat];
+                  }
+                } else {
+                  // Fallback to this category: live matches first, then upcoming
+                  finalEvents = [...catLive, ...catUpcoming];
                 }
+
+                setRelatedMatches(finalEvents.slice(0, 10));
               })
               .catch(() => { });
           }
@@ -190,11 +233,25 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
   const displayCategory = match?.categoryName || categorySlug;
   const displaySubcategory = match?.subcategoryName || subcategorySlug;
 
+  // 1. Single Page Background Banner (Shows in the page ambient atmosphere):
+  // Priority 1: Match/Event Custom Background Banner (match.bgImage)
+  // Priority 2: Category Background Banner Image (match.categoryBgImage)
+  // Fallback: Category Thumbnail (match.categoryThumbUrl)
+  const singlePageBgImage =
+    (match?.bgImage && match.bgImage.trim()) ||
+    (match?.categoryBgImage && match.categoryBgImage.trim()) ||
+    (match?.categoryThumbUrl && match.categoryThumbUrl.trim()) ||
+    '';
+
+  // 2. Video Player & Modal Canvas Image (Shows in the video player & modal backdrop):
+  // Priority 1: Match/Event Custom Player Image (match.playerImage)
+  // Priority 2: Category Player Image (match.categoryPlayerImage)
+  // Priority 3: Fallback to Background Banner if no player image is uploaded
+  // Priority 4: Category Thumbnail or default
   const playerBackdrop =
-    match?.playerImage ||
-    match?.bgImage ||
-    match?.categoryPlayerImage ||
-    match?.categoryThumbUrl ||
+    (match?.playerImage && match.playerImage.trim()) ||
+    (match?.categoryPlayerImage && match.categoryPlayerImage.trim()) ||
+    singlePageBgImage ||
     'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80';
 
   const matchTitle = match?.matchType === 'team_vs_team' ? `${match.homeTeam} VS ${match.awayTeam}` : match?.title || 'Match Stream';
@@ -204,7 +261,22 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-3 pb-12 flex-1 w-full">
+    <div className="relative min-h-screen flex-1 w-full overflow-hidden">
+      {/* 🏟️ Single Page Hero & Ambient Background Banner */}
+      {singlePageBgImage && (
+        <div className="absolute top-0 left-0 right-0 h-[680px] sm:h-[860px] pointer-events-none overflow-hidden select-none z-0">
+          <div
+            className="absolute inset-0 bg-cover bg-top scale-100 opacity-60 dark:opacity-65 transition-opacity duration-700"
+            style={{
+              backgroundImage: `url(${singlePageBgImage})`,
+            }}
+          />
+          {/* Fresh, clean fade overlay that keeps the top crisp and smoothly blends into the page body */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[var(--bg-main)]/50 to-[var(--bg-main)]" />
+        </div>
+      )}
+
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 pt-3 pb-12 flex-1 w-full">
       {match && (
         <JsonLdSchema
           type="event"
@@ -535,7 +607,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
             <div className="space-y-4 pt-4 mx-auto w-full max-w-[891px]">
               <div className="flex items-center justify-between border-b border-[var(--border-glass)] pb-2">
                 <h3 className="text-base font-black text-[var(--text-white)] flex items-center gap-2">
-                  <Radio className="h-4 w-4 text-[#F8C831]" /> More {displayCategory} Events
+                  <Radio className="h-4 w-4 text-[#F8C831]" /> More Events
                 </h3>
                 <Link href={`/${slugify(displayCategory)}`} className="text-xs font-bold text-[#F8C831] hover:underline">
                   View All →
@@ -543,7 +615,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
               </div>
 
               <div className="space-y-2.5">
-                {relatedMatches.slice(0, 5).map((m) => (
+                {relatedMatches.slice(0, 10).map((m) => (
                   <MatchCard key={m.id} match={m} />
                 ))}
               </div>
@@ -551,6 +623,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
           )}
         </div>
       ) : null}
+      </div>
     </div>
   );
 }

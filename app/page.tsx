@@ -295,8 +295,8 @@ export default function HomePage() {
                       }
                     }}
                     className={`w-full flex items-center justify-between p-2.5 rounded-xl text-[14px] font-semibold leading-[1.5] transition-all group ${isSelected
-                        ? 'bg-[#F8C831] text-black shadow-md border border-[#F8C831]'
-                        : 'bg-[var(--bg-card)] text-[#555555] dark:text-zinc-200 border border-[var(--border-glass)] hover:bg-[var(--bg-card-hover)]'
+                      ? 'bg-[#F8C831] text-black shadow-md border border-[#F8C831]'
+                      : 'bg-[var(--bg-card)] text-[#555555] dark:text-zinc-200 border border-[var(--border-glass)] hover:bg-[var(--bg-card-hover)]'
                       }`}
                   >
                     <div className="flex items-center gap-2.5 truncate flex-1 min-w-0 mr-1.5">
@@ -455,8 +455,7 @@ export default function HomePage() {
 
       </div>
 
-      {/* FOOTER */}
-      <Footer />
+
 
     </motion.div>
   );
