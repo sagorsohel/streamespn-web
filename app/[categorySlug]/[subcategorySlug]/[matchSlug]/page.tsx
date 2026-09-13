@@ -10,7 +10,7 @@ interface SingleMatchProps {
 }
 
 export async function generateMetadata({ params }: SingleMatchProps): Promise<Metadata> {
-  const { matchSlug } = await params;
+  const { categorySlug, subcategorySlug, matchSlug } = await params;
 
   try {
     const res = await api.get(`/matches/${matchSlug}`, { timeout: 25000 });
@@ -44,12 +44,30 @@ export async function generateMetadata({ params }: SingleMatchProps): Promise<Me
     // silent catch
   }
 
+  const knownAcronyms: Record<string, string> = {
+    aew: 'AEW', ufc: 'UFC', wwe: 'WWE', nba: 'NBA', nfl: 'NFL', nhl: 'NHL',
+    mlb: 'MLB', mls: 'MLS', f1: 'F1', motogp: 'MotoGP', bkfc: 'BKFC', wrc: 'WRC',
+    wnba: 'WNBA', hs: 'HS', fifa: 'FIFA', uefa: 'UEFA',
+  };
+
+  const formatSlug = (s: string) =>
+    (s || '')
+      .split('-')
+      .map((w) => knownAcronyms[w.toLowerCase()] || (w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()))
+      .join(' ');
+
+  const subName = formatSlug(subcategorySlug);
+  const cateName = formatSlug(categorySlug);
+  const notFoundTitle = `(404)- (${subName}) - (${cateName}) Live | StreamESPN`;
+
   return {
-    title: 'Live Match Stream',
-    description: 'Stream live match events live on StreamESPN. Unlock all high-speed HD streams.',
+    title: {
+      absolute: notFoundTitle,
+    },
+    description: `Watch ${subName} - ${cateName} live match streams on StreamESPN.`,
     openGraph: {
-      title: 'Live Match Stream | StreamESPN',
-      description: 'Stream live match events live on StreamESPN. Unlock all high-speed HD streams.',
+      title: notFoundTitle,
+      description: `Watch ${subName} - ${cateName} live match streams on StreamESPN.`,
     },
   };
 }
@@ -163,7 +181,8 @@ export default async function SingleMatchPage({ params }: SingleMatchProps) {
 
   if (!matchFound) {
     const fallbackUrl = await getNotFoundFallback(categorySlug, subcategorySlug);
-    redirect(fallbackUrl);
+    const redirectUrl = `${fallbackUrl}${fallbackUrl.includes('?') ? '&' : '?'}notfound=true`;
+    redirect(redirectUrl);
   }
 
   const initialAdsSettings = await getInitialAds();

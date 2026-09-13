@@ -98,18 +98,18 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
 
               if (matchedSub) {
                 const validSubSlug = slugify(matchedSub.name);
-                if (isMounted) router.replace(`/${validCategorySlug}/${validSubSlug}`);
+                if (isMounted) router.replace(`/${validCategorySlug}/${validSubSlug}?notfound=true`);
                 return;
               }
             } catch (e) { }
           }
 
-          if (isMounted) router.replace(`/${validCategorySlug}`);
+          if (isMounted) router.replace(`/${validCategorySlug}?notfound=true`);
           return;
         }
       } catch (e) { }
 
-      if (isMounted) router.replace('/');
+      if (isMounted) router.replace('/?notfound=true');
     };
 
     handleRedirect();

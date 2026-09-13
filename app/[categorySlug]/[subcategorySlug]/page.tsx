@@ -5,10 +5,17 @@ import { SubcategoryOrMatchView } from './SubcategoryOrMatchView';
 
 interface NestedPageProps {
   params: Promise<{ categorySlug: string; subcategorySlug: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export async function generateMetadata({ params }: NestedPageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: NestedPageProps): Promise<Metadata> {
   const { categorySlug, subcategorySlug } = await params;
+  const sp = searchParams ? await searchParams : {};
+  const isFromNotFound =
+    sp?.notfound === 'true' ||
+    sp?.notfound === '1' ||
+    sp?.error === '404' ||
+    sp?.status === '404';
 
   const isLikelyMatch = subcategorySlug?.includes('-vs-') || /-\d{4}-\d{2}-\d{2}/.test(subcategorySlug || '');
 
@@ -102,7 +109,9 @@ export async function generateMetadata({ params }: NestedPageProps): Promise<Met
     // fallback
   }
 
-  const pageTitle = `${subName} (${cateName}) Live | StreamESPN`;
+  const pageTitle = isFromNotFound
+    ? `(404)- (${subName}) - (${cateName}) Live | StreamESPN`
+    : `${subName} (${cateName}) Live | StreamESPN`;
 
   return {
     title: {

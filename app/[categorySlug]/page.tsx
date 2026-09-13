@@ -50,12 +50,22 @@ async function getCategoryName(categorySlug: string): Promise<string> {
 
 interface PageProps {
   params: Promise<{ categorySlug: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { categorySlug } = await params;
+  const sp = searchParams ? await searchParams : {};
+  const isFromNotFound =
+    sp?.notfound === 'true' ||
+    sp?.notfound === '1' ||
+    sp?.error === '404' ||
+    sp?.status === '404';
+
   const categoryName = await getCategoryName(categorySlug);
-  const pageTitle = `(${categoryName}) Live | StreamESPN`;
+  const pageTitle = isFromNotFound
+    ? `(404)- (${categoryName}) Live | StreamESPN`
+    : `(${categoryName}) Live | StreamESPN`;
 
   return {
     title: {

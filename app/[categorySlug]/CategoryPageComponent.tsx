@@ -274,16 +274,25 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
 
         // Update document title for client-side navigation
         if (typeof document !== 'undefined') {
+          const isFromNotFound =
+            typeof window !== 'undefined' &&
+            (window.location.search.includes('notfound=true') ||
+             window.location.search.includes('notfound=1') ||
+             window.location.search.includes('error=404'));
+
           if (subcategorySlug) {
             const matched = fetchedSubList.find(
               (s: Subcategory) => slugify(s.name) === subcategorySlug.toLowerCase() || String(s.id) === subcategorySlug
             );
             const subTitle = matched ? matched.name : subcategorySlug.toUpperCase();
-            document.title = targetCategory?.sportName
-              ? `${subTitle} - ${targetCategory.sportName} | StreamESPN`
-              : `${subTitle} | StreamESPN`;
+            const catTitle = targetCategory?.sportName || '';
+            document.title = isFromNotFound
+              ? `(404)- (${subTitle}) - (${catTitle}) Live | StreamESPN`
+              : `${subTitle} (${catTitle}) Live | StreamESPN`;
           } else if (targetCategory?.sportName) {
-            document.title = `${targetCategory.sportName} | StreamESPN`;
+            document.title = isFromNotFound
+              ? `(404)- (${targetCategory.sportName}) Live | StreamESPN`
+              : `(${targetCategory.sportName}) Live | StreamESPN`;
           }
         }
 
