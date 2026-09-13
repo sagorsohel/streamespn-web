@@ -142,11 +142,11 @@ export const Footer: React.FC<FooterProps> = ({ initialAdsSettings }) => {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-10 space-y-8">
 
-        {/* TOP SECTION: 4-COLUMN FOOTER GRID (2-COLUMNS ON MOBILE) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 pb-8 border-b border-[var(--border-glass)]">
+        {/* TOP SECTION: BRAND ON LEFT, POPULAR SPORTS & QUICK LINKS ON RIGHT */}
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 pb-8 border-b border-[var(--border-glass)]">
 
-          {/* COLUMN 1: BRAND LOGO & TAGLINE */}
-          <div className="space-y-3 col-span-2 md:col-span-1">
+          {/* LEFT: BRAND LOGO & TAGLINE */}
+          <div className="space-y-3 max-w-sm">
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-rose-600 via-amber-500 to-yellow-400 shadow-md">
                 <Tv className="h-5 w-5 text-white" />
@@ -160,75 +160,76 @@ export const Footer: React.FC<FooterProps> = ({ initialAdsSettings }) => {
             </p>
           </div>
 
-          {/* COLUMN 2: POPULAR SPORTS */}
-          <div className="space-y-3 col-span-1">
-            <h4 className="text-xs font-black uppercase text-[var(--text-white)] tracking-wider flex items-center gap-1.5">
-              <Radio className="h-3.5 w-3.5 text-[#F8C831]" /> Popular Sports
-            </h4>
-            <ul className="space-y-2 text-xs font-semibold">
-              <li>
-                <Link href="/soccer" className="hover:text-[var(--text-white)] transition-colors flex items-center gap-1">
-                  ⚽ Soccer Streams
-                </Link>
-              </li>
-              <li>
-                <Link href="/basketball" className="hover:text-[var(--text-white)] transition-colors flex items-center gap-1">
-                  🏀 Basketball Streams
-                </Link>
-              </li>
-              <li>
-                <Link href="/american-football" className="hover:text-[var(--text-white)] transition-colors flex items-center gap-1">
-                  🏈 NFL / American Football
-                </Link>
-              </li>
-              <li>
-                <Link href="/tennis" className="hover:text-[var(--text-white)] transition-colors flex items-center gap-1">
-                  🎾 Tennis Streams
-                </Link>
-              </li>
-            </ul>
+          {/* RIGHT: POPULAR SPORTS & QUICK LINKS */}
+          <div className="flex flex-wrap sm:flex-nowrap gap-12 sm:gap-20">
+            {/* COLUMN: POPULAR SPORTS */}
+            <div className="space-y-3 min-w-[140px]">
+              <h4 className="text-xs font-black uppercase text-[var(--text-white)] tracking-wider flex items-center gap-1.5">
+                <Radio className="h-3.5 w-3.5 text-[#F8C831]" /> Popular Sports
+              </h4>
+              <ul className="space-y-2 text-xs font-semibold">
+                <li>
+                  <Link href="/soccer" className="hover:text-[var(--text-white)] transition-colors flex items-center gap-1">
+                    ⚽ Soccer Streams
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/basketball" className="hover:text-[var(--text-white)] transition-colors flex items-center gap-1">
+                    🏀 Basketball Streams
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/american-football" className="hover:text-[var(--text-white)] transition-colors flex items-center gap-1">
+                    🏈 NFL / American Football
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/tennis" className="hover:text-[var(--text-white)] transition-colors flex items-center gap-1">
+                    🎾 Tennis Streams
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* COLUMN: QUICK LINKS */}
+            <div className="space-y-3 min-w-[140px]">
+              <h4 className="text-xs font-black uppercase text-[var(--text-white)] tracking-wider flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-amber-400" /> Quick Links
+              </h4>
+              <ul className="space-y-2 text-xs font-semibold">
+                <li>
+                  <Link href="/" className="hover:text-[var(--text-white)] transition-colors">
+                    🔥 Live Events
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/replay" className="hover:text-[var(--text-white)] transition-colors">
+                    📺 Highlights
+                  </Link>
+                </li>
+                <li>
+                  <a
+                    href={formatExternalUrl(adsSettings.membershipReferralLink)}
+                    suppressHydrationWarning
+                    rel="noopener noreferrer"
+                    className="hover:text-[#F8C831] transition-colors flex items-center gap-1 cursor-pointer"
+                  >
+                    <Lock className="h-3 w-3 text-amber-400" /> VIP Access
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href={formatExternalUrl(adsSettings.globalSignInReferralLink)}
+                    suppressHydrationWarning
+                    rel="noopener noreferrer"
+                    className="hover:text-[#F8C831] transition-colors cursor-pointer"
+                  >
+                    🔐 Free Sign In
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
-
-          {/* COLUMN 3: QUICK LINKS */}
-          <div className="space-y-3 col-span-1">
-            <h4 className="text-xs font-black uppercase text-[var(--text-white)] tracking-wider flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-amber-400" /> Quick Links
-            </h4>
-            <ul className="space-y-2 text-xs font-semibold">
-              <li>
-                <Link href="/" className="hover:text-[var(--text-white)] transition-colors">
-                  🔥 Live Events
-                </Link>
-              </li>
-              <li>
-                <Link href="/replay" className="hover:text-[var(--text-white)] transition-colors">
-                  📺 Highlights
-                </Link>
-              </li>
-              <li>
-                <a
-                  href={formatExternalUrl(adsSettings.membershipReferralLink)}
-                  suppressHydrationWarning
-                  rel="noopener noreferrer"
-                  className="hover:text-[#F8C831] transition-colors flex items-center gap-1 cursor-pointer"
-                >
-                  <Lock className="h-3 w-3 text-amber-400" /> VIP Access
-                </a>
-              </li>
-              <li>
-                <a
-                  href={formatExternalUrl(adsSettings.globalSignInReferralLink)}
-                  suppressHydrationWarning
-                  rel="noopener noreferrer"
-                  className="hover:text-[#F8C831] transition-colors cursor-pointer"
-                >
-                  🔐 Free Sign In
-                </a>
-              </li>
-            </ul>
-          </div>
-
-
 
         </div>
 
