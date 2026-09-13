@@ -2,7 +2,6 @@ import React from 'react';
 import type { Metadata } from 'next';
 import api from '@/lib/api';
 import { slugify } from '@/lib/utils';
-import { CategoryPageComponent } from './CategoryPageComponent';
 
 const knownAcronyms: Record<string, string> = {
   aew: 'AEW',
@@ -48,14 +47,15 @@ async function getCategoryName(categorySlug: string): Promise<string> {
   return formatSlugToTitle(categorySlug);
 }
 
-interface PageProps {
+interface CategoryLayoutProps {
+  children: React.ReactNode;
   params: Promise<{ categorySlug: string }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ categorySlug: string }> }): Promise<Metadata> {
   const { categorySlug } = await params;
   const categoryName = await getCategoryName(categorySlug);
-  const pageTitle = `${categoryName} | StreamESPN`;
+  const pageTitle = `${categoryName} | StreamESPN - Watch Live Sports & All Events Online FREE `;
 
   return {
     title: {
@@ -73,7 +73,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function CategoryPage({ params }: PageProps) {
-  const { categorySlug } = await params;
-  return <CategoryPageComponent categorySlug={categorySlug} />;
+export default function CategoryLayout({ children }: CategoryLayoutProps) {
+  return <>{children}</>;
 }

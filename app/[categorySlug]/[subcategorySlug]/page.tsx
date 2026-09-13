@@ -45,18 +45,77 @@ export async function generateMetadata({ params }: NestedPageProps): Promise<Met
     }
   }
 
-  const cleanCat = categorySlug ? categorySlug.replace(/-/g, ' ') : 'Sports';
-  const cleanSub = subcategorySlug ? subcategorySlug.replace(/-/g, ' ') : '';
-  const pageTitle = cleanSub
-    ? `${cleanSub.toUpperCase()} (${cleanCat.toUpperCase()}) Live Streams`
-    : `${cleanCat.toUpperCase()} Live Streams`;
+  const knownAcronyms: Record<string, string> = {
+    aew: 'AEW',
+    ufc: 'UFC',
+    wwe: 'WWE',
+    nba: 'NBA',
+    nfl: 'NFL',
+    nhl: 'NHL',
+    mlb: 'MLB',
+    mls: 'MLS',
+    f1: 'F1',
+    motogp: 'MotoGP',
+    bkfc: 'BKFC',
+    wrc: 'WRC',
+    wnba: 'WNBA',
+    hs: 'HS',
+    fifa: 'FIFA',
+    uefa: 'UEFA',
+  };
+
+  const formatSlugToTitle = (slug: string): string => {
+    if (!slug) return '';
+    return slug
+      .split('-')
+      .map((word) => knownAcronyms[word.toLowerCase()] || (word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()))
+      .join(' ');
+  };
+
+  let subName = formatSlugToTitle(subcategorySlug);
+  let cateName = formatSlugToTitle(categorySlug);
+
+  try {
+    const [subRes, sportsRes] = await Promise.all([
+      api.get('/subcategories?all=true', { timeout: 10000 }).catch(() => null),
+      api.get('/sports', { timeout: 10000 }).catch(() => null),
+    ]);
+
+    if (subRes?.data?.success && Array.isArray(subRes.data?.data?.subcategories)) {
+      const match = subRes.data.data.subcategories.find(
+        (s: any) =>
+          s.name?.toLowerCase() === subcategorySlug.replace(/-/g, ' ').toLowerCase() ||
+          s.name?.toLowerCase().replace(/\s+/g, '-') === subcategorySlug.toLowerCase()
+      );
+      if (match?.name) subName = match.name;
+    }
+
+    if (sportsRes?.data?.success && Array.isArray(sportsRes.data?.data?.sports)) {
+      const matchedSport = sportsRes.data.data.sports.find(
+        (s: any) =>
+          s.sportName?.toLowerCase() === categorySlug.replace(/-/g, ' ').toLowerCase() ||
+          s.sportName?.toLowerCase().replace(/\s+/g, '-') === categorySlug.toLowerCase()
+      );
+      if (matchedSport?.sportName) cateName = matchedSport.sportName;
+    }
+  } catch (e) {
+    // fallback
+  }
+
+  const pageTitle = `${subName} - ${cateName} | StreamESPN`;
 
   return {
-    title: pageTitle,
-    description: `Watch ${cleanSub || cleanCat} live streams HD. Enjoy fast and lag-free sports coverage.`,
+    title: {
+      absolute: pageTitle,
+    },
+    description: `Watch ${subName} - ${cateName} live streams HD online for free on StreamESPN. High-speed lag-free coverage.`,
     openGraph: {
-      title: `${pageTitle} | StreamESPN`,
-      description: `Watch ${cleanSub || cleanCat} live streams HD. Enjoy fast and lag-free sports coverage.`,
+      title: pageTitle,
+      description: `Watch ${subName} - ${cateName} live streams HD online for free on StreamESPN.`,
+    },
+    twitter: {
+      title: pageTitle,
+      description: `Watch ${subName} - ${cateName} live streams HD online for free on StreamESPN.`,
     },
   };
 }

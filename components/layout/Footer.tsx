@@ -228,27 +228,7 @@ export const Footer: React.FC<FooterProps> = ({ initialAdsSettings }) => {
             </ul>
           </div>
 
-          {/* COLUMN 4: TRUST & COMPLIANCE BADGES */}
-          <div className="space-y-3 col-span-2 md:col-span-1">
-            <h4 className="text-xs font-black uppercase text-[var(--text-white)] tracking-wider flex items-center gap-1.5">
-              <Shield className="h-3.5 w-3.5 text-emerald-400" /> Security & Compliance
-            </h4>
-            <div className="space-y-2 text-xs">
-              <div className="p-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-glass)] space-y-1">
-                <div className="flex items-center gap-1.5 font-bold text-[var(--text-white)]">
-                  <Shield className="h-3.5 w-3.5 text-emerald-400 shrink-0" /> DMCA Protection
-                </div>
-                <p className="text-[11px] text-[var(--text-muted)] leading-tight">
-                  StreamESPN does not host any media files. Content is aggregated from public web servers.
-                </p>
-              </div>
 
-              <div className="p-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-glass)] flex items-center gap-2">
-                <Globe className="h-4 w-4 text-cyan-400 shrink-0" />
-                <span className="font-extrabold text-[var(--text-white)] text-[11px]">Global High-Speed HLS CDN</span>
-              </div>
-            </div>
-          </div>
 
         </div>
 

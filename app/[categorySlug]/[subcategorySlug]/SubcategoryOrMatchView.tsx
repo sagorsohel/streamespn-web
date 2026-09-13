@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import api from '@/lib/api';
-import { CategoryPageComponent } from '../page';
+import { CategoryPageComponent } from '../CategoryPageComponent';
 import { SingleMatchViewComponent } from '@/components/match/SingleMatchViewComponent';
 
 interface SubcategoryOrMatchViewProps {
