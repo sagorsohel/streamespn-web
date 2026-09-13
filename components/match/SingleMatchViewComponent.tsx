@@ -310,21 +310,20 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
               {!isPlaying ? (
                 <div
                   onClick={handlePlayClick}
-                  className="relative z-10 flex flex-col items-center justify-center p-6 text-center space-y-3 sm:space-y-4 cursor-pointer select-none"
+                  className="relative z-10 flex flex-col items-center justify-center p-6 text-center cursor-pointer select-none"
                 >
                   <div className="relative flex items-center justify-center">
-                    {/* Animated Pulsing Ambient Waves */}
-                    <div className="absolute -inset-3 sm:-inset-4 rounded-full border-2 border-[#F8C831] opacity-75 animate-ping pointer-events-none" />
-                    <div className="absolute -inset-2 sm:-inset-2.5 rounded-full bg-[#F8C831]/40 blur-md animate-pulse group-hover:bg-[#F8C831]/60 pointer-events-none" />
+                    {/* Subtle Flat Pulse Wave on Hover */}
+                    <div className="absolute -inset-2.5 sm:-inset-3 rounded-full border-2 border-[#F8C831]/60 opacity-0 group-hover:opacity-100 group-hover:animate-ping pointer-events-none transition-opacity duration-300" />
 
-                    {/* Main Highlighted & Filled Play Button */}
+                    {/* Clean Flat Modern Highlighted Play Button with crisp border */}
                     <button
                       type="button"
                       onClick={handlePlayClick}
-                      className="relative flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-gradient-to-tr from-[#E5B520] via-[#F8C831] to-[#FFE066] text-black shadow-[0_0_35px_rgba(248,200,49,0.85),0_10px_25px_rgba(0,0,0,0.8)] border-2 border-white/90 transform transition-all duration-300 group-hover:scale-115 group-hover:shadow-[0_0_55px_rgba(248,200,49,1)] active:scale-95 cursor-pointer ring-4 ring-black/50"
+                      className="relative flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-[#F8C831] text-black border-2 sm:border-[3px] border-white shadow-xl shadow-yellow-500/30 transition-all duration-300 group-hover:scale-110 group-hover:bg-yellow-400 group-hover:border-white group-hover:shadow-yellow-500/50 active:scale-95 cursor-pointer"
                       title="Click to Start Streaming"
                     >
-                      <Play className="h-7 w-7 sm:h-9 sm:w-9 fill-black text-black ml-1 drop-shadow-md" />
+                      <Play className="h-7 w-7 sm:h-9 sm:w-9 fill-white text-white ml-1" />
                     </button>
                   </div>
                 </div>
