@@ -75,11 +75,23 @@ export interface Category {
 }
 
 // Helper icon mapping for sports
-const getSportIcon = (name: string) => {
-  const n = name.toLowerCase();
+const getSportIcon = (name: string): React.ReactNode => {
+  const n = (name || '').toLowerCase();
+  // High School / HS gets a distinct colored football (Electric Blue / Cyan hue)
+  if (n.includes('high school') || n.includes('hs')) {
+    return (
+      <span
+        className="inline-block filter hue-rotate-[160deg] saturate-[220%] contrast-[115%]"
+        title="High School Football"
+      >
+        🏈
+      </span>
+    );
+  }
+  // American Football / NFL gets standard brown football
+  if (n.includes('nfl') || n.includes('americ')) return '🏈';
   if (n.includes('foot') || n.includes('socc')) return '⚽';
   if (n.includes('fight') || n.includes('ufc') || n.includes('box')) return '🥊';
-  if (n.includes('nfl') || n.includes('americ')) return '🏈';
   if (n.includes('formu') || n.includes('motor') || n.includes('f1')) return '🏎️';
   if (n.includes('rugb') || n.includes('afl')) return '🏉';
   if (n.includes('base') || n.includes('mlb')) return '⚾';
