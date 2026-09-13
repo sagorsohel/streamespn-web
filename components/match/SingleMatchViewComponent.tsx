@@ -362,6 +362,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
                     {(() => {
                       const rawLink =
                         (match?.referralLink && match.referralLink.trim()) ||
+                        (match?.subcategoryReferralLink && match.subcategoryReferralLink.trim()) ||
                         (match?.categoryReferralLink && match.categoryReferralLink.trim()) ||
                         (adsSettings.membershipReferralLink && adsSettings.membershipReferralLink.trim()) ||
                         (adsSettings.globalSignInReferralLink && adsSettings.globalSignInReferralLink.trim()) ||

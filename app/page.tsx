@@ -64,10 +64,10 @@ export default function HomePage() {
     }
   };
 
-  // Fetch Trending Subcategories (where is_trending = 1 in DB)
+  // Fetch Trending Subcategories (where is_trending = 1 in DB and show_on_home = 1)
   const fetchTrendingSubcategories = async () => {
     try {
-      const res = await api.get('/subcategories?trending=true');
+      const res = await api.get('/subcategories?trending=true&home=true');
       if (res.data?.success) {
         setTrendingSubcategories(res.data.data.subcategories || []);
       }
@@ -100,7 +100,7 @@ export default function HomePage() {
     isFetchingRef.current = true;
 
     try {
-      let url = `/matches?limit=20&page=${pageNum}&`;
+      let url = `/matches?limit=20&page=${pageNum}&home=true&`;
       if (selectedCategory !== 'all') url += `categoryId=${selectedCategory}&`;
       if (selectedSubcategory) url += `subcategoryId=${selectedSubcategory}&`;
 
@@ -111,7 +111,7 @@ export default function HomePage() {
         // Auto Fallback for Home Page ONLY if selectedCategory is 'all' and selectedSubcategory is set
         if (pageNum === 1 && fetchedMatches.length === 0 && selectedCategory === 'all' && selectedSubcategory !== null) {
           try {
-            const fallbackRes = await api.get('/matches?limit=20&page=1');
+            const fallbackRes = await api.get('/matches?limit=20&page=1&home=true');
             if (fallbackRes.data?.success && Array.isArray(fallbackRes.data?.data?.matches) && fallbackRes.data.data.matches.length > 0) {
               fetchedMatches = fallbackRes.data.data.matches;
               setSelectedSubcategory(null);

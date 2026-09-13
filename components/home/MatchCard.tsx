@@ -31,6 +31,7 @@ export interface MatchItem {
   categoryReferralLink?: string | null;
   subcategoryName?: string;
   subcategoryLogo?: string;
+  subcategoryReferralLink?: string | null;
   playerImage?: string | null;
   bgImage?: string | null;
 }
