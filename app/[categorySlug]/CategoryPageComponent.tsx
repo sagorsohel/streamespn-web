@@ -430,7 +430,7 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
     return combined.slice(0, 10);
   }, [uniqueMatches]);
 
-  if (notFound) {
+  if (notFound || (!loading && !matchesLoading && matches.length === 0)) {
     return <HomePage />;
   }
 
