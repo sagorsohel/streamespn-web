@@ -204,7 +204,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
     setTimeout(() => {
       setIsConnecting(false);
       setShowStreamModal(true);
-    }, 2000);
+    }, 500);
   };
 
   const handleServerChange = (serverId: number) => {
@@ -215,7 +215,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
       setTimeout(() => {
         setIsConnecting(false);
         setShowStreamModal(true);
-      }, 1000);
+      }, 500);
     }
   };
 
