@@ -210,15 +210,27 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
                   ? catRes.data.data.matches
                   : [];
 
+                const isMatchTodayOrTomorrow = (dateStr?: string | null) => {
+                  if (!dateStr) return false;
+                  const d = new Date(dateStr);
+                  if (isNaN(d.getTime())) return false;
+                  const now = new Date();
+                  const isMatchToday = d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                  const tomorrow = new Date();
+                  tomorrow.setDate(tomorrow.getDate() + 1);
+                  const isMatchTomorrow = d.getDate() === tomorrow.getDate() && d.getMonth() === tomorrow.getMonth() && d.getFullYear() === tomorrow.getFullYear();
+                  return isMatchToday || isMatchTomorrow;
+                };
+
                 // 1. Subcategory matches (exclude current match & finished)
                 const cleanSubcat = subcatMatches.filter((m: MatchItem) => m.id !== matchData.id && m.status !== 'finished');
                 const subcatLive = cleanSubcat.filter((m: MatchItem) => m.status === 'live');
-                const subcatUpcoming = cleanSubcat.filter((m: MatchItem) => m.status === 'upcoming');
+                const subcatUpcoming = cleanSubcat.filter((m: MatchItem) => m.status === 'upcoming' && isMatchTodayOrTomorrow(m.matchTime));
 
                 // 2. Category matches (exclude current match & finished)
                 const cleanCat = catMatches.filter((m: MatchItem) => m.id !== matchData.id && m.status !== 'finished');
                 const catLive = cleanCat.filter((m: MatchItem) => m.status === 'live');
-                const catUpcoming = cleanCat.filter((m: MatchItem) => m.status === 'upcoming');
+                const catUpcoming = cleanCat.filter((m: MatchItem) => m.status === 'upcoming' && isMatchTodayOrTomorrow(m.matchTime));
 
                 let finalEvents: MatchItem[] = [];
 

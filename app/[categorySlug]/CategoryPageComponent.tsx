@@ -405,9 +405,10 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
     return Array.from(new Map<number, MatchItem>(matches.map((m) => [m.id, m])).values());
   }, [matches]);
 
-  const isToday = (dateStr: string) => {
+  const isToday = (dateStr?: string | null) => {
     if (!dateStr) return false;
     const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return false;
     const now = new Date();
     return (
       d.getDate() === now.getDate() &&
@@ -416,16 +417,40 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
     );
   };
 
+  const isTomorrow = (dateStr?: string | null) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return false;
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return (
+      d.getDate() === tomorrow.getDate() &&
+      d.getMonth() === tomorrow.getMonth() &&
+      d.getFullYear() === tomorrow.getFullYear()
+    );
+  };
+
+  // 1. Live Matches: Always include (even if older/started earlier)
   const liveMatches = React.useMemo(() => uniqueMatches.filter((m) => m.status === 'live'), [uniqueMatches]);
-  const todayUpcomingMatches = React.useMemo(() => uniqueMatches.filter((m) => m.status !== 'live' && isToday(m.matchTime)), [uniqueMatches]);
-  const tomorrowUpcomingMatches = React.useMemo(() => uniqueMatches.filter((m) => m.status !== 'live' && !isToday(m.matchTime)), [uniqueMatches]);
+
+  // 2. Today's Upcoming: Matches happening today (excluding finished and live)
+  const todayUpcomingMatches = React.useMemo(() => uniqueMatches.filter((m) => m.status !== 'live' && m.status !== 'finished' && isToday(m.matchTime)), [uniqueMatches]);
+
+  // 3. Tomorrow's Scheduled Matches: Matches happening tomorrow only (excluding finished and live)
+  // Past matches whose date has passed are excluded!
+  const tomorrowUpcomingMatches = React.useMemo(() => uniqueMatches.filter((m) => m.status !== 'live' && m.status !== 'finished' && isTomorrow(m.matchTime)), [uniqueMatches]);
 
   const selectedSubcatObj = subcategories.find((s) => String(s.id) === selectedSubcategory);
 
-  // Category Banner Matches: Prioritize Live matches first, then Upcoming matches
+  // Category Banner Matches: Prioritize Live matches first, then Upcoming matches (Today / Tomorrow only)
   const categoryBannerMatches = React.useMemo(() => {
-    const live = uniqueMatches.filter((m) => m.status === 'live');
-    const upcoming = uniqueMatches.filter((m) => m.status !== 'live');
+    const validMatches = uniqueMatches.filter((m) => {
+      if (m.status === 'live') return true;
+      if (m.status === 'finished') return false;
+      return isToday(m.matchTime) || isTomorrow(m.matchTime);
+    });
+    const live = validMatches.filter((m) => m.status === 'live');
+    const upcoming = validMatches.filter((m) => m.status !== 'live');
     const combined = [...live, ...upcoming];
     return combined.slice(0, 10);
   }, [uniqueMatches]);
@@ -567,7 +592,7 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
                     ))}
                   </div>
                 </div>
-              ) : uniqueMatches.length === 0 ? (
+              ) : (uniqueMatches.length === 0 || (liveMatches.length === 0 && todayUpcomingMatches.length === 0 && tomorrowUpcomingMatches.length === 0)) ? (
                 <div className="p-8 text-center text-xs sm:text-sm text-[var(--text-muted)] border border-[var(--border-glass)] rounded-2xl bg-[var(--bg-card)] space-y-2">
                   <div className="text-3xl">📅</div>
                   <div className="font-bold text-[var(--text-white)]">No Events Available</div>
