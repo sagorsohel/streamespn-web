@@ -354,7 +354,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
         </div>
       )}
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 pt-3 pb-12 flex-1 w-full">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 pt-3 pb-12 flex-1 w-full">
         {match && (
           <JsonLdSchema
             type="event"
@@ -486,7 +486,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
 
                 {/* 2C. STREAM SIGN UP (PRE-RENDERED ON PAGE LOAD FOR INSTANT ZERO-DELAY AD DISPLAY) */}
                 <div
-                  className={`fixed sm:absolute inset-0 z-[999999] sm:z-30 items-center justify-center bg-black/75 dark:bg-black/85 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none p-4 sm:p-0 overflow-y-auto no-scrollbar transition-all duration-200 ${showStreamModal && !isConnecting && isPlaying
+                  className={`fixed sm:absolute inset-0 z-[9999999999] sm:z-30 items-center justify-center bg-black/75 dark:bg-black/85 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none p-4 sm:p-0 overflow-y-auto no-scrollbar transition-all duration-200 ${showStreamModal && !isConnecting && isPlaying
                     ? 'flex opacity-100 pointer-events-auto visible'
                     : 'flex opacity-0 pointer-events-none invisible'
                     }`}
