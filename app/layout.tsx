@@ -156,7 +156,7 @@ export default async function RootLayout({
       </head>
       <body suppressHydrationWarning className="min-h-screen bg-[var(--bg-main)] text-[var(--text-white)] flex flex-col font-sans">
         <ThemeProvider>
-          {/* <InspectProtection /> */}
+          <InspectProtection />
           <HeadScriptInjector initialHeadAds={headAdsHtml} isEnabled={isHeadAdsEnabled} />
           <Suspense fallback={null}>
             <TopLoadingBar />
