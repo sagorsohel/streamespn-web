@@ -85,8 +85,8 @@ body {
     border-color: rgba(255, 238, 150, 0.85);
   }
   50% {
-    transform: scale(1.035);
-    box-shadow: 0 8px 28px rgba(246, 196, 41, 0.85);
+    transform: scale(1.02);
+    box-shadow: 0 6px 22px rgba(246, 196, 41, 0.75);
     border-color: #ffffff;
   }
 }
@@ -101,5 +101,5 @@ body {
 
 .animate-border-pulse:hover,
 .animate-full-pulse:hover {
-  transform: scale(1.04);
+  transform: scale(1);
 }

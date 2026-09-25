@@ -32,7 +32,9 @@ import {
   Film,
   Zap,
   Ban,
-  Smartphone
+  Smartphone,
+  ArrowRight,
+  MoveRight
 } from 'lucide-react';
 
 interface MatchDetailProps {
@@ -539,9 +541,11 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
                             href={finalUrl}
                             target="_self"
                             rel="noopener noreferrer"
-                            className="w-full max-w-xs h-12 py-3 px-6 rounded-xl sm:rounded-2xl bg-[#f6c324] hover:bg-[#fad450] text-black font-black text-xs sm:text-sm tracking-wider text-center flex items-center justify-center cursor-pointer border border-[#ffe885] animate-border-pulse uppercase active:scale-95"
+                            className="w-full max-w-xs h-12 py-3 px-6 rounded-xl sm:rounded-2xl bg-[#f6c324] hover:bg-[#fad450] text-black font-black text-xs sm:text-sm tracking-wider text-center flex items-center justify-center gap-0 cursor-pointer border border-[#ffe885] animate-border-pulse uppercase active:scale-95"
                           >
-                            SIGN UP & WATCH NOW!
+                            <span>SIGN UP & WATCH NOW</span>
+                           
+                            <MoveRight className="h-4 w-8 stroke-[2.8]" />
                           </a>
                         );
                       })()}
