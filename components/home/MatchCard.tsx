@@ -37,7 +37,7 @@ export interface MatchItem {
   bgImage?: string | null;
 }
 
-import { formatMatchTime, formatMatchDate, getTimezoneAbbr, formatLiveBadgeText } from '@/lib/timezone';
+import { formatMatchTime, formatMatchDate, getTimezoneAbbr, formatLiveBadgeText, formatLiveTimeOnly } from '@/lib/timezone';
 
 interface MatchCardProps {
   match: MatchItem;
@@ -224,16 +224,21 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
                     <span className="text-[#40b857] font-bold text-sm sm:text-base tracking-widest font-sans">
                       {match.homeScore ?? 0} - {match.awayScore ?? 0}
                     </span>
-                    {(match.livePeriod || match.liveMinute) && (
+                    {formatLiveTimeOnly(match) && (
                       <span className="text-[10px] font-extrabold text-[#40b857] tracking-wider">
-                        {match.livePeriod ? match.livePeriod : ''} {match.liveMinute ? (match.liveMinute.includes("'") ? match.liveMinute : `${match.liveMinute}'`) : ''}
+                        {formatLiveTimeOnly(match)}
                       </span>
                     )}
                   </div>
                 ) : isFinished ? (
-                  <span className="text-slate-800 dark:text-zinc-100 font-bold text-xs sm:text-sm tracking-widest font-sans">
-                    {match.homeScore ?? 0} - {match.awayScore ?? 0}
-                  </span>
+                  <div className="flex flex-col items-center">
+                    <span className="text-slate-800 dark:text-zinc-100 font-bold text-xs sm:text-sm tracking-widest font-sans">
+                      {match.homeScore ?? 0} - {match.awayScore ?? 0}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
+                      FT
+                    </span>
+                  </div>
                 ) : (
                   <span className="text-slate-400 dark:text-zinc-500 font-bold text-xs sm:text-sm">
                     vs

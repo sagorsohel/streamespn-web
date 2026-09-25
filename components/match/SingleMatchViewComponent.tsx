@@ -399,16 +399,20 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
                   {/* CENTER: VS / LIVE SCORE PILL */}
                   <div className="shrink-0 flex flex-col items-center">
                     <div className="flex items-center justify-center px-4 sm:px-6 py-2 sm:py-2.5 rounded-2xl bg-[var(--bg-main)] border border-slate-200/80 dark:border-white/10 font-black text-sm sm:text-lg font-mono text-[#F8C831]">
-                      {isLive || isFinished
+                      {isLive || isFinished || (match.homeScore !== null && match.awayScore !== null)
                         ? `${match.homeScore ?? 0} - ${match.awayScore ?? 0}`
                         : 'VS'}
                     </div>
-                    {isLive && (
+                    {isLive ? (
                       <div className="mt-1.5 flex items-center gap-1.5 text-xs font-extrabold text-[#40b857] bg-[#40b857]/10 px-3 py-0.5 rounded-full border border-[#40b857]/20">
                         <span className="h-1.5 w-1.5 rounded-full bg-[#40b857] animate-pulse" />
                         <span>{formatLiveTimeOnly(match)}</span>
                       </div>
-                    )}
+                    ) : isFinished ? (
+                      <div className="mt-1.5 flex items-center gap-1 text-[11px] font-extrabold text-slate-500 dark:text-zinc-400 bg-slate-500/10 px-2.5 py-0.5 rounded-full border border-slate-500/20 uppercase tracking-wider">
+                        <span>FT</span>
+                      </div>
+                    ) : null}
                   </div>
 
                   {/* AWAY TEAM: NAME + LOGO (RIGHT) */}

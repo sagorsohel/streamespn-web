@@ -7,7 +7,7 @@ export async function GET() {
     const rawUrl =
       process.env.BACKEND_API_URL ||
       process.env.NEXT_PUBLIC_API_URL ||
-      'http://localhost:5000/api';
+      'http://localhost:5001/api';
     const res = await fetch(`${rawUrl.replace(/\/$/, '')}/ads/fast`, {
       cache: 'no-store',
       headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },

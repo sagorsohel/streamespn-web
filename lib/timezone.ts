@@ -99,6 +99,80 @@ export const formatMatchFullDateTime = (utcTimeStr: string | null | undefined): 
   }
 };
 
+export const formatLiveTimeOnly = (match: {
+  livePeriod?: string | null;
+  liveMinute?: string | null;
+  status: string;
+}): string => {
+  if (match.status === 'finished') {
+    return 'FT';
+  }
+  if (match.status !== 'live') {
+    return '';
+  }
+
+  const rawPeriod = (match.livePeriod || '').trim();
+  const rawMinute = (match.liveMinute || '').trim();
+  const lowerPeriod = rawPeriod.toLowerCase();
+  const lowerMinute = rawMinute.toLowerCase();
+
+  // 1. Finished / Full Time check
+  if (
+    lowerPeriod === 'ft' ||
+    lowerPeriod === 'finished' ||
+    lowerPeriod === 'final' ||
+    lowerMinute === 'ft' ||
+    lowerMinute === 'finished' ||
+    lowerMinute === 'final'
+  ) {
+    return 'FT';
+  }
+
+  // 2. Half Time (HT) check
+  if (
+    lowerPeriod === 'ht' ||
+    lowerPeriod.includes('half time') ||
+    lowerPeriod.includes('halftime') ||
+    lowerMinute === 'ht' ||
+    lowerMinute.includes('half time') ||
+    lowerMinute.includes('halftime')
+  ) {
+    return 'HT';
+  }
+
+  // Clean minute formatting (e.g. "74" -> "74'", "90+6" -> "90+6'")
+  const cleanMinute = rawMinute
+    ? rawMinute.includes("'")
+      ? rawMinute
+      : `${rawMinute}'`
+    : '';
+
+  // 3. Football / Soccer 1H & 2H: Do NOT show 1H or 2H, show minute only
+  if (/^(1h|2h|1st\s*half|2nd\s*half)$/i.test(rawPeriod)) {
+    return cleanMinute || 'LIVE';
+  }
+
+  // 4. If minute exists and period is empty or duplicate
+  if (cleanMinute && (!rawPeriod || rawPeriod.toLowerCase() === rawMinute.toLowerCase())) {
+    return cleanMinute;
+  }
+
+  // 5. Other sports or overtime periods (e.g. "OT 105'", "Q3 12'")
+  if (rawPeriod && cleanMinute) {
+    return `${rawPeriod} ${cleanMinute}`;
+  }
+
+  if (cleanMinute) {
+    return cleanMinute;
+  }
+
+  if (rawPeriod) {
+    return rawPeriod;
+  }
+
+  return 'LIVE';
+};
+
 export const formatLiveBadgeText = (match: {
   homeScore?: string | null;
   awayScore?: string | null;
@@ -108,42 +182,6 @@ export const formatLiveBadgeText = (match: {
 }): string => {
   if (match.status !== 'live') return '';
   const scoreStr = `${match.homeScore ?? 0}-${match.awayScore ?? 0}`;
-
-  const period = match.livePeriod ? match.livePeriod.trim() : '';
-  const minute = match.liveMinute ? match.liveMinute.trim() : '';
-
-  let details = '';
-  if (period && minute) {
-    const minFormatted = minute.includes("'") ? minute : `${minute}'`;
-    details = `${period} ${minFormatted}`;
-  } else if (period) {
-    details = period;
-  } else if (minute) {
-    const minFormatted = minute.includes("'") ? minute : `${minute}'`;
-    details = minFormatted;
-  }
-
+  const details = formatLiveTimeOnly(match);
   return details ? `Live ${scoreStr} • ${details}` : `Live ${scoreStr}`;
-};
-
-export const formatLiveTimeOnly = (match: {
-  livePeriod?: string | null;
-  liveMinute?: string | null;
-  status: string;
-}): string => {
-  if (match.status !== 'live') return '';
-
-  const period = match.livePeriod ? match.livePeriod.trim() : '';
-  const minute = match.liveMinute ? match.liveMinute.trim() : '';
-
-  if (period && minute) {
-    const minFormatted = minute.includes("'") ? minute : `${minute}'`;
-    return `${period} ${minFormatted}`;
-  } else if (period) {
-    return period;
-  } else if (minute) {
-    return minute.includes("'") ? minute : `${minute}'`;
-  }
-
-  return 'LIVE';
 };

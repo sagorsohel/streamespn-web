@@ -7,6 +7,8 @@ export async function GET() {
     const urls = [
       process.env.BACKEND_API_URL,
       process.env.NEXT_PUBLIC_API_URL,
+      'http://localhost:5001/api',
+      'http://127.0.0.1:5001/api',
       'https://backendapi.streamespn.org/api',
       'http://localhost:5000/api',
     ].filter(Boolean) as string[];
@@ -15,7 +17,7 @@ export async function GET() {
       try {
         const cleanUrl = rawUrl.replace(/\/$/, '');
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1500);
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
         const res = await fetch(`${cleanUrl}/ads/fast`, {
           cache: 'no-store',
           signal: controller.signal,
