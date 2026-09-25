@@ -539,7 +539,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
                             href={finalUrl}
                             target="_self"
                             rel="noopener noreferrer"
-                            className="w-full max-w-xs py-2.5 sm:py-3 px-6 rounded-xl bg-[#008ba3] hover:bg-[#00778c] text-white font-black text-xs sm:text-sm shadow-lg tracking-wider text-center transition-all transform hover:scale-105 active:scale-95 cursor-pointer border border-cyan-400/30 uppercase"
+                            className="w-full max-w-xs h-12 py-3 px-6 rounded-xl sm:rounded-2xl bg-[#f6c324] hover:bg-[#fad450] text-black font-black text-xs sm:text-sm tracking-wider text-center flex items-center justify-center cursor-pointer border border-[#ffe885] animate-border-pulse uppercase active:scale-95"
                           >
                             SIGN UP & WATCH NOW!
                           </a>

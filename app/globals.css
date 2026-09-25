@@ -76,3 +76,30 @@ body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Full Button Scale & Glow Heartbeat Pulse */
+@keyframes fullButtonPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 16px rgba(246, 196, 41, 0.45);
+    border-color: rgba(255, 238, 150, 0.85);
+  }
+  50% {
+    transform: scale(1.035);
+    box-shadow: 0 8px 28px rgba(246, 196, 41, 0.85);
+    border-color: #ffffff;
+  }
+}
+
+.animate-border-pulse,
+.animate-full-pulse {
+  box-shadow: 0 4px 16px rgba(246, 196, 41, 0.45);
+  border-color: rgba(255, 238, 150, 0.85);
+  animation: fullButtonPulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  transition: background-color 0.2s ease;
+}
+
+.animate-border-pulse:hover,
+.animate-full-pulse:hover {
+  transform: scale(1.04);
+}
