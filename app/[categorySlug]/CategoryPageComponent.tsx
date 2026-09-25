@@ -246,31 +246,40 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
           }
         }
 
-        try {
-          const subRes = await api.get(`/subcategories?categoryId=${targetCategory.id}`);
-          if (subRes.data?.success && Array.isArray(subRes.data?.data?.subcategories)) {
-            fetchedSubList = subRes.data.data.subcategories;
-            setCachedSubcategories(String(targetCategory.id), fetchedSubList);
-            const activeSubs = fetchedSubList.filter(
-              (s: Subcategory) =>
-                Boolean(s.status) === true &&
-                (Number(s.matchCount || 0) > 0 || Number(s.totalMatchCount || 0) > 0)
-            );
+        let targetSubIdOrSlug = initialSubId || subcategorySlug || null;
+        let matchUrl = `/matches?limit=100&page=1&categoryId=${targetCategory.id}`;
+        if (targetSubIdOrSlug) matchUrl += `&subcategoryId=${targetSubIdOrSlug}`;
 
-            if (subcategorySlug && activeSubs.length > 0) {
-              const matchedSubcat = activeSubs.find(
-                (s: Subcategory) => slugify(s.name) === subcategorySlug.toLowerCase() || String(s.id) === subcategorySlug
-              );
-              if (matchedSubcat) {
-                initialSubId = String(matchedSubcat.id);
-              }
-            }
-            if (isMounted) {
-              setSelectedSubcategory(initialSubId);
-              setSubcategories(activeSubs);
+        const [subResResult, matchResResult] = await Promise.allSettled([
+          api.get(`/subcategories?categoryId=${targetCategory.id}`),
+          api.get(matchUrl),
+        ]);
+
+        if (!isMounted) return;
+
+        // Process subcategories
+        if (subResResult.status === 'fulfilled' && subResResult.value.data?.success && Array.isArray(subResResult.value.data?.data?.subcategories)) {
+          fetchedSubList = subResResult.value.data.data.subcategories;
+          setCachedSubcategories(String(targetCategory.id), fetchedSubList);
+          const activeSubs = fetchedSubList.filter(
+            (s: Subcategory) =>
+              Boolean(s.status) === true &&
+              (Number(s.matchCount || 0) > 0 || Number(s.totalMatchCount || 0) > 0)
+          );
+
+          if (subcategorySlug && activeSubs.length > 0) {
+            const matchedSubcat = activeSubs.find(
+              (s: Subcategory) => slugify(s.name) === subcategorySlug.toLowerCase() || String(s.id) === subcategorySlug
+            );
+            if (matchedSubcat) {
+              initialSubId = String(matchedSubcat.id);
             }
           }
-        } catch (e) { }
+          if (isMounted) {
+            setSelectedSubcategory(initialSubId);
+            setSubcategories(activeSubs);
+          }
+        }
 
         // Update document title for client-side navigation
         if (typeof document !== 'undefined') {
@@ -296,20 +305,12 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
           }
         }
 
-        if (!isMounted) return;
-
-        let matchUrl = `/matches?limit=100&page=1&categoryId=${targetCategory.id}`;
-        if (initialSubId) matchUrl += `&subcategoryId=${initialSubId}`;
-
-        const matchRes = await api.get(matchUrl);
-
-        if (!isMounted) return;
-
-        if (matchRes.data?.success && Array.isArray(matchRes.data?.data?.matches)) {
-          let fetchedMatches: MatchItem[] = matchRes.data.data.matches;
+        // Process matches
+        if (matchResResult.status === 'fulfilled' && matchResResult.value.data?.success && Array.isArray(matchResResult.value.data?.data?.matches)) {
+          let fetchedMatches: MatchItem[] = matchResResult.value.data.data.matches;
 
           // Auto Fallback: If subcategory filter returns 0 matches, fallback to category matches
-          if (fetchedMatches.length === 0 && initialSubId) {
+          if (fetchedMatches.length === 0 && targetSubIdOrSlug) {
             try {
               const fallbackRes = await api.get(`/matches?limit=100&page=1&categoryId=${targetCategory.id}`);
               if (fallbackRes.data?.success && Array.isArray(fallbackRes.data?.data?.matches) && fallbackRes.data.data.matches.length > 0) {

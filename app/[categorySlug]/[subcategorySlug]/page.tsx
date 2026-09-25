@@ -1,6 +1,8 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import api from '@/lib/api';
+import { getCategories } from '@/lib/categories';
+import { slugify } from '@/lib/utils';
 import { SubcategoryOrMatchView } from './SubcategoryOrMatchView';
 
 interface NestedPageProps {
@@ -83,25 +85,12 @@ export async function generateMetadata({ params, searchParams }: NestedPageProps
   let cateName = formatSlugToTitle(categorySlug);
 
   try {
-    const [subRes, sportsRes] = await Promise.all([
-      api.get('/subcategories?all=true', { timeout: 10000 }).catch(() => null),
-      api.get('/sports', { timeout: 10000 }).catch(() => null),
-    ]);
-
-    if (subRes?.data?.success && Array.isArray(subRes.data?.data?.subcategories)) {
-      const match = subRes.data.data.subcategories.find(
-        (s: any) =>
-          s.name?.toLowerCase() === subcategorySlug.replace(/-/g, ' ').toLowerCase() ||
-          s.name?.toLowerCase().replace(/\s+/g, '-') === subcategorySlug.toLowerCase()
-      );
-      if (match?.name) subName = match.name;
-    }
-
-    if (sportsRes?.data?.success && Array.isArray(sportsRes.data?.data?.sports)) {
-      const matchedSport = sportsRes.data.data.sports.find(
+    const sportsList = await getCategories();
+    if (Array.isArray(sportsList)) {
+      const matchedSport = sportsList.find(
         (s: any) =>
           s.sportName?.toLowerCase() === categorySlug.replace(/-/g, ' ').toLowerCase() ||
-          s.sportName?.toLowerCase().replace(/\s+/g, '-') === categorySlug.toLowerCase()
+          slugify(s.sportName) === categorySlug.toLowerCase()
       );
       if (matchedSport?.sportName) cateName = matchedSport.sportName;
     }

@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import api from '@/lib/api';
+import { getCategories } from '@/lib/categories';
 import { slugify } from '@/lib/utils';
 import { CategoryPageComponent } from './CategoryPageComponent';
 
@@ -33,9 +33,9 @@ const formatSlugToTitle = (slug: string): string => {
 
 async function getCategoryName(categorySlug: string): Promise<string> {
   try {
-    const res = await api.get('/sports', { timeout: 10000 });
-    if (res.data?.success && Array.isArray(res.data?.data?.sports)) {
-      const match = res.data.data.sports.find(
+    const sportsList = await getCategories();
+    if (Array.isArray(sportsList)) {
+      const match = sportsList.find(
         (s: any) =>
           slugify(s.sportName) === categorySlug.toLowerCase() ||
           s.sportName.toLowerCase() === categorySlug.replace(/-/g, ' ').toLowerCase()

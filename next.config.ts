@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
       process.env.BACKEND_API_URL ||
       process.env.NEXT_PUBLIC_API_URL ||
       (process.env.NODE_ENV === 'production'
-        ? 'https://backendapi.streamespn.org/api'
+        ? 'http://127.0.0.1:5001/api'
         : 'http://localhost:5001/api');
     const cleanBackend = rawBackend.replace(/\/$/, '');
     const backendDestination = cleanBackend.endsWith('/:path*') ? cleanBackend : `${cleanBackend}/:path*`;

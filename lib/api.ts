@@ -1,16 +1,26 @@
 import axios from 'axios';
 
-// Use relative /api URL so Next.js proxy rewrites handle tunneling seamlessly for mobile/external devices
+// Base URL resolver: direct backend connection for production, relative /api for localhost proxy
 const getBaseUrl = () => {
   if (typeof window !== 'undefined') {
-    // Relative /api allows any device (mobile on 192.168.x.x, localhost, tunnel) to hit Next.js proxy rewrite
+    // If running in browser on production domain or hostname includes streamespn:
+    if (window.location.hostname.includes('streamespn.org')) {
+      return 'https://backendapi.streamespn.org/api';
+    }
+    // If NEXT_PUBLIC_API_URL is configured and not localhost:
+    if (process.env.NEXT_PUBLIC_API_URL && !process.env.NEXT_PUBLIC_API_URL.includes('localhost')) {
+      return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '');
+    }
+    // Local dev: relative /api allows Next.js proxy rewrite for localhost & tunnel devices
     return '/api';
   }
+
+  // Server-side (SSR) in Node
   const rawUrl =
-    process.env.NEXT_PUBLIC_API_URL ||
     process.env.BACKEND_API_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
     (process.env.NODE_ENV === 'production'
-      ? 'https://backendapi.streamespn.org/api'
+      ? 'http://127.0.0.1:5001/api'
       : 'http://localhost:5001/api');
 
   return rawUrl.replace(/\/$/, '');
