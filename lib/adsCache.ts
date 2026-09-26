@@ -1,8 +1,17 @@
 import api from './api';
 
+export interface HeaderScriptItem {
+  id: string;
+  name: string;
+  code: string;
+  isEnabled: boolean;
+}
+
 export interface AdsSettings {
   id?: number;
   headAds?: string;
+  isHeadAdsEnabled?: boolean;
+  headerScripts?: HeaderScriptItem[];
   navAds?: string;
   modalSignupAds?: string;
   footerAds?: string;

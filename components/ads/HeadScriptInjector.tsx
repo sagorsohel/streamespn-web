@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import api from '@/lib/api';
+import React, { useEffect, useRef } from 'react';
+import { subscribeAdsSettings, fetchAdsSettingsAsync, AdsSettings } from '@/lib/adsCache';
 
 interface HeadScriptInjectorProps {
   initialHeadAds?: string;
@@ -9,78 +9,103 @@ interface HeadScriptInjectorProps {
 }
 
 export const HeadScriptInjector: React.FC<HeadScriptInjectorProps> = ({ initialHeadAds, isEnabled = true }) => {
+  const currentInjectedHtmlRef = useRef<string>('');
+
   useEffect(() => {
     let isMounted = true;
 
-    // If disabled, remove any existing scripts from head and exit immediately
-    if (isEnabled === false) {
-      const existingContainer = document.getElementById('streamespn-head-scripts');
-      if (existingContainer) {
-        existingContainer.remove();
-      }
-      return;
-    }
+    const removeExistingInjected = () => {
+      document.querySelectorAll('[data-streamespn-head-script]').forEach((el) => el.remove());
+      const oldContainer = document.getElementById('streamespn-head-scripts');
+      if (oldContainer) oldContainer.remove();
+      currentInjectedHtmlRef.current = '';
+    };
 
-    const injectScripts = (headAds?: string) => {
-      if (!headAds || !headAds.trim()) return;
-
-      let headContainer = document.getElementById('streamespn-head-scripts');
-      if (!headContainer) {
-        headContainer = document.createElement('div');
-        headContainer.id = 'streamespn-head-scripts';
-        document.head.appendChild(headContainer);
+    const injectScripts = (codeToInject?: string) => {
+      if (!codeToInject || !codeToInject.trim()) {
+        removeExistingInjected();
+        return;
       }
 
-      headContainer.innerHTML = '';
+      // Avoid redundant re-injections if the HTML is identical
+      if (currentInjectedHtmlRef.current === codeToInject) {
+        return;
+      }
+
+      removeExistingInjected();
+      currentInjectedHtmlRef.current = codeToInject;
 
       const wrapper = document.createElement('div');
-      wrapper.innerHTML = headAds;
+      wrapper.innerHTML = codeToInject;
 
-      // Execute all <script> tags dynamically inside <head>
+      // Execute each <script> tag individually inside <head>, one after another
       const scripts = wrapper.querySelectorAll('script');
       scripts.forEach((oldScript) => {
         const newScript = document.createElement('script');
+        newScript.setAttribute('data-streamespn-head-script', 'true');
         Array.from(oldScript.attributes).forEach((attr) => {
           newScript.setAttribute(attr.name, attr.value);
         });
         if (oldScript.innerHTML) {
           newScript.appendChild(document.createTextNode(oldScript.innerHTML));
         }
-        headContainer!.appendChild(newScript);
+        document.head.appendChild(newScript);
       });
 
-      // Append non-script tags (like <link>, <meta>, <style>) to <head>
+      // Append any non-script tags (like <link>, <meta>, <style>) to <head>
       Array.from(wrapper.children).forEach((child) => {
         if (child.tagName !== 'SCRIPT') {
-          headContainer!.appendChild(child.cloneNode(true));
+          const clone = child.cloneNode(true) as HTMLElement;
+          clone.setAttribute('data-streamespn-head-script', 'true');
+          document.head.appendChild(clone);
         }
       });
-    };
 
-    if (initialHeadAds && initialHeadAds.trim()) {
-      injectScripts(initialHeadAds);
-      return;
-    }
-
-    const fetchAndInjectHeadAds = async () => {
-      try {
-        const res = await api.get('/ads/fast');
-        if (!isMounted) return;
-
-        const settings = res.data?.data?.settings;
-        if (settings?.isHeadAdsEnabled === false) return;
-
-        const headAds = settings?.headAds;
-        injectScripts(headAds);
-      } catch (err) {
-        // silent catch
+      if (process.env.NODE_ENV !== 'production' || typeof window !== 'undefined') {
+        console.log(`[HeadScriptInjector] Successfully injected ${scripts.length} script(s) into <head>.`);
       }
     };
 
-    fetchAndInjectHeadAds();
+    const applySettings = (settings?: AdsSettings) => {
+      if (!isMounted) return;
+      if (settings?.isHeadAdsEnabled === false || isEnabled === false) {
+        removeExistingInjected();
+        return;
+      }
+
+      let codeToInject = '';
+      if (Array.isArray(settings?.headerScripts) && settings.headerScripts.length > 0) {
+        const activeCodes = settings.headerScripts
+          .filter((s) => s && s.isEnabled && s.code && s.code.trim())
+          .map((s) => s.code.trim());
+        codeToInject = activeCodes.join('\n\n');
+      }
+
+      if (!codeToInject && settings?.headAds) {
+        codeToInject = settings.headAds;
+      }
+
+      injectScripts(codeToInject);
+    };
+
+    // If initialHeadAds provided from SSR and enabled, inject it immediately
+    if (isEnabled && initialHeadAds && initialHeadAds.trim()) {
+      injectScripts(initialHeadAds);
+    }
+
+    // Subscribe to live cache updates
+    const unsubscribe = subscribeAdsSettings((updated) => {
+      applySettings(updated);
+    });
+
+    // Always fetch fresh ads settings from /ads/fast on mount
+    fetchAdsSettingsAsync().then((settings) => {
+      applySettings(settings);
+    });
 
     return () => {
       isMounted = false;
+      unsubscribe();
     };
   }, [initialHeadAds, isEnabled]);
 

@@ -91,7 +91,7 @@ async function getInitialAds() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 1500);
         const res = await fetch(`${cleanUrl}/ads/fast`, {
-          next: { revalidate: 30 },
+          cache: 'no-store',
           signal: controller.signal,
         });
         clearTimeout(timeoutId);
@@ -118,7 +118,18 @@ export default async function RootLayout({
 }>) {
   const initialAdsSettings = await getInitialAds();
   const isHeadAdsEnabled = initialAdsSettings?.isHeadAdsEnabled !== false;
-  const headAdsHtml = isHeadAdsEnabled ? (initialAdsSettings?.headAds || '') : '';
+  let headAdsHtml = '';
+  if (isHeadAdsEnabled) {
+    if (Array.isArray(initialAdsSettings?.headerScripts) && initialAdsSettings.headerScripts.length > 0) {
+      headAdsHtml = initialAdsSettings.headerScripts
+        .filter((s: any) => s && s.isEnabled && s.code && s.code.trim())
+        .map((s: any) => s.code.trim())
+        .join('\n\n');
+    }
+    if (!headAdsHtml && initialAdsSettings?.headAds) {
+      headAdsHtml = initialAdsSettings.headAds;
+    }
+  }
 
   return (
     <html

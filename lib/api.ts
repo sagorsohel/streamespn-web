@@ -15,13 +15,14 @@ const getBaseUrl = () => {
     return '/api';
   }
 
-  // Server-side (SSR) in Node
+  // Server-side (SSR) in Node: use internal 127.0.0.1 on the VPS to avoid hairpin NAT loopback timeout
   const rawUrl =
     process.env.BACKEND_API_URL ||
-    process.env.NEXT_PUBLIC_API_URL ||
-    (process.env.NODE_ENV === 'production'
-      ? 'http://127.0.0.1:5001/api'
-      : 'http://localhost:5001/api');
+    (process.env.VERCEL
+      ? (process.env.NEXT_PUBLIC_API_URL || 'https://backendapi.streamespn.org/api')
+      : (process.env.NODE_ENV === 'production'
+          ? 'http://127.0.0.1:5001/api'
+          : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api')));
 
   return rawUrl.replace(/\/$/, '');
 };
