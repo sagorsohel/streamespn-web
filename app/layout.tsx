@@ -15,7 +15,7 @@ const fontMono = Geist_Mono({
 
 import { Suspense } from "react";
 import { TopLoadingBar } from "@/components/layout/TopLoadingBar";
-import { HeadScriptInjector } from "@/components/ads/HeadScriptInjector";
+import { SSRHeadScripts } from "@/components/ads/SSRHeadScripts";
 import { InspectProtection } from "@/components/layout/InspectProtection";
 import { JsonLdSchema } from "@/components/seo/JsonLdSchema";
 import type { Metadata } from "next";
@@ -131,20 +131,42 @@ export default async function RootLayout({
     }
   }
 
+  // Remove headAds & headerScripts from body props so they never appear inside body flight data
+  const { headAds: _h1, headerScripts: _h2, ...bodyAdsSettings } = (initialAdsSettings || {}) as any;
+
   return (
     <html
       lang="en"
       suppressHydrationWarning
       className={cn("antialiased", fontMono.variable, "font-sans", geist.variable)}
     >
-      <head>
+      <head suppressHydrationWarning>
         <link rel="preconnect" href="https://www.highperformanceformat.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://www.highperformanceformat.com" />
         <JsonLdSchema type="website" />
         <script
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
+                // Protect DOM manipulation against 3rd-party ad scripts mutating/removing nodes
+                if (typeof window !== 'undefined' && typeof Node !== 'undefined') {
+                  var origRemoveChild = Node.prototype.removeChild;
+                  Node.prototype.removeChild = function(child) {
+                    if (child && child.parentNode !== this) {
+                      return child;
+                    }
+                    return origRemoveChild.apply(this, arguments);
+                  };
+                  var origInsertBefore = Node.prototype.insertBefore;
+                  Node.prototype.insertBefore = function(newNode, referenceNode) {
+                    if (referenceNode && referenceNode.parentNode !== this) {
+                      return newNode;
+                    }
+                    return origInsertBefore.apply(this, arguments);
+                  };
+                }
+
                 document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; }, true);
                 window.addEventListener('keydown', function(e) {
                   var k = e.key ? e.key.toUpperCase() : '';
@@ -164,19 +186,19 @@ export default async function RootLayout({
             `,
           }}
         />
+        <SSRHeadScripts rawHtml={headAdsHtml} isEnabled={isHeadAdsEnabled} />
       </head>
       <body suppressHydrationWarning className="min-h-screen bg-[var(--bg-main)] text-[var(--text-white)] flex flex-col font-sans">
         <ThemeProvider>
           <InspectProtection />
-          <HeadScriptInjector initialHeadAds={headAdsHtml} isEnabled={isHeadAdsEnabled} />
           <Suspense fallback={null}>
             <TopLoadingBar />
           </Suspense>
-          <Navbar initialAdsSettings={initialAdsSettings} />
+          <Navbar initialAdsSettings={bodyAdsSettings} />
           <div className="flex-1 flex flex-col">
             {children}
           </div>
-          <Footer initialAdsSettings={initialAdsSettings} />
+          <Footer initialAdsSettings={bodyAdsSettings} />
         </ThemeProvider>
       </body>
     </html>

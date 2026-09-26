@@ -66,6 +66,8 @@ export const HeadScriptInjector: React.FC<HeadScriptInjectorProps> = ({ initialH
       }
     };
 
+    const normalizeCode = (s?: string) => (s || '').replace(/\r\n/g, '\n').trim();
+
     const applySettings = (settings?: AdsSettings) => {
       if (!isMounted) return;
       if (settings?.isHeadAdsEnabled === false || isEnabled === false) {
@@ -85,12 +87,24 @@ export const HeadScriptInjector: React.FC<HeadScriptInjectorProps> = ({ initialH
         codeToInject = settings.headAds;
       }
 
+      // If code is identical to what is already in head (e.g. from SSR), DO NOT re-inject or remove
+      if (normalizeCode(currentInjectedHtmlRef.current) === normalizeCode(codeToInject)) {
+        return;
+      }
+
       injectScripts(codeToInject);
     };
 
-    // If initialHeadAds provided from SSR and enabled, inject it immediately
+    // Since SSR (SSRHeadScripts) already rendered initialHeadAds directly into <head>,
+    // record it in ref so we don't duplicate injection on initial load
     if (isEnabled && initialHeadAds && initialHeadAds.trim()) {
-      injectScripts(initialHeadAds);
+      currentInjectedHtmlRef.current = initialHeadAds;
+    } else if (typeof document !== 'undefined') {
+      const existingSSR = document.querySelectorAll('[data-streamespn-head-script="true"]');
+      if (existingSSR.length > 0) {
+        // SSR scripts are present in DOM, seed ref with initialHeadAds or mark present
+        currentInjectedHtmlRef.current = initialHeadAds || '';
+      }
     }
 
     // Subscribe to live cache updates
@@ -111,4 +125,5 @@ export const HeadScriptInjector: React.FC<HeadScriptInjectorProps> = ({ initialH
 
   return null;
 };
+
 
