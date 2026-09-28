@@ -17,7 +17,9 @@ export async function generateMetadata({ params, searchParams }: NestedPageProps
     sp?.notfound === 'true' ||
     sp?.notfound === '1' ||
     sp?.error === '404' ||
-    sp?.status === '404';
+    sp?.status === '404' ||
+    Boolean(sp?.m) ||
+    Boolean(sp?.matchslug);
 
   const isLikelyMatch = subcategorySlug?.includes('-vs-') || /-\d{4}-\d{2}-\d{2}/.test(subcategorySlug || '');
 

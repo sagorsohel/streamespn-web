@@ -100,18 +100,31 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
 
               if (matchedSub) {
                 const validSubSlug = slugify(matchedSub.name);
-                if (isMounted) router.replace(`/${validCategorySlug}/${validSubSlug}?notfound=true`);
+                const cleanMatchSlug = matchSlug ? matchSlug.replace(/^\/+/, '') : '';
+                if (isMounted) router.replace(`/${validCategorySlug}/${validSubSlug}?notfound=true${cleanMatchSlug ? `&m=${cleanMatchSlug}` : ''}`);
                 return;
               }
             } catch (e) { }
+
+            const cleanMatchSlug = matchSlug ? matchSlug.replace(/^\/+/, '') : '';
+            if (isMounted) router.replace(`/${validCategorySlug}/${subcategorySlug}?notfound=true${cleanMatchSlug ? `&m=${cleanMatchSlug}` : ''}`);
+            return;
           }
 
-          if (isMounted) router.replace(`/${validCategorySlug}?notfound=true`);
+          const cleanMatchSlug = matchSlug ? matchSlug.replace(/^\/+/, '') : '';
+          if (isMounted) router.replace(`/${validCategorySlug}?notfound=true${cleanMatchSlug ? `&m=${cleanMatchSlug}` : ''}`);
           return;
         }
       } catch (e) { }
 
-      if (isMounted) router.replace('/?notfound=true');
+      const cleanMatchSlug = matchSlug ? matchSlug.replace(/^\/+/, '') : '';
+      if (categorySlug && subcategorySlug && subcategorySlug !== 'all') {
+        if (isMounted) router.replace(`/${categorySlug}/${subcategorySlug}?notfound=true${cleanMatchSlug ? `&m=${cleanMatchSlug}` : ''}`);
+      } else if (categorySlug) {
+        if (isMounted) router.replace(`/${categorySlug}?notfound=true${cleanMatchSlug ? `&m=${cleanMatchSlug}` : ''}`);
+      } else {
+        if (isMounted) router.replace(`/?notfound=true${cleanMatchSlug ? `&m=${cleanMatchSlug}` : ''}`);
+      }
     };
 
     handleRedirect();
@@ -119,7 +132,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
     return () => {
       isMounted = false;
     };
-  }, [notFound, categorySlug, subcategorySlug, router]);
+  }, [notFound, categorySlug, subcategorySlug, matchSlug, router]);
 
   // 🔄 REAL-TIME SILENT LIVE SCORE & MINUTE SYNC (15s interval)
   useLiveScoreSync(match ? [match] : [], (updatedArr) => {

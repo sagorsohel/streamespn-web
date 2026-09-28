@@ -60,7 +60,9 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     sp?.notfound === 'true' ||
     sp?.notfound === '1' ||
     sp?.error === '404' ||
-    sp?.status === '404';
+    sp?.status === '404' ||
+    Boolean(sp?.m) ||
+    Boolean(sp?.matchslug);
 
   const categoryName = await getCategoryName(categorySlug);
   const pageTitle = isFromNotFound

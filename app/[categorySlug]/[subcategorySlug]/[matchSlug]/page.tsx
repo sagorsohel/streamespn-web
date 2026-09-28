@@ -147,11 +147,19 @@ async function getNotFoundFallback(categorySlug: string, subcategorySlug: string
             return `/${validCategorySlug}/${validSubSlug}`;
           }
         } catch (e) { }
+
+        return `/${validCategorySlug}/${subcategorySlug}`;
       }
 
       return `/${validCategorySlug}`;
     }
   } catch (e) { }
+
+  if (categorySlug && subcategorySlug && subcategorySlug !== 'all') {
+    return `/${categorySlug}/${subcategorySlug}`;
+  } else if (categorySlug) {
+    return `/${categorySlug}`;
+  }
 
   return '/';
 }
@@ -183,7 +191,9 @@ export default async function SingleMatchPage({ params }: SingleMatchProps) {
 
   if (!matchFound) {
     const fallbackUrl = await getNotFoundFallback(categorySlug, subcategorySlug);
-    const redirectUrl = `${fallbackUrl}${fallbackUrl.includes('?') ? '&' : '?'}notfound=true`;
+    const cleanMatchSlug = matchSlug.replace(/^\/+/, '');
+    const separator = fallbackUrl.includes('?') ? '&' : '?';
+    const redirectUrl = `${fallbackUrl}${separator}notfound=true&m=${cleanMatchSlug}`;
     redirect(redirectUrl);
   }
 
