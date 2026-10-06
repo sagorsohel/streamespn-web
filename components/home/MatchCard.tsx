@@ -280,8 +280,8 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
               <span>Replay</span>
             </span>
           ) : (
-            <span className="inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-300 dark:border-zinc-700 bg-transparent px-3.5 sm:px-4 py-1.5 text-xs font-bold text-slate-800 dark:text-zinc-200 group-hover:bg-[#F8C831] group-hover:border-[#F8C831] group-hover:text-black transition-all">
-              <PlayCircle className="h-3.5 w-3.5" />
+            <span className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#f8c831]  bg-transparent px-3.5 sm:px-4 py-1.5 text-xs font-bold text-slate-800 dark:text-zinc-200 group-hover:bg-[#F8C831] group-hover:border-[#F8C831] group-hover:text-black transition-all">
+              <PlayCircle className="h-3.5 text-red-500 w-3.5" />
               <span>Watch</span>
             </span>
           )}
