@@ -23,8 +23,6 @@ import {
   TrendingUp,
 } from 'lucide-react';
 
-const POPULAR_SEARCHES = ['Soccer', 'NFL', 'Basketball', 'Baseball', 'Premier League', 'UFC'];
-
 export default function SearchResultsView() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -37,43 +35,39 @@ export default function SearchResultsView() {
   const [activeTab, setActiveTab] = useState<'all' | 'live' | 'upcoming' | 'finished'>('all');
   const [selectedSport, setSelectedSport] = useState<string>('all');
 
-  // Keep search input synced when URL query changes
+  // Keep search query synced when URL query changes
   useEffect(() => {
     setSearchInput(rawQuery);
     setActiveQuery(rawQuery);
   }, [rawQuery]);
 
-  // Fetch search results
+  // Fetch search results (always fresh from backend without caching)
   useEffect(() => {
     let isCancelled = false;
+    const queryTerm = activeQuery.trim();
 
     const fetchSearchResults = async () => {
       setLoading(true);
       startTopLoader();
 
       try {
-        const queryTerm = activeQuery.trim();
         let fetchedList: MatchItem[] = [];
 
-        // 1. Try search endpoint with q/search param
-        try {
-          const res = await api.get('/matches', {
-            params: {
-              search: queryTerm || undefined,
-              q: queryTerm || undefined,
-              all: 'true',
-              limit: 500,
-            },
-          });
-          if (res.data?.success && Array.isArray(res.data.data?.matches)) {
-            fetchedList = res.data.data.matches;
-          }
-        } catch (apiErr) {
-          // If endpoint fails, fallback to fetching all matches
+        // 2. Fetch directly from optimized search endpoint
+        const res = await api.get('/matches', {
+          params: {
+            search: queryTerm || undefined,
+            q: queryTerm || undefined,
+            all: 'true',
+            limit: 200,
+          },
+        });
+
+        if (res.data?.success && Array.isArray(res.data.data?.matches)) {
+          fetchedList = res.data.data.matches;
         }
 
-        // 2. If query was supplied and remote backend did not filter (or returned empty/fallback)
-        // Perform exhaustive client-side inclusion check across all relevant match fields
+        // 3. Client-side inclusion filter (guarantees accuracy across teams, titles, and leagues)
         if (queryTerm) {
           const term = queryTerm.toLowerCase();
           const words = term.split(/\s+/).filter(Boolean);
@@ -111,17 +105,7 @@ export default function SearchResultsView() {
             return false;
           };
 
-          // If fetchedList is already filtered by backend, verify; otherwise, fetch full list and filter
-          if (fetchedList.length === 0 || !fetchedList.some(matchesSearch)) {
-            try {
-              const allRes = await api.get('/matches?all=true&limit=1000');
-              if (allRes.data?.success && Array.isArray(allRes.data.data?.matches)) {
-                fetchedList = allRes.data.data.matches.filter(matchesSearch);
-              }
-            } catch (err) {}
-          } else {
-            fetchedList = fetchedList.filter(matchesSearch);
-          }
+          fetchedList = fetchedList.filter(matchesSearch);
         }
 
         if (!isCancelled) {
