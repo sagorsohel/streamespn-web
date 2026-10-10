@@ -66,21 +66,22 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 
   const categoryName = await getCategoryName(categorySlug);
   const pageTitle = isFromNotFound
-    ? `(404)- (${categoryName}) Live | StreamESPN`
-    : `(${categoryName}) Live | StreamESPN`;
+    ? `(404) - ${categoryName} Fixtures, Live Scores & Schedules | StreamESPN`
+    : `${categoryName} Fixtures, Live Scores & Schedules | StreamESPN`;
+  const pageDescription = `Follow ${categoryName} live scores, upcoming fixtures, match schedules, team news, results, and the latest match updates on StreamESPN.`;
 
   return {
     title: {
       absolute: pageTitle,
     },
-    description: `Watch ${categoryName} live streams HD online for free on StreamESPN. High-speed lag-free streams, scores, and schedules.`,
+    description: pageDescription,
     openGraph: {
       title: pageTitle,
-      description: `Watch ${categoryName} live streams HD online for free on StreamESPN. High-speed lag-free streams, scores, and schedules.`,
+      description: pageDescription,
     },
     twitter: {
       title: pageTitle,
-      description: `Watch ${categoryName} live streams HD online for free on StreamESPN. High-speed lag-free streams, scores, and schedules.`,
+      description: pageDescription,
     },
   };
 }

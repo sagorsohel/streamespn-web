@@ -300,8 +300,8 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
               : `${subTitle} (${catTitle}) Live | StreamESPN`;
           } else if (targetCategory?.sportName) {
             document.title = isFromNotFound
-              ? `(404)- (${targetCategory.sportName}) Live | StreamESPN`
-              : `(${targetCategory.sportName}) Live | StreamESPN`;
+              ? `(404) - ${targetCategory.sportName} Fixtures, Live Scores & Schedules | StreamESPN`
+              : `${targetCategory.sportName} Fixtures, Live Scores & Schedules | StreamESPN`;
           }
         }
 

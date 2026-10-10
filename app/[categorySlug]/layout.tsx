@@ -55,20 +55,21 @@ interface CategoryLayoutProps {
 export async function generateMetadata({ params }: { params: Promise<{ categorySlug: string }> }): Promise<Metadata> {
   const { categorySlug } = await params;
   const categoryName = await getCategoryName(categorySlug);
-  const pageTitle = `(${categoryName}) Live | StreamESPN`;
+  const pageTitle = `${categoryName} Fixtures, Live Scores & Schedules | StreamESPN`;
+  const pageDescription = `Follow ${categoryName} live scores, upcoming fixtures, match schedules, team news, results, and the latest match updates on StreamESPN.`;
 
   return {
     title: {
       absolute: pageTitle,
     },
-    description: `Watch ${categoryName} live streams HD online for free on StreamESPN. High-speed lag-free streams, scores, and schedules.`,
+    description: pageDescription,
     openGraph: {
       title: pageTitle,
-      description: `Watch ${categoryName} live streams HD online for free on StreamESPN. High-speed lag-free streams, scores, and schedules.`,
+      description: pageDescription,
     },
     twitter: {
       title: pageTitle,
-      description: `Watch ${categoryName} live streams HD online for free on StreamESPN. High-speed lag-free streams, scores, and schedules.`,
+      description: pageDescription,
     },
   };
 }

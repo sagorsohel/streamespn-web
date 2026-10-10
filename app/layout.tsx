@@ -25,19 +25,18 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://streamespn.org';
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "StreamESPN | Watch Live Sports & All Events Online FREE",
+    default: "Live Sports Scores, Fixtures & Schedules | StreamESPN",
     template: "%s | StreamESPN",
   },
   description:
-    "Watch Your Favorite Sports Live Streams Online for FREE, TV Coverage, Replays, and Highlights from Anywhere at Anytime. Fast HLS streaming CDN optimized for PC, Mac, iPad, iPhone, and Android.",
+    "Follow live sports scores, upcoming fixtures, match schedules, team news, and the latest updates for soccer, basketball, tennis, and more on StreamESPN.",
   keywords: [
-    "live sports streaming",
-    "soccer live stream",
-    "free sports stream",
-    "hd sports stream",
-    "nba live stream",
-    "nfl live stream",
-    "f1 live stream",
+    "live sports scores",
+    "sports fixtures",
+    "match schedules",
+    "soccer scores",
+    "basketball fixtures",
+    "tennis schedules",
     "streamespn",
   ],
   authors: [{ name: "StreamESPN" }],
@@ -58,16 +57,16 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: siteUrl,
-    title: "StreamESPN | Watch Live Sports & All Events Online FREE",
+    title: "Live Sports Scores, Fixtures & Schedules | StreamESPN",
     description:
-      "Watch Your Favorite Sports Live Streams Online for FREE, TV Coverage, Replays, and Highlights from Anywhere at Anytime.",
+      "Follow live sports scores, upcoming fixtures, match schedules, team news, and the latest updates for soccer, basketball, tennis, and more on StreamESPN.",
     siteName: "StreamESPN",
   },
   twitter: {
     card: "summary_large_image",
-    title: "StreamESPN | Watch Live Sports & All Events Online FREE",
+    title: "Live Sports Scores, Fixtures & Schedules | StreamESPN",
     description:
-      "Watch Your Favorite Sports Live Streams Online for FREE, TV Coverage, Replays, and Highlights from Anywhere at Anytime.",
+      "Follow live sports scores, upcoming fixtures, match schedules, team news, and the latest updates for soccer, basketball, tennis, and more on StreamESPN.",
   },
   alternates: {
     canonical: siteUrl,
