@@ -28,25 +28,39 @@ export async function generateMetadata({ params, searchParams }: NestedPageProps
       const matchRes = await api.get(`/matches/${subcategorySlug}`, { timeout: 25000 });
       if (matchRes.data?.success && matchRes.data?.data?.match) {
         const match = matchRes.data.data.match;
-        let displayTitle = '';
-        let displayDescription = '';
-
-        if (match.matchType === 'team_vs_team') {
-          const teamA = match.homeTeam || 'Team A';
-          const teamB = match.awayTeam || 'Team B';
-          displayTitle = `LIVE: ${teamA} vs ${teamB} Match Stream`;
-          displayDescription = `Stream "${teamA} vs ${teamB}" live match including scores, standings, and highlights.`;
+        let matchName = '';
+        if (match.matchType === 'team_vs_team' && match.homeTeam && match.awayTeam) {
+          matchName = `${match.homeTeam} vs ${match.awayTeam}`;
         } else {
-          const matchTitle = match.title || 'Live Stream';
-          displayTitle = `${matchTitle}`;
-          displayDescription = `Stream ${matchTitle} live on StreamESPN. Unlock all high-speed HD streams.`;
+          matchName = match.title || (match.homeTeam && match.awayTeam ? `${match.homeTeam} vs ${match.awayTeam}` : 'Match');
         }
 
+        const subcatName = match.subcategoryName || 'League';
+        const catName = match.categoryName || 'Sports';
+        const venueStr = match.venue?.trim() ? match.venue.trim() : 'the stadium';
+
+        const d = match.matchTime ? new Date(match.matchTime) : null;
+        const matchDate = d && !isNaN(d.getTime())
+          ? d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+          : 'TBA';
+        const matchTime = d && !isNaN(d.getTime())
+          ? d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'UTC' }) + ' UTC'
+          : 'TBA';
+
+        const displayTitle = `${matchName} Live Score & Match Updates | StreamESPN`;
+        const displayDescription = `Follow ${matchName} in the ${subcatName} on ${matchDate} at ${matchTime}. Get ${catName} match details, schedules, scores, and updates from ${venueStr} on StreamESPN`;
+
         return {
-          title: displayTitle,
+          title: {
+            absolute: displayTitle,
+          },
           description: displayDescription,
           openGraph: {
-            title: `${displayTitle} | StreamESPN`,
+            title: displayTitle,
+            description: displayDescription,
+          },
+          twitter: {
+            title: displayTitle,
             description: displayDescription,
           },
         };
