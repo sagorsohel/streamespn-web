@@ -301,7 +301,7 @@ Follow live sports scores, upcoming fixtures, match schedules, team news, and th
             <span className="text-[var(--border-glass)]">•</span>
             <Link href="/" className="hover:text-[var(--text-white)] transition-colors">Terms of Service</Link>
             <span className="text-[var(--border-glass)]">•</span>
-            <Link href="/" className="hover:text-[var(--text-white)] transition-colors">DMCA</Link>
+            <Link href="/dmca" className="hover:text-[var(--text-white)] transition-colors">DMCA</Link>
           </div>
         </div>
 
