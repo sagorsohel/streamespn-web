@@ -296,12 +296,14 @@ Follow live sports scores, upcoming fixtures, match schedules, team news, and th
         {/* BOTTOM COPYRIGHT & LEGAL NOTICE */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-[11px] text-[var(--text-muted)]">
           <p>© {new Date().getFullYear()} <strong className="text-[var(--text-white)]">StreamESPN</strong>. All rights reserved.</p>
-          <div className="flex items-center gap-4 text-xs font-bold">
+          <div className="flex items-center gap-4 text-xs font-bold flex-wrap">
             <Link href="/" className="hover:text-[var(--text-white)] transition-colors">Privacy Policy</Link>
             <span className="text-[var(--border-glass)]">•</span>
             <Link href="/" className="hover:text-[var(--text-white)] transition-colors">Terms of Service</Link>
             <span className="text-[var(--border-glass)]">•</span>
             <Link href="/dmca" className="hover:text-[var(--text-white)] transition-colors">DMCA</Link>
+            <span className="text-[var(--border-glass)]">•</span>
+            <Link href="/contact-us" className="hover:text-[var(--text-white)] transition-colors">Contact Us</Link>
           </div>
         </div>
 
