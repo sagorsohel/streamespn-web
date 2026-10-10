@@ -221,15 +221,20 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
 
   // Search & Navigation States
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [searching, setSearching] = useState<boolean>(false);
 
   const [leftDrawerOpen, setLeftDrawerOpen] = useState<boolean>(false);
   const [isMoreOpen, setIsMoreOpen] = useState<boolean>(false);
   const [isTvModalOpen, setIsTvModalOpen] = useState<boolean>(false);
 
   const moreRef = useRef<HTMLDivElement>(null);
+
+  const handleSearchSubmit = (overrideQuery?: string) => {
+    const q = (overrideQuery !== undefined ? overrideQuery : searchQuery).trim();
+    if (!q) return;
+    setLeftDrawerOpen(false);
+    startTopLoader();
+    router.push(`/search?q=${encodeURIComponent(q)}`);
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -260,39 +265,6 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
       })
       .catch(() => { });
   }, []);
-
-  // Search API Call
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      setSearching(true);
-      try {
-        const res = await api.get('/matches');
-        if (res.data?.success) {
-          const allMatches = res.data.data.matches || [];
-          const term = searchQuery.toLowerCase();
-          const filtered = allMatches.filter((m: any) => {
-            const h = m.homeTeam ? m.homeTeam.toLowerCase().includes(term) : false;
-            const a = m.awayTeam ? m.awayTeam.toLowerCase().includes(term) : false;
-            const t = m.title ? m.title.toLowerCase().includes(term) : false;
-            const c = m.categoryName ? m.categoryName.toLowerCase().includes(term) : false;
-            return h || a || t || c;
-          });
-          setSearchResults(filtered.slice(0, 6));
-        }
-      } catch (err) {
-        // ignore
-      } finally {
-        setSearching(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
 
   const toggleDarkMode = () => {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
@@ -333,60 +305,44 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
 
             {/* SEARCH INPUT BAR */}
             <div className="relative">
-              <div className="flex items-center rounded-full border border-[var(--border-glass)] bg-[var(--bg-card)] px-4 py-2 text-xs sm:text-sm focus-within:border-[#F8C831] transition-all">
-                <Search className="h-4 w-4 text-[var(--text-muted)] mr-2 shrink-0" />
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSearchSubmit();
+                }}
+                className="flex items-center rounded-full border border-[var(--border-glass)] bg-[var(--bg-card)] px-3.5 py-2 text-xs sm:text-sm focus-within:border-[#F8C831] transition-all"
+              >
+                <button
+                  type="submit"
+                  title="Search"
+                  className="text-[var(--text-muted)] hover:text-[#F8C831] mr-2 shrink-0 transition-colors cursor-pointer"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setIsSearchOpen(true);
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSearchSubmit();
+                    }
                   }}
                   placeholder="Search"
                   className="w-36 md:w-52 bg-transparent text-[var(--text-white)] placeholder-[var(--text-dim)] focus:outline-none text-xs sm:text-sm font-medium"
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="text-[var(--text-muted)] hover:text-[var(--text-white)]">
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="text-[var(--text-muted)] hover:text-[var(--text-white)] ml-1 cursor-pointer"
+                    title="Clear"
+                  >
                     <X className="h-4 w-4" />
                   </button>
                 )}
-              </div>
-
-              {/* SEARCH RESULTS DROPDOWN */}
-              {isSearchOpen && searchQuery && (
-                <div className="absolute right-0 top-12 w-80 rounded-2xl border border-[var(--border-glass)] bg-[var(--bg-card)] p-3 shadow-2xl z-50 space-y-2 backdrop-blur-xl">
-                  <div className="flex items-center justify-between border-b border-[var(--border-glass)] pb-2 text-xs text-[var(--text-muted)] font-bold">
-                    <span>Events Results</span>
-                    <button onClick={() => setIsSearchOpen(false)} className="hover:text-[var(--text-white)]">
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  {searching ? (
-                    <div className="p-4 text-center text-xs text-[var(--text-muted)]">Searching live data...</div>
-                  ) : searchResults.length === 0 ? (
-                    <div className="p-4 text-center text-xs text-[var(--text-muted)]">No matches found</div>
-                  ) : (
-                    <div className="space-y-1.5">
-                      {searchResults.map((m) => (
-                        <Link
-                          key={m.id}
-                          href={`/match/${m.slug || m.id}`}
-                          onClick={() => setIsSearchOpen(false)}
-                          className="flex items-center justify-between p-2 rounded-xl bg-[var(--bg-main)] hover:bg-[var(--bg-card-hover)] transition-all"
-                        >
-                          <div className="truncate text-xs sm:text-sm font-semibold text-[var(--text-white)]">
-                            {m.matchType === 'team_vs_team' ? `${m.homeTeam} vs ${m.awayTeam}` : m.title}
-                          </div>
-                          <span className="text-[10px] sm:text-xs font-bold text-[#F8C831] px-2 py-0.5 bg-amber-500/10 rounded-md border border-amber-500/20">
-                            {m.categoryName || 'Sport'}
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+              </form>
             </div>
 
             {/* DARK / LIGHT THEME TOGGLER */}
@@ -628,22 +584,49 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
               </div>
 
               {/* SEARCH INPUT BAR */}
-              <div className="space-y-2">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSearchSubmit();
+                }}
+                className="space-y-2"
+              >
                 <label className="text-xs font-black text-[var(--text-muted)] uppercase tracking-wider">Search Events</label>
-                <div className="flex items-center rounded-xl border border-[var(--border-glass)] bg-[var(--bg-main)] px-3.5 py-2 text-xs">
-                  <Search className="h-4 w-4 text-[var(--text-muted)] mr-2 shrink-0" />
+                <div className="flex items-center rounded-xl border border-[var(--border-glass)] bg-[var(--bg-main)] px-3.5 py-2 text-xs focus-within:border-[#F8C831] transition-all">
+                  <button
+                    type="submit"
+                    title="Search"
+                    className="text-[var(--text-muted)] hover:text-[#F8C831] mr-2 shrink-0 transition-colors cursor-pointer"
+                  >
+                    <Search className="h-4 w-4" />
+                  </button>
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
-                      setIsSearchOpen(true);
                     }}
-                    placeholder="Search teams, events..."
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSearchSubmit();
+                      }
+                    }}
+                    placeholder="Search teams, events, leagues..."
                     className="w-full bg-transparent text-[var(--text-white)] placeholder-[var(--text-dim)] focus:outline-none text-xs font-semibold"
                   />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="text-[var(--text-muted)] hover:text-[var(--text-white)] ml-1"
+                      title="Clear"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
-              </div>
+              </form>
 
               {/* MEMBERSHIP SOLID BUTTON */}
               <div className="pt-2">
