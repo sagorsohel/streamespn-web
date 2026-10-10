@@ -101,21 +101,22 @@ export async function generateMetadata({ params, searchParams }: NestedPageProps
   }
 
   const pageTitle = isFromNotFound
-    ? `(404)- (${subName}) - (${cateName}) Live | StreamESPN`
-    : `${subName} (${cateName}) Live | StreamESPN`;
+    ? `(404) - ${subName} Fixtures, Live Scores & Schedule | StreamESPN`
+    : `${subName} Fixtures, Live Scores & Schedule | StreamESPN`;
+  const pageDescription = `Explore ${subName} live scores, upcoming fixtures, match schedules, team news, results, standings, and the latest ${cateName} updates on StreamESPN`;
 
   return {
     title: {
       absolute: pageTitle,
     },
-    description: `Watch ${subName} - ${cateName} live streams HD online for free on StreamESPN. High-speed lag-free coverage.`,
+    description: pageDescription,
     openGraph: {
       title: pageTitle,
-      description: `Watch ${subName} - ${cateName} live streams HD online for free on StreamESPN.`,
+      description: pageDescription,
     },
     twitter: {
       title: pageTitle,
-      description: `Watch ${subName} - ${cateName} live streams HD online for free on StreamESPN.`,
+      description: pageDescription,
     },
   };
 }

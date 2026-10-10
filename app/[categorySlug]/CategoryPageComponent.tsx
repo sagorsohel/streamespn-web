@@ -296,8 +296,8 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
             const subTitle = matched ? matched.name : subcategorySlug.toUpperCase();
             const catTitle = targetCategory?.sportName || '';
             document.title = isFromNotFound
-              ? `(404)- (${subTitle}) - (${catTitle}) Live | StreamESPN`
-              : `${subTitle} (${catTitle}) Live | StreamESPN`;
+              ? `(404) - ${subTitle} Fixtures, Live Scores & Schedule | StreamESPN`
+              : `${subTitle} Fixtures, Live Scores & Schedule | StreamESPN`;
           } else if (targetCategory?.sportName) {
             document.title = isFromNotFound
               ? `(404) - ${targetCategory.sportName} Fixtures, Live Scores & Schedules | StreamESPN`
