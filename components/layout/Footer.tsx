@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import api from '@/lib/api';
 import { AdRenderer } from '../ads/AdRenderer';
 import { Tv, Shield, Globe, Radio, Sparkles, Lock, X } from 'lucide-react';
+import { slugify } from '@/lib/utils';
 import {
   getAdsSettingsSync,
   subscribeAdsSettings,
@@ -26,6 +27,12 @@ interface FooterProps {
   initialAdsSettings?: AdsSettings;
 }
 
+// In-memory cache for Footer Top Leagues to prevent repetitive API calls during navigation
+let cachedTopSubcategories: any[] | null = null;
+let topSubcategoriesPromise: Promise<any[]> | null = null;
+let lastCacheTimestamp = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes cache
+
 export const Footer: React.FC<FooterProps> = ({ initialAdsSettings }) => {
   const pathname = usePathname();
   const [mounted, setMounted] = useState<boolean>(false);
@@ -36,6 +43,7 @@ export const Footer: React.FC<FooterProps> = ({ initialAdsSettings }) => {
     return {};
   });
   const [showFloatDesktop, setShowFloatDesktop] = useState<boolean>(true);
+  const [topSubcategories, setTopSubcategories] = useState<any[]>(() => cachedTopSubcategories || []);
   const histatsContainerRef = useRef<HTMLDivElement>(null);
   const injectedHistatsRef = useRef<string>('');
 
@@ -46,7 +54,73 @@ export const Footer: React.FC<FooterProps> = ({ initialAdsSettings }) => {
       setAdsSettings(updated);
     });
     fetchAdsSettingsAsync();
+
+    let isMounted = true;
+    const fetchTopSubcategories = async () => {
+      const now = Date.now();
+      if (cachedTopSubcategories && now - lastCacheTimestamp < CACHE_TTL_MS) {
+        if (isMounted) setTopSubcategories(cachedTopSubcategories);
+        return;
+      }
+      if (topSubcategoriesPromise) {
+        const cached = await topSubcategoriesPromise;
+        if (isMounted && cached) setTopSubcategories(cached);
+        return;
+      }
+
+      topSubcategoriesPromise = (async () => {
+        try {
+          const res = await api.get('/subcategories?home=true');
+          if (res.data?.success && Array.isArray(res.data.data?.subcategories)) {
+            const subs = res.data.data.subcategories;
+            // Filter subcategories with >= 10 matches today/upcoming
+            const qualifying = subs.filter((s: any) => Number(s.matchCount || 0) >= 10);
+
+            // Get top subcategories across up to 4 distinct categories
+            const selected: any[] = [];
+            const seenCategories = new Set<string>();
+
+            for (const sub of qualifying) {
+              const catKey = sub.categoryName || String(sub.categoryId);
+              if (!seenCategories.has(catKey)) {
+                seenCategories.add(catKey);
+                selected.push(sub);
+              }
+              if (selected.length >= 4) break;
+            }
+
+            // Fill remaining slots up to 4 if less than 4 categories have >= 10 matches
+            if (selected.length < 4) {
+              for (const sub of qualifying) {
+                if (!selected.some((s) => s.id === sub.id)) {
+                  selected.push(sub);
+                  if (selected.length >= 4) break;
+                }
+              }
+            }
+
+            cachedTopSubcategories = selected;
+            lastCacheTimestamp = Date.now();
+            return selected;
+          }
+        } catch (e) {
+          // ignore
+        } finally {
+          topSubcategoriesPromise = null;
+        }
+        return [];
+      })();
+
+      const data = await topSubcategoriesPromise;
+      if (isMounted && data) {
+        setTopSubcategories(data);
+      }
+    };
+
+    fetchTopSubcategories();
+
     return () => {
+      isMounted = false;
       unsubscribe();
     };
   }, []);
@@ -156,8 +230,7 @@ export const Footer: React.FC<FooterProps> = ({ initialAdsSettings }) => {
               </span>
             </div>
             <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-              Watch your favorite live sports events online for FREE. Fast HLS streaming CDN optimized for PC, Mac, iPad, iPhone, and Android.
-            </p>
+Follow live sports scores, upcoming fixtures, match schedules, team news, and the latest updates for soccer, basketball, tennis, and more on StreamESPN.            </p>
           </div>
 
           {/* RIGHT: POPULAR SPORTS & QUICK LINKS */}
@@ -170,12 +243,12 @@ export const Footer: React.FC<FooterProps> = ({ initialAdsSettings }) => {
               <ul className="space-y-2 text-xs font-semibold">
                 <li>
                   <Link href="/soccer" className="hover:text-[var(--text-white)] transition-colors flex items-center gap-1">
-                    ⚽ Soccer Streams
+                    ⚽ Soccer 
                   </Link>
                 </li>
                 <li>
                   <Link href="/basketball" className="hover:text-[var(--text-white)] transition-colors flex items-center gap-1">
-                    🏀 Basketball Streams
+                    🏀 Basketball 
                   </Link>
                 </li>
                 <li>
@@ -185,57 +258,44 @@ export const Footer: React.FC<FooterProps> = ({ initialAdsSettings }) => {
                 </li>
                 <li>
                   <Link href="/tennis" className="hover:text-[var(--text-white)] transition-colors flex items-center gap-1">
-                    🎾 Tennis Streams
+                    🎾 Tennis 
                   </Link>
                 </li>
               </ul>
             </div>
 
-            {/* COLUMN: QUICK LINKS */}
-            <div className="space-y-3 min-w-[140px]">
-              <h4 className="text-xs font-black uppercase text-[var(--text-white)] tracking-wider flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-amber-400" /> Quick Links
-              </h4>
-              <ul className="space-y-2 text-xs font-semibold">
-                <li>
-                  <Link href="/" className="hover:text-[var(--text-white)] transition-colors">
-                    🔥 Live Events
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/replay" className="hover:text-[var(--text-white)] transition-colors">
-                    📺 Highlights
-                  </Link>
-                </li>
-                <li>
-                  <a
-                    href={formatExternalUrl(adsSettings.membershipReferralLink)}
-                    suppressHydrationWarning
-                    rel="noopener noreferrer"
-                    className="hover:text-[#F8C831] transition-colors flex items-center gap-1 cursor-pointer"
-                  >
-                    <Lock className="h-3 w-3 text-amber-400" /> VIP Access
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href={formatExternalUrl(adsSettings.globalSignInReferralLink)}
-                    suppressHydrationWarning
-                    rel="noopener noreferrer"
-                    className="hover:text-[#F8C831] transition-colors cursor-pointer"
-                  >
-                    🔐 Free Sign In
-                  </a>
-                </li>
-              </ul>
-            </div>
+            {/* COLUMN: TOP LEAGUES (Only shown if there are subcategories with >= 10 matches) */}
+            {topSubcategories.length > 0 && (
+              <div className="space-y-3 min-w-[140px]">
+                <h4 className="text-xs font-black uppercase text-[var(--text-white)] tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-amber-400" /> Top Leagues
+                </h4>
+                <ul className="space-y-2 text-xs font-semibold">
+                  {topSubcategories.map((sub) => {
+                    const catSlug = slugify(sub.categoryName || 'sport');
+                    const subSlug = slugify(sub.name);
+                    return (
+                      <li key={sub.id}>
+                        <Link
+                          href={`/${catSlug}/${subSlug}`}
+                          className="hover:text-[var(--text-white)] transition-colors flex items-center gap-1.5"
+                        >
+                          <span>🔥</span>
+                          <span>{sub.name}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
           </div>
 
         </div>
 
         {/* BOTTOM COPYRIGHT & LEGAL NOTICE */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-[11px] text-[var(--text-muted)]">
-          <p>© {new Date().getFullYear()} <strong className="text-[var(--text-white)]">StreamESPN</strong>. All rights reserved. Premium Live Sports Streaming Platform.</p>
+          <p>© {new Date().getFullYear()} <strong className="text-[var(--text-white)]">StreamESPN</strong>. All rights reserved.</p>
           <div className="flex items-center gap-4 text-xs font-bold">
             <Link href="/" className="hover:text-[var(--text-white)] transition-colors">Privacy Policy</Link>
             <span className="text-[var(--border-glass)]">•</span>
