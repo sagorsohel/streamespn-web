@@ -9,6 +9,7 @@ import { slugify } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { JsonLdSchema } from '@/components/seo/JsonLdSchema';
 import { SportsFilter, Category } from '@/components/home/SportsFilter';
 import { MatchCard, MatchItem } from '@/components/home/MatchCard';
 import { useLiveScoreSync } from '@/lib/useLiveScoreSync';
@@ -270,6 +271,8 @@ export default function HomePage() {
       transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] }}
       className="mx-auto max-w-7xl px-4 sm:px-6 pt-3 pb-12 flex-1 w-full"
     >
+      <JsonLdSchema type="home" />
+
       {/* BANNER / SLIDER LOADING SKELETON (MOBILE & DESKTOP STYLED) */}
       {loading && displayedBannerMatches.length === 0 ? (
         <BannerSkeleton />

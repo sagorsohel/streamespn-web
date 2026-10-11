@@ -41,6 +41,7 @@ interface MatchDetailProps {
   categorySlug: string;
   subcategorySlug: string;
   matchSlug: string;
+  initialMatch?: MatchItem | null;
   initialAdsSettings?: AdsSettings;
 }
 
@@ -53,11 +54,11 @@ const formatExternalUrl = (url?: string) => {
   return `https://${trimmed}`;
 };
 
-export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchSlug, initialAdsSettings }: MatchDetailProps) {
+export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchSlug, initialMatch, initialAdsSettings }: MatchDetailProps) {
   const router = useRouter();
-  const [match, setMatch] = useState<MatchItem | null>(null);
+  const [match, setMatch] = useState<MatchItem | null>(() => initialMatch || null);
   const [relatedMatches, setRelatedMatches] = useState<MatchItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(() => !initialMatch);
   const [notFound, setNotFound] = useState<boolean>(false);
 
   // Redirect hierarchically if match is not found: subcategory -> category -> home
@@ -378,6 +379,11 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
             homeTeam={match.homeTeam || undefined}
             awayTeam={match.awayTeam || undefined}
             categoryName={match.categoryName || categorySlug}
+            categorySlug={categorySlug !== 'sport' ? categorySlug : (match.categoryName ? slugify(match.categoryName) : 'sport')}
+            tournamentName={match.subcategoryName || (subcategorySlug !== 'all' ? subcategorySlug : 'League')}
+            tournamentSlug={subcategorySlug !== 'all' ? subcategorySlug : (match.subcategoryName ? slugify(match.subcategoryName) : 'league')}
+            matchSlug={match.slug || matchSlug}
+            venue={match.venue || undefined}
             isLive={isLive}
           />
         )}

@@ -182,6 +182,7 @@ export default async function SingleMatchPage({ params }: SingleMatchProps) {
   const { categorySlug, subcategorySlug, matchSlug } = await params;
 
   let matchFound = false;
+  let serverMatch: any = null;
   try {
     const rawSlug = matchSlug;
     let decodedSlug = rawSlug;
@@ -198,6 +199,7 @@ export default async function SingleMatchPage({ params }: SingleMatchProps) {
 
     if (res.data?.success && res.data?.data?.match) {
       matchFound = true;
+      serverMatch = res.data.data.match;
     }
   } catch (err: any) {
     matchFound = false;
@@ -218,6 +220,7 @@ export default async function SingleMatchPage({ params }: SingleMatchProps) {
       categorySlug={categorySlug}
       subcategorySlug={subcategorySlug}
       matchSlug={matchSlug}
+      initialMatch={serverMatch}
       initialAdsSettings={initialAdsSettings}
     />
   );
