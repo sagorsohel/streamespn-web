@@ -68,11 +68,20 @@ export async function generateMetadata({ params }: MatchSlugPageProps): Promise<
 
 export default async function LegacyMatchPage({ params }: MatchSlugPageProps) {
   const { slug } = await params;
+  let serverMatch: any = null;
+  try {
+    const res = await api.get(`/matches/${slug}`, { timeout: 8000 });
+    if (res.data?.success && res.data?.data?.match) {
+      serverMatch = res.data.data.match;
+    }
+  } catch (e) { }
+
   return (
     <SingleMatchViewComponent
       categorySlug="sport"
       subcategorySlug="all"
       matchSlug={slug}
+      initialMatch={serverMatch}
     />
   );
 }

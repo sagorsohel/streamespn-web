@@ -17,7 +17,6 @@ import { Suspense } from "react";
 import { TopLoadingBar } from "@/components/layout/TopLoadingBar";
 import { SSRHeadScripts } from "@/components/ads/SSRHeadScripts";
 import { InspectProtection } from "@/components/layout/InspectProtection";
-import { JsonLdSchema } from "@/components/seo/JsonLdSchema";
 import type { Metadata } from "next";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://streamespn.org';
@@ -142,7 +141,6 @@ export default async function RootLayout({
       <head suppressHydrationWarning>
         <link rel="preconnect" href="https://www.highperformanceformat.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://www.highperformanceformat.com" />
-        <JsonLdSchema type="website" />
         <script
           suppressHydrationWarning
           dangerouslySetInnerHTML={{

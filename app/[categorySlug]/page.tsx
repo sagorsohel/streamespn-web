@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { getCategories } from '@/lib/categories';
 import { slugify } from '@/lib/utils';
 import { CategoryPageComponent } from './CategoryPageComponent';
+import { JsonLdSchema } from '@/components/seo/JsonLdSchema';
 
 const knownAcronyms: Record<string, string> = {
   aew: 'AEW',
@@ -86,7 +87,29 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   };
 }
 
-export default async function CategoryPage({ params }: PageProps) {
+export default async function CategoryPage({ params, searchParams }: PageProps) {
   const { categorySlug } = await params;
-  return <CategoryPageComponent categorySlug={categorySlug} />;
+  const sp = searchParams ? await searchParams : {};
+  const isFromNotFound =
+    sp?.notfound === 'true' ||
+    sp?.notfound === '1' ||
+    sp?.error === '404' ||
+    sp?.status === '404' ||
+    Boolean(sp?.m) ||
+    Boolean(sp?.matchslug);
+
+  const categoryName = await getCategoryName(categorySlug);
+
+  return (
+    <>
+      {!isFromNotFound && (
+        <JsonLdSchema
+          type="category"
+          categoryName={categoryName}
+          categorySlug={categorySlug}
+        />
+      )}
+      <CategoryPageComponent categorySlug={categorySlug} />
+    </>
+  );
 }
