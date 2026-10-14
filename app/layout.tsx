@@ -72,40 +72,47 @@ export const metadata: Metadata = {
   },
 };
 
-async function getInitialAds() {
-  try {
-    const urls = [
-      process.env.BACKEND_API_URL,
-      process.env.NEXT_PUBLIC_API_URL,
-      'http://localhost:5001/api',
-      'http://127.0.0.1:5001/api',
-      'https://backendapi.streamespn.org/api',
-      'http://localhost:5000/api',
-    ].filter(Boolean) as string[];
+let memoryAdsCache: { timestamp: number; settings: any } | null = null;
+const ADS_CACHE_TTL = 60 * 1000; // 60 seconds
 
-    for (const rawUrl of urls) {
+async function getInitialAds() {
+  const now = Date.now();
+  if (memoryAdsCache && (now - memoryAdsCache.timestamp < ADS_CACHE_TTL)) {
+    return memoryAdsCache.settings;
+  }
+
+  try {
+    const defaultInternal = process.env.NODE_ENV === 'production' ? 'http://127.0.0.1:5001/api' : 'http://localhost:5001/api';
+    const urls = Array.from(new Set([
+      process.env.BACKEND_API_URL,
+      defaultInternal,
+      process.env.NEXT_PUBLIC_API_URL,
+      'https://backendapi.streamespn.org/api',
+    ].filter(Boolean).map(u => String(u).replace(/\/$/, '')))) as string[];
+
+    for (const cleanUrl of urls) {
       try {
-        const cleanUrl = rawUrl.replace(/\/$/, '');
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1500);
+        const timeoutId = setTimeout(() => controller.abort(), 750);
         const res = await fetch(`${cleanUrl}/ads/fast`, {
-          cache: 'no-store',
+          next: { revalidate: 60 },
           signal: controller.signal,
         });
         clearTimeout(timeoutId);
         if (res.ok) {
           const data = await res.json();
           if (data?.data?.settings) {
+            memoryAdsCache = { timestamp: Date.now(), settings: data.data.settings };
             return data.data.settings;
           }
         }
       } catch {
-        // Try next fallback URL
+        // Try next fallback URL quickly
       }
     }
-    return {};
+    return memoryAdsCache?.settings || {};
   } catch (e) {
-    return {};
+    return memoryAdsCache?.settings || {};
   }
 }
 
