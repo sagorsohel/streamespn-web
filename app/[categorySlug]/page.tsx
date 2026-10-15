@@ -1,53 +1,8 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { getCategories } from '@/lib/categories';
-import { slugify } from '@/lib/utils';
+import { prefetchCategoryData } from '@/lib/serverPrefetch';
 import { CategoryPageComponent } from './CategoryPageComponent';
 import { JsonLdSchema } from '@/components/seo/JsonLdSchema';
-
-const knownAcronyms: Record<string, string> = {
-  aew: 'AEW',
-  ufc: 'UFC',
-  wwe: 'WWE',
-  nba: 'NBA',
-  nfl: 'NFL',
-  nhl: 'NHL',
-  mlb: 'MLB',
-  mls: 'MLS',
-  f1: 'F1',
-  motogp: 'MotoGP',
-  bkfc: 'BKFC',
-  wrc: 'WRC',
-  wnba: 'WNBA',
-  hs: 'HS',
-  fifa: 'FIFA',
-  uefa: 'UEFA',
-};
-
-const formatSlugToTitle = (slug: string): string => {
-  if (!slug) return '';
-  return slug
-    .split('-')
-    .map((word) => knownAcronyms[word.toLowerCase()] || (word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()))
-    .join(' ');
-};
-
-async function getCategoryName(categorySlug: string): Promise<string> {
-  try {
-    const sportsList = await getCategories();
-    if (Array.isArray(sportsList)) {
-      const match = sportsList.find(
-        (s: any) =>
-          slugify(s.sportName) === categorySlug.toLowerCase() ||
-          s.sportName.toLowerCase() === categorySlug.replace(/-/g, ' ').toLowerCase()
-      );
-      if (match?.sportName) return match.sportName;
-    }
-  } catch (e) {
-    // fallback
-  }
-  return formatSlugToTitle(categorySlug);
-}
 
 interface PageProps {
   params: Promise<{ categorySlug: string }>;
@@ -65,7 +20,8 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     Boolean(sp?.m) ||
     Boolean(sp?.matchslug);
 
-  const categoryName = await getCategoryName(categorySlug);
+  const data = await prefetchCategoryData(categorySlug);
+  const categoryName = data.cateName || categorySlug;
   const pageTitle = isFromNotFound
     ? `(404) - ${categoryName} Fixtures, Live Scores & Schedules | StreamESPN`
     : `${categoryName} Fixtures, Live Scores & Schedules | StreamESPN`;
@@ -98,7 +54,8 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     Boolean(sp?.m) ||
     Boolean(sp?.matchslug);
 
-  const categoryName = await getCategoryName(categorySlug);
+  const data = !isFromNotFound ? await prefetchCategoryData(categorySlug) : null;
+  const categoryName = data?.cateName || categorySlug;
 
   return (
     <>
@@ -109,7 +66,14 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
           categorySlug={categorySlug}
         />
       )}
-      <CategoryPageComponent categorySlug={categorySlug} />
+      <CategoryPageComponent
+        categorySlug={categorySlug}
+        initialCategory={data?.category || null}
+        initialSubcategories={data?.subcategories || []}
+        initialMatches={data?.matches || []}
+        initialSelectedSubcategory={null}
+      />
     </>
   );
 }
+

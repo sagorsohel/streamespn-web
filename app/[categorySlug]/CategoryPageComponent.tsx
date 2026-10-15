@@ -81,32 +81,62 @@ interface Subcategory {
   totalMatchCount?: number;
 }
 
-interface PageProps {
-  params: Promise<{ categorySlug: string; subcategorySlug?: string }>;
+export interface CategoryPageComponentProps {
+  categorySlug: string;
+  subcategorySlug?: string;
+  initialCategory?: Category | null;
+  initialSubcategories?: Subcategory[];
+  initialMatches?: MatchItem[];
+  initialSelectedSubcategory?: string | null;
 }
 
-export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categorySlug: string; subcategorySlug?: string }) {
+export function CategoryPageComponent({
+  categorySlug,
+  subcategorySlug,
+  initialCategory,
+  initialSubcategories,
+  initialMatches,
+  initialSelectedSubcategory,
+}: CategoryPageComponentProps) {
   const router = useRouter();
 
-  const [category, setCategory] = useState<Category | null>(null);
-  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
-  const [matches, setMatches] = useState<MatchItem[]>([]);
+  const [category, setCategory] = useState<Category | null>(initialCategory || null);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>(initialSubcategories || []);
+  const [matches, setMatches] = useState<MatchItem[]>(initialMatches || []);
 
   // 🔄 REAL-TIME SILENT LIVE SCORE & MINUTE SYNC (15s interval)
   useLiveScoreSync(matches, setMatches);
 
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(initialSelectedSubcategory || null);
+  const [loading, setLoading] = useState<boolean>(!initialCategory);
   const [matchesLoading, setMatchesLoading] = useState<boolean>(false);
   const [notFound, setNotFound] = useState<boolean>(false);
   const [isMobileSubcatOpen, setIsMobileSubcatOpen] = useState<boolean>(false);
 
   // Infinite Scroll & Pagination States (20 items per batch)
   const [page, setPage] = useState<number>(1);
-  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [hasMore, setHasMore] = useState<boolean>((initialMatches?.length || 0) >= 20);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const observerTarget = useRef<HTMLDivElement>(null);
   const activeSubcatRef = useRef<HTMLButtonElement | null>(null);
+
+  const initialDataUsedRef = useRef<boolean>(
+    Boolean(initialCategory && Array.isArray(initialMatches) && initialMatches.length > 0)
+  );
+
+  const currentRouteKey = `${categorySlug}___${subcategorySlug || 'all'}`;
+  const initialKeyRef = useRef(currentRouteKey);
+
+  // Sync state if user navigates via client-side Link router to another category/subcategory
+  useEffect(() => {
+    if (initialKeyRef.current !== currentRouteKey) {
+      initialKeyRef.current = currentRouteKey;
+      if (initialCategory) setCategory(initialCategory);
+      if (initialSubcategories) setSubcategories(initialSubcategories);
+      if (initialMatches) setMatches(initialMatches);
+      if (initialSelectedSubcategory !== undefined) setSelectedSubcategory(initialSelectedSubcategory);
+    }
+  }, [currentRouteKey, initialCategory, initialSubcategories, initialMatches, initialSelectedSubcategory]);
 
   // Auto-scroll selected subcategory into view in left sidebar
   useEffect(() => {
@@ -185,6 +215,13 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
   useEffect(() => {
     let isMounted = true;
     setNotFound(false);
+
+    // If SSR already pre-populated data for this category/subcategory, skip initial client waterfall
+    if (initialDataUsedRef.current) {
+      initialDataUsedRef.current = false;
+      return;
+    }
+
     setMatchesLoading(true);
 
     const initCategoryPage = async () => {
@@ -360,7 +397,7 @@ export function CategoryPageComponent({ categorySlug, subcategorySlug }: { categ
       setSelectedSubcategory(targetSubId);
       fetchMatches(category.id, targetSubId, 1);
     }
-  }, [subcategorySlug, subcategories, category]);
+  }, [subcategorySlug, subcategories, category, selectedSubcategory]);
 
   const handleSubcategorySelect = (subcat: Subcategory | null) => {
     if (!category) return;

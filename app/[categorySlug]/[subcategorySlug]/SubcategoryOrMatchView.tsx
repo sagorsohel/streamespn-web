@@ -8,9 +8,20 @@ import { SingleMatchViewComponent } from '@/components/match/SingleMatchViewComp
 interface SubcategoryOrMatchViewProps {
   categorySlug: string;
   subcategorySlug: string;
+  initialCategory?: any;
+  initialSubcategories?: any[];
+  initialMatches?: any[];
+  initialSelectedSubcategory?: string | null;
 }
 
-export function SubcategoryOrMatchView({ categorySlug, subcategorySlug }: SubcategoryOrMatchViewProps) {
+export function SubcategoryOrMatchView({
+  categorySlug,
+  subcategorySlug,
+  initialCategory,
+  initialSubcategories,
+  initialMatches,
+  initialSelectedSubcategory,
+}: SubcategoryOrMatchViewProps) {
   const isLikelyMatchSlug = React.useMemo(() => {
     const raw = subcategorySlug || '';
     return raw.includes('-vs-') || /-\d{4}-\d{2}-\d{2}/.test(raw);
@@ -76,6 +87,11 @@ export function SubcategoryOrMatchView({ categorySlug, subcategorySlug }: Subcat
     <CategoryPageComponent
       categorySlug={categorySlug}
       subcategorySlug={subcategorySlug}
+      initialCategory={initialCategory}
+      initialSubcategories={initialSubcategories}
+      initialMatches={initialMatches}
+      initialSelectedSubcategory={initialSelectedSubcategory}
     />
   );
 }
+

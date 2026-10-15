@@ -1,80 +1,13 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import api from '@/lib/api';
-import { getCategories } from '@/lib/categories';
-import { slugify } from '@/lib/utils';
+import { prefetchCategoryData } from '@/lib/serverPrefetch';
 import { SubcategoryOrMatchView } from './SubcategoryOrMatchView';
 import { JsonLdSchema } from '@/components/seo/JsonLdSchema';
 
 interface NestedPageProps {
   params: Promise<{ categorySlug: string; subcategorySlug: string }>;
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
-}
-
-const knownAcronyms: Record<string, string> = {
-  aew: 'AEW',
-  ufc: 'UFC',
-  wwe: 'WWE',
-  nba: 'NBA',
-  nfl: 'NFL',
-  nhl: 'NHL',
-  mlb: 'MLB',
-  mls: 'MLS',
-  f1: 'F1',
-  motogp: 'MotoGP',
-  bkfc: 'BKFC',
-  wrc: 'WRC',
-  wnba: 'WNBA',
-  hs: 'HS',
-  fifa: 'FIFA',
-  uefa: 'UEFA',
-};
-
-const formatSlugToTitle = (slug: string): string => {
-  if (!slug) return '';
-  return slug
-    .split('-')
-    .map((word) => knownAcronyms[word.toLowerCase()] || (word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()))
-    .join(' ');
-};
-
-async function getNames(categorySlug: string, subcategorySlug: string) {
-  let subName = formatSlugToTitle(subcategorySlug);
-  let cateName = formatSlugToTitle(categorySlug);
-
-  try {
-    const sportsList = await getCategories();
-    if (Array.isArray(sportsList)) {
-      const matchedSport = sportsList.find(
-        (s: any) =>
-          s.sportName?.toLowerCase() === categorySlug.replace(/-/g, ' ').toLowerCase() ||
-          slugify(s.sportName) === categorySlug.toLowerCase()
-      );
-      if (matchedSport?.sportName) {
-        cateName = matchedSport.sportName;
-        try {
-          const subRes = await api.get(`/subcategories?categoryId=${matchedSport.id}`, { timeout: 10000 });
-          if (subRes.data?.success && Array.isArray(subRes.data?.data?.subcategories)) {
-            const matchedSub = subRes.data.data.subcategories.find(
-              (s: any) =>
-                slugify(s.name) === subcategorySlug.toLowerCase() ||
-                String(s.id) === subcategorySlug ||
-                s.name?.toLowerCase() === subcategorySlug.replace(/-/g, ' ').toLowerCase()
-            );
-            if (matchedSub?.name) {
-              subName = matchedSub.name;
-            }
-          }
-        } catch (e) {
-          // ignore
-        }
-      }
-    }
-  } catch (e) {
-    // fallback
-  }
-
-  return { cateName, subName };
 }
 
 export async function generateMetadata({ params, searchParams }: NestedPageProps): Promise<Metadata> {
@@ -137,7 +70,9 @@ export async function generateMetadata({ params, searchParams }: NestedPageProps
     }
   }
 
-  const { cateName, subName } = await getNames(categorySlug, subcategorySlug);
+  const data = await prefetchCategoryData(categorySlug, subcategorySlug);
+  const subName = data.subName;
+  const cateName = data.cateName;
 
   const pageTitle = isFromNotFound
     ? `(404) - ${subName} Fixtures, Live Scores & Schedule | StreamESPN`
@@ -173,22 +108,30 @@ export default async function SubcategoryPage({ params, searchParams }: NestedPa
 
   const isLikelyMatch = subcategorySlug?.includes('-vs-') || /-\d{4}-\d{2}-\d{2}/.test(subcategorySlug || '');
 
-  const { cateName, subName } = (!isLikelyMatch && !isFromNotFound)
-    ? await getNames(categorySlug, subcategorySlug)
-    : { cateName: '', subName: '' };
+  const data = (!isLikelyMatch && !isFromNotFound)
+    ? await prefetchCategoryData(categorySlug, subcategorySlug)
+    : null;
 
   return (
     <>
       {!isLikelyMatch && !isFromNotFound && (
         <JsonLdSchema
           type="subcategory"
-          categoryName={cateName}
+          categoryName={data?.cateName || ''}
           categorySlug={categorySlug}
-          subcategoryName={subName}
+          subcategoryName={data?.subName || ''}
           subcategorySlug={subcategorySlug}
         />
       )}
-      <SubcategoryOrMatchView categorySlug={categorySlug} subcategorySlug={subcategorySlug} />
+      <SubcategoryOrMatchView
+        categorySlug={categorySlug}
+        subcategorySlug={subcategorySlug}
+        initialCategory={data?.category || null}
+        initialSubcategories={data?.subcategories || []}
+        initialMatches={data?.matches || []}
+        initialSelectedSubcategory={data?.selectedSubId || null}
+      />
     </>
   );
 }
+
