@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import api from '@/lib/api';
-import { prefetchCategoryData } from '@/lib/serverPrefetch';
+import { prefetchCategoryData, prefetchSingleMatch } from '@/lib/serverPrefetch';
 import { SubcategoryOrMatchView } from './SubcategoryOrMatchView';
 import { JsonLdSchema } from '@/components/seo/JsonLdSchema';
 
@@ -25,9 +25,8 @@ export async function generateMetadata({ params, searchParams }: NestedPageProps
 
   if (isLikelyMatch) {
     try {
-      const matchRes = await api.get(`/matches/${subcategorySlug}`, { timeout: 25000 });
-      if (matchRes.data?.success && matchRes.data?.data?.match) {
-        const match = matchRes.data.data.match;
+      const match = await prefetchSingleMatch(subcategorySlug);
+      if (match) {
         let matchName = '';
         if (match.matchType === 'team_vs_team' && match.homeTeam && match.awayTeam) {
           matchName = `${match.homeTeam} vs ${match.awayTeam}`;
@@ -112,6 +111,10 @@ export default async function SubcategoryPage({ params, searchParams }: NestedPa
     ? await prefetchCategoryData(categorySlug, subcategorySlug)
     : null;
 
+  const serverMatch = (isLikelyMatch && !isFromNotFound)
+    ? await prefetchSingleMatch(subcategorySlug)
+    : null;
+
   return (
     <>
       {!isLikelyMatch && !isFromNotFound && (
@@ -130,6 +133,7 @@ export default async function SubcategoryPage({ params, searchParams }: NestedPa
         initialSubcategories={data?.subcategories || []}
         initialMatches={data?.matches || []}
         initialSelectedSubcategory={data?.selectedSubId || null}
+        initialMatch={serverMatch}
       />
     </>
   );

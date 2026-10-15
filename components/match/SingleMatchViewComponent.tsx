@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
@@ -166,10 +167,87 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [showStreamModal, setShowStreamModal] = useState<boolean>(false);
 
+  const initialMatchUsedRef = useRef<boolean>(Boolean(initialMatch));
+
+  // Helper to fetch related matches in background without wiping match UI
+  const fetchRelatedMatchesFor = (matchData: MatchItem, isMounted: boolean) => {
+    const requests: Promise<any>[] = [];
+    if (matchData.subcategoryId) {
+      requests.push(api.get(`/matches?subcategoryId=${matchData.subcategoryId}&limit=25`).catch(() => null));
+    }
+    if (matchData.categoryId) {
+      requests.push(api.get(`/matches?categoryId=${matchData.categoryId}&limit=30`).catch(() => null));
+    }
+
+    if (requests.length > 0) {
+      Promise.all(requests)
+        .then((responses) => {
+          if (!isMounted) return;
+
+          const subcatRes = matchData.subcategoryId ? responses[0] : null;
+          const catRes = matchData.subcategoryId ? responses[1] : responses[0];
+
+          const subcatMatches: MatchItem[] = subcatRes?.data?.success && Array.isArray(subcatRes?.data?.data?.matches)
+            ? subcatRes.data.data.matches
+            : [];
+          const catMatches: MatchItem[] = catRes?.data?.success && Array.isArray(catRes?.data?.data?.matches)
+            ? catRes.data.data.matches
+            : [];
+
+          const isMatchTodayOrTomorrow = (dateStr?: string | null) => {
+            if (!dateStr) return false;
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return false;
+            const now = new Date();
+            const isMatchToday = d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const isMatchTomorrow = d.getDate() === tomorrow.getDate() && d.getMonth() === tomorrow.getMonth() && d.getFullYear() === tomorrow.getFullYear();
+            return isMatchToday || isMatchTomorrow;
+          };
+
+          // 1. Subcategory matches (exclude current match & finished)
+          const cleanSubcat = subcatMatches.filter((m: MatchItem) => m.id !== matchData.id && m.status !== 'finished');
+          const subcatLive = cleanSubcat.filter((m: MatchItem) => m.status === 'live');
+          const subcatUpcoming = cleanSubcat.filter((m: MatchItem) => m.status === 'upcoming' && isMatchTodayOrTomorrow(m.matchTime));
+
+          // 2. Category matches (exclude current match & finished)
+          const cleanCat = catMatches.filter((m: MatchItem) => m.id !== matchData.id && m.status !== 'finished');
+          const catLive = cleanCat.filter((m: MatchItem) => m.status === 'live');
+          const catUpcoming = cleanCat.filter((m: MatchItem) => m.status === 'upcoming' && isMatchTodayOrTomorrow(m.matchTime));
+
+          let finalEvents: MatchItem[] = [];
+
+          if (cleanSubcat.length > 0) {
+            finalEvents = [...subcatLive, ...subcatUpcoming];
+            if (finalEvents.length < 10) {
+              const existingIds = new Set(finalEvents.map((m) => m.id));
+              const extraCat = [...catLive, ...catUpcoming].filter((m) => !existingIds.has(m.id));
+              finalEvents = [...finalEvents, ...extraCat];
+            }
+          } else {
+            finalEvents = [...catLive, ...catUpcoming];
+          }
+
+          setRelatedMatches(finalEvents.slice(0, 10));
+        })
+        .catch(() => { });
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
-    setLoading(true);
     setNotFound(false);
+
+    // If SSR already preloaded initialMatch, skip main fetch & spinner
+    if (initialMatchUsedRef.current && match) {
+      initialMatchUsedRef.current = false;
+      setLoading(false);
+      fetchRelatedMatchesFor(match, isMounted);
+      return;
+    }
+
+    setLoading(true);
 
     const fetchMatchDetails = async () => {
       try {
@@ -202,73 +280,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
             setLoading(false); // ⚡ UNLOCK MAIN MATCH UI IMMEDIATELY (<100ms)
           }
 
-          // Fetch related matches: subcategory live -> subcategory upcoming -> category live -> category upcoming
-          const requests: Promise<any>[] = [];
-          if (matchData.subcategoryId) {
-            requests.push(api.get(`/matches?subcategoryId=${matchData.subcategoryId}&limit=25`).catch(() => null));
-          }
-          if (matchData.categoryId) {
-            requests.push(api.get(`/matches?categoryId=${matchData.categoryId}&limit=30`).catch(() => null));
-          }
-
-          if (requests.length > 0) {
-            Promise.all(requests)
-              .then((responses) => {
-                if (!isMounted) return;
-
-                const subcatRes = matchData.subcategoryId ? responses[0] : null;
-                const catRes = matchData.subcategoryId ? responses[1] : responses[0];
-
-                const subcatMatches: MatchItem[] = subcatRes?.data?.success && Array.isArray(subcatRes?.data?.data?.matches)
-                  ? subcatRes.data.data.matches
-                  : [];
-                const catMatches: MatchItem[] = catRes?.data?.success && Array.isArray(catRes?.data?.data?.matches)
-                  ? catRes.data.data.matches
-                  : [];
-
-                const isMatchTodayOrTomorrow = (dateStr?: string | null) => {
-                  if (!dateStr) return false;
-                  const d = new Date(dateStr);
-                  if (isNaN(d.getTime())) return false;
-                  const now = new Date();
-                  const isMatchToday = d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-                  const tomorrow = new Date();
-                  tomorrow.setDate(tomorrow.getDate() + 1);
-                  const isMatchTomorrow = d.getDate() === tomorrow.getDate() && d.getMonth() === tomorrow.getMonth() && d.getFullYear() === tomorrow.getFullYear();
-                  return isMatchToday || isMatchTomorrow;
-                };
-
-                // 1. Subcategory matches (exclude current match & finished)
-                const cleanSubcat = subcatMatches.filter((m: MatchItem) => m.id !== matchData.id && m.status !== 'finished');
-                const subcatLive = cleanSubcat.filter((m: MatchItem) => m.status === 'live');
-                const subcatUpcoming = cleanSubcat.filter((m: MatchItem) => m.status === 'upcoming' && isMatchTodayOrTomorrow(m.matchTime));
-
-                // 2. Category matches (exclude current match & finished)
-                const cleanCat = catMatches.filter((m: MatchItem) => m.id !== matchData.id && m.status !== 'finished');
-                const catLive = cleanCat.filter((m: MatchItem) => m.status === 'live');
-                const catUpcoming = cleanCat.filter((m: MatchItem) => m.status === 'upcoming' && isMatchTodayOrTomorrow(m.matchTime));
-
-                let finalEvents: MatchItem[] = [];
-
-                if (cleanSubcat.length > 0) {
-                  // Prioritize this subcategory: live first, then upcoming
-                  finalEvents = [...subcatLive, ...subcatUpcoming];
-
-                  // Supplement with category events if less than 10
-                  if (finalEvents.length < 10) {
-                    const existingIds = new Set(finalEvents.map((m) => m.id));
-                    const extraCat = [...catLive, ...catUpcoming].filter((m) => !existingIds.has(m.id));
-                    finalEvents = [...finalEvents, ...extraCat];
-                  }
-                } else {
-                  // Fallback to this category: live matches first, then upcoming
-                  finalEvents = [...catLive, ...catUpcoming];
-                }
-
-                setRelatedMatches(finalEvents.slice(0, 10));
-              })
-              .catch(() => { });
-          }
+          fetchRelatedMatchesFor(matchData, isMounted);
         } else {
           if (isMounted) setNotFound(true);
         }
@@ -280,6 +292,7 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
     };
 
     fetchMatchDetails();
+
     return () => {
       isMounted = false;
     };

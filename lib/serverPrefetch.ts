@@ -195,3 +195,36 @@ export async function prefetchHomeData(): Promise<PrefetchedHomeData> {
   return result;
 }
 
+const singleMatchCache = new Map<string, { timestamp: number; data: any }>();
+const MATCH_CACHE_TTL_MS = 20 * 1000; // 20s in-memory TTL
+
+export async function prefetchSingleMatch(matchSlug: string): Promise<any | null> {
+  const normSlug = (matchSlug || '').trim();
+  if (!normSlug) return null;
+
+  const cached = singleMatchCache.get(normSlug);
+  if (cached && Date.now() - cached.timestamp < MATCH_CACHE_TTL_MS) {
+    return cached.data;
+  }
+
+  let match: any | null = null;
+  try {
+    let res = await api.get(`/matches/${normSlug}`, { timeout: 6000 });
+    if (!res.data?.success || !res.data?.data?.match) {
+      const decodedSlug = decodeURIComponent(normSlug);
+      if (decodedSlug !== normSlug) {
+        res = await api.get(`/matches/${decodedSlug}`, { timeout: 6000 });
+      }
+    }
+    if (res.data?.success && res.data?.data?.match) {
+      match = res.data.data.match;
+    }
+  } catch (err) {
+    // gracefully fallback
+  }
+
+  singleMatchCache.set(normSlug, { timestamp: Date.now(), data: match });
+  return match;
+}
+
+

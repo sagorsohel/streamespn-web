@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import api from '@/lib/api';
 import { slugify } from '@/lib/utils';
+import { prefetchSingleMatch } from '@/lib/serverPrefetch';
 import { SingleMatchViewComponent } from '@/components/match/SingleMatchViewComponent';
 
 interface SingleMatchProps {
@@ -13,9 +14,8 @@ export async function generateMetadata({ params }: SingleMatchProps): Promise<Me
   const { categorySlug, subcategorySlug, matchSlug } = await params;
 
   try {
-    const res = await api.get(`/matches/${matchSlug}`, { timeout: 25000 });
-    if (res.data?.success && res.data?.data?.match) {
-      const match = res.data.data.match;
+    const match = await prefetchSingleMatch(matchSlug);
+    if (match) {
 
       let matchName = '';
       if (match.matchType === 'team_vs_team' && match.homeTeam && match.awayTeam) {
@@ -181,29 +181,14 @@ async function getNotFoundFallback(categorySlug: string, subcategorySlug: string
 export default async function SingleMatchPage({ params }: SingleMatchProps) {
   const { categorySlug, subcategorySlug, matchSlug } = await params;
 
-  let matchFound = false;
   let serverMatch: any = null;
   try {
-    const rawSlug = matchSlug;
-    let decodedSlug = rawSlug;
-    try {
-      decodedSlug = decodeURIComponent(rawSlug);
-    } catch (e) { }
-
-    let res = await api.get(`/matches/${rawSlug}`, { timeout: 8000 });
-    if (!res.data?.success || !res.data?.data?.match) {
-      if (decodedSlug !== rawSlug) {
-        res = await api.get(`/matches/${decodedSlug}`, { timeout: 8000 });
-      }
-    }
-
-    if (res.data?.success && res.data?.data?.match) {
-      matchFound = true;
-      serverMatch = res.data.data.match;
-    }
+    serverMatch = await prefetchSingleMatch(matchSlug);
   } catch (err: any) {
-    matchFound = false;
+    serverMatch = null;
   }
+
+  const matchFound = Boolean(serverMatch);
 
   if (!matchFound) {
     const fallbackUrl = await getNotFoundFallback(categorySlug, subcategorySlug);

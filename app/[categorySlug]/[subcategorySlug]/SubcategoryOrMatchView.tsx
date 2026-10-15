@@ -12,6 +12,7 @@ interface SubcategoryOrMatchViewProps {
   initialSubcategories?: any[];
   initialMatches?: any[];
   initialSelectedSubcategory?: string | null;
+  initialMatch?: any;
 }
 
 export function SubcategoryOrMatchView({
@@ -21,15 +22,21 @@ export function SubcategoryOrMatchView({
   initialSubcategories,
   initialMatches,
   initialSelectedSubcategory,
+  initialMatch,
 }: SubcategoryOrMatchViewProps) {
   const isLikelyMatchSlug = React.useMemo(() => {
     const raw = subcategorySlug || '';
     return raw.includes('-vs-') || /-\d{4}-\d{2}-\d{2}/.test(raw);
   }, [subcategorySlug]);
 
-  const [isMatch, setIsMatch] = useState<boolean>(false);
+  const [isMatch, setIsMatch] = useState<boolean>(() => Boolean(initialMatch) || isLikelyMatchSlug);
 
   useEffect(() => {
+    if (initialMatch) {
+      setIsMatch(true);
+      return;
+    }
+
     if (!isLikelyMatchSlug) {
       setIsMatch(false);
       return;
@@ -71,7 +78,7 @@ export function SubcategoryOrMatchView({
     return () => {
       isMounted = false;
     };
-  }, [subcategorySlug, isLikelyMatchSlug]);
+  }, [subcategorySlug, isLikelyMatchSlug, initialMatch]);
 
   if (isMatch === true) {
     return (
@@ -79,6 +86,7 @@ export function SubcategoryOrMatchView({
         categorySlug={categorySlug}
         subcategorySlug="all"
         matchSlug={subcategorySlug}
+        initialMatch={initialMatch}
       />
     );
   }

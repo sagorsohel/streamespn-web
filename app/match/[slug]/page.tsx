@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import api from '@/lib/api';
+import { prefetchSingleMatch } from '@/lib/serverPrefetch';
 import { SingleMatchViewComponent } from '@/components/match/SingleMatchViewComponent';
 
 interface MatchSlugPageProps {
@@ -11,10 +11,8 @@ export async function generateMetadata({ params }: MatchSlugPageProps): Promise<
   const { slug } = await params;
 
   try {
-    const res = await api.get(`/matches/${slug}`, { timeout: 25000 });
-    if (res.data?.success && res.data?.data?.match) {
-      const match = res.data.data.match;
-
+    const match = await prefetchSingleMatch(slug);
+    if (match) {
       let matchName = '';
       if (match.matchType === 'team_vs_team' && match.homeTeam && match.awayTeam) {
         matchName = `${match.homeTeam} vs ${match.awayTeam}`;
@@ -70,10 +68,7 @@ export default async function LegacyMatchPage({ params }: MatchSlugPageProps) {
   const { slug } = await params;
   let serverMatch: any = null;
   try {
-    const res = await api.get(`/matches/${slug}`, { timeout: 8000 });
-    if (res.data?.success && res.data?.data?.match) {
-      serverMatch = res.data.data.match;
-    }
+    serverMatch = await prefetchSingleMatch(slug);
   } catch (e) { }
 
   return (
@@ -85,3 +80,4 @@ export default async function LegacyMatchPage({ params }: MatchSlugPageProps) {
     />
   );
 }
+
