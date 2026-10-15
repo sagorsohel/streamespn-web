@@ -133,3 +133,65 @@ export async function prefetchCategoryData(
   serverCache.set(cacheKey, { timestamp: Date.now(), data: result });
   return result;
 }
+
+export interface PrefetchedHomeData {
+  categories: Category[];
+  trendingSubcategories: any[];
+  bannerMatches: MatchItem[];
+  matches: MatchItem[];
+}
+
+let homeCache: { timestamp: number; data: PrefetchedHomeData | null } = {
+  timestamp: 0,
+  data: null,
+};
+const HOME_CACHE_TTL_MS = 20 * 1000; // 20s in-memory TTL
+
+export async function prefetchHomeData(): Promise<PrefetchedHomeData> {
+  if (homeCache.data && Date.now() - homeCache.timestamp < HOME_CACHE_TTL_MS) {
+    return homeCache.data;
+  }
+
+  let categories: Category[] = [];
+  let trendingSubcategories: any[] = [];
+  let bannerMatches: MatchItem[] = [];
+  let matches: MatchItem[] = [];
+
+  try {
+    const [catRes, trendRes, bannerRes, matchRes] = await Promise.allSettled([
+      getCategories(),
+      api.get('/subcategories?trending=true&home=true', { timeout: 6000 }),
+      api.get('/matches/banner', { timeout: 6000 }),
+      api.get('/matches?limit=20&page=1&home=true', { timeout: 6000 }),
+    ]);
+
+    if (catRes.status === 'fulfilled' && Array.isArray(catRes.value)) {
+      categories = catRes.value;
+    }
+    if (trendRes.status === 'fulfilled' && trendRes.value.data?.success && Array.isArray(trendRes.value.data?.data?.subcategories)) {
+      trendingSubcategories = trendRes.value.data.data.subcategories;
+    }
+    if (bannerRes.status === 'fulfilled' && bannerRes.value.data?.success && Array.isArray(bannerRes.value.data?.data?.matches)) {
+      bannerMatches = bannerRes.value.data.data.matches;
+    }
+    if (matchRes.status === 'fulfilled' && matchRes.value.data?.success && Array.isArray(matchRes.value.data?.data?.matches)) {
+      matches = matchRes.value.data.data.matches;
+    }
+  } catch (err) {
+    // gracefully fallback
+  }
+
+  const result: PrefetchedHomeData = {
+    categories,
+    trendingSubcategories,
+    bannerMatches,
+    matches,
+  };
+
+  homeCache = {
+    timestamp: Date.now(),
+    data: result,
+  };
+  return result;
+}
+

@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import HomePage from '@/app/page';
+import { HomePageClient as HomePage } from '@/components/home/HomePageClient';
 import api from '@/lib/api';
+
 import { getCategories, clearCategoriesCache } from '@/lib/categories';
 import { getCachedMatches, setCachedMatches, getCachedSubcategories, setCachedSubcategories } from '@/lib/matchesCache';
 import { motion, AnimatePresence } from 'framer-motion';
