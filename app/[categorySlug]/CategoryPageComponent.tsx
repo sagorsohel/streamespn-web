@@ -119,9 +119,10 @@ export function CategoryPageComponent({
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const observerTarget = useRef<HTMLDivElement>(null);
   const activeSubcatRef = useRef<HTMLButtonElement | null>(null);
+  const prevSubSlugRef = useRef<string | undefined>(subcategorySlug);
 
   const initialDataUsedRef = useRef<boolean>(
-    Boolean(initialCategory && Array.isArray(initialMatches) && initialMatches.length > 0)
+    Boolean(initialCategory)
   );
 
   const currentRouteKey = `${categorySlug}___${subcategorySlug || 'all'}`;
@@ -174,7 +175,6 @@ export function CategoryPageComponent({
             const catFallback = await api.get(`/matches?limit=20&page=1&categoryId=${catId}`);
             if (catFallback.data?.success && Array.isArray(catFallback.data?.data?.matches) && catFallback.data.data.matches.length > 0) {
               fetched = catFallback.data.data.matches;
-              setSelectedSubcategory(null);
             }
           } catch (e) { }
         }
@@ -352,7 +352,6 @@ export function CategoryPageComponent({
               const fallbackRes = await api.get(`/matches?limit=100&page=1&categoryId=${targetCategory.id}`);
               if (fallbackRes.data?.success && Array.isArray(fallbackRes.data?.data?.matches) && fallbackRes.data.data.matches.length > 0) {
                 fetchedMatches = fallbackRes.data.data.matches;
-                setSelectedSubcategory(null);
               }
             } catch (e) { }
           }
@@ -381,6 +380,9 @@ export function CategoryPageComponent({
 
 
   useEffect(() => {
+    if (prevSubSlugRef.current === subcategorySlug) return;
+    prevSubSlugRef.current = subcategorySlug;
+
     if (!subcategories.length || !category) return;
     let targetSubId: string | null = null;
 
@@ -397,7 +399,7 @@ export function CategoryPageComponent({
       setSelectedSubcategory(targetSubId);
       fetchMatches(category.id, targetSubId, 1);
     }
-  }, [subcategorySlug, subcategories, category, selectedSubcategory]);
+  }, [subcategorySlug, subcategories, category]);
 
   const handleSubcategorySelect = (subcat: Subcategory | null) => {
     if (!category) return;
@@ -499,7 +501,6 @@ export function CategoryPageComponent({
 
   return (
     <>
-      <TopLoadingBar isLoading={matchesLoading} />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-6 pb-12 flex-1 w-full space-y-6">
 
         {/* BANNER / SLIDER LOADING SKELETON (MOBILE & DESKTOP STYLED) */}

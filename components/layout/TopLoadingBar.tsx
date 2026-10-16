@@ -64,14 +64,33 @@ export const TopLoadingBar: React.FC<TopLoadingBarProps> = ({ isLoading: externa
     };
   }, []);
 
-  // Listen strictly for pathname changes or externalLoading state (ignores query params)
+  const prevPathnameRef = useRef<string>(pathname);
+  const prevExternalRef = useRef<boolean | undefined>(externalLoading);
+
+  // Pathname change effect: triggers progress bar on actual route navigation
   useEffect(() => {
-    if (externalLoading) {
+    if (prevPathnameRef.current !== pathname) {
+      prevPathnameRef.current = pathname;
       triggerStart();
-    } else {
-      triggerStop();
+      const t = setTimeout(() => {
+        triggerStop();
+      }, 400);
+      return () => clearTimeout(t);
     }
-  }, [pathname, externalLoading]);
+  }, [pathname]);
+
+  // External loading effect: only responds when externalLoading actually toggles
+  useEffect(() => {
+    if (externalLoading === undefined) return;
+    if (prevExternalRef.current !== externalLoading) {
+      prevExternalRef.current = externalLoading;
+      if (externalLoading) {
+        triggerStart();
+      } else {
+        triggerStop();
+      }
+    }
+  }, [externalLoading]);
 
   if (!visible && progress === 0) return null;
 
