@@ -77,16 +77,35 @@ export const subscribeAdsSettings = (callback: (settings: AdsSettings) => void) 
   };
 };
 
+let inFlightAdsPromise: Promise<AdsSettings> | null = null;
+let lastAdsFetchTime = 0;
+const ADS_FETCH_INTERVAL_MS = 30000; // 30 seconds
+
 export const fetchAdsSettingsAsync = async (): Promise<AdsSettings> => {
-  try {
-    const res = await api.get('/ads/fast');
-    if (res.data?.success && res.data?.data?.settings) {
-      const settings = res.data.data.settings;
-      setAdsSettingsCache(settings);
-      return settings;
-    }
-  } catch (e) {
-    // ignore
+  const now = Date.now();
+  if (memoryAdsSettings && now - lastAdsFetchTime < ADS_FETCH_INTERVAL_MS) {
+    return memoryAdsSettings;
   }
-  return getAdsSettingsSync();
+  if (inFlightAdsPromise) {
+    return inFlightAdsPromise;
+  }
+
+  inFlightAdsPromise = (async () => {
+    try {
+      const res = await api.get('/ads/fast');
+      if (res.data?.success && res.data?.data?.settings) {
+        const settings = res.data.data.settings;
+        setAdsSettingsCache(settings);
+        lastAdsFetchTime = Date.now();
+        return settings;
+      }
+    } catch (e) {
+      // ignore
+    } finally {
+      inFlightAdsPromise = null;
+    }
+    return getAdsSettingsSync();
+  })();
+
+  return inFlightAdsPromise;
 };

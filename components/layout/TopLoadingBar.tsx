@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 export const startTopLoader = () => {
   if (typeof window !== 'undefined') {
@@ -21,7 +21,6 @@ interface TopLoadingBarProps {
 
 export const TopLoadingBar: React.FC<TopLoadingBarProps> = ({ isLoading: externalLoading }) => {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [progress, setProgress] = useState<number>(0);
   const [visible, setVisible] = useState<boolean>(false);
   const timerRef = useRef<NodeJS.Timeout[]>([]);
@@ -65,14 +64,14 @@ export const TopLoadingBar: React.FC<TopLoadingBarProps> = ({ isLoading: externa
     };
   }, []);
 
-  // Listen for route changes or externalLoading state
+  // Listen strictly for pathname changes or externalLoading state (ignores query params)
   useEffect(() => {
     if (externalLoading) {
       triggerStart();
     } else {
       triggerStop();
     }
-  }, [pathname, searchParams, externalLoading]);
+  }, [pathname, externalLoading]);
 
   if (!visible && progress === 0) return null;
 
