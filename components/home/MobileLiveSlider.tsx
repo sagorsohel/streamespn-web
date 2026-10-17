@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { MatchItem } from './MatchCard';
 import { slugify } from '@/lib/utils';
 import { Radio } from 'lucide-react';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
 
 interface MobileLiveSliderProps {
   matches: MatchItem[];
@@ -112,7 +113,14 @@ export const MobileLiveSlider: React.FC<MobileLiveSliderProps> = ({ matches }) =
 
               {/* Subtle background emblem pattern */}
               <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none">
-                <img src={m.subcategoryLogo || m.categoryLogo || 'https://r2.thesportsdb.com/images/media/league/badge/57662.png'} alt="" loading="lazy" decoding="async" className="w-36 h-36 object-contain" />
+                <OptimizedImage
+                  src={m.subcategoryLogo || m.categoryLogo || 'https://r2.thesportsdb.com/images/media/league/badge/57662.png'}
+                  alt=""
+                  width={144}
+                  height={144}
+                  sizeVariant="preview"
+                  className="w-36 h-36 object-contain"
+                />
               </div>
 
               {/* TOP HEADER INSIDE CARD: Tournament Name & Subtitle */}
@@ -134,7 +142,15 @@ export const MobileLiveSlider: React.FC<MobileLiveSliderProps> = ({ matches }) =
                   }`}>
                     <div className="h-11 w-11 sm:h-12 sm:w-12 flex items-center justify-center mb-1">
                       {m.homeTeamLogo ? (
-                        <img src={m.homeTeamLogo} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain drop-shadow-md" />
+                        <OptimizedImage
+                          src={m.homeTeamLogo}
+                          alt={m.homeTeam || ''}
+                          width={48}
+                          height={48}
+                          sizeVariant="tiny"
+                          className="max-h-full max-w-full object-contain drop-shadow-md"
+                          fallback={<span className="text-2xl">🛡️</span>}
+                        />
                       ) : (
                         <span className="text-2xl">🛡️</span>
                       )}
@@ -176,7 +192,15 @@ export const MobileLiveSlider: React.FC<MobileLiveSliderProps> = ({ matches }) =
                   }`}>
                     <div className="h-11 w-11 sm:h-12 sm:w-12 flex items-center justify-center mb-1">
                       {m.awayTeamLogo ? (
-                        <img src={m.awayTeamLogo} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain drop-shadow-md" />
+                        <OptimizedImage
+                          src={m.awayTeamLogo}
+                          alt={m.awayTeam || ''}
+                          width={48}
+                          height={48}
+                          sizeVariant="tiny"
+                          className="max-h-full max-w-full object-contain drop-shadow-md"
+                          fallback={<span className="text-2xl">🛡️</span>}
+                        />
                       ) : (
                         <span className="text-2xl">🛡️</span>
                       )}

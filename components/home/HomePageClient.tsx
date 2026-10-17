@@ -14,6 +14,7 @@ import { MatchCardSkeleton } from '@/components/home/MatchCardSkeleton';
 import { BannerSkeleton } from '@/components/home/BannerSkeleton';
 import { MobileLiveSlider } from '@/components/home/MobileLiveSlider';
 import { HeroBannerCarousel } from '@/components/home/HeroBannerCarousel';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { startTopLoader, stopTopLoader } from '@/components/layout/TopLoadingBar';
 import {
   Clock3,
@@ -321,15 +322,21 @@ export function HomePageClient({
                       }`}
                   >
                     <div className="flex items-center gap-2.5 truncate flex-1 min-w-0 mr-1.5">
-                      {subcat.logoUrl ? (
-                        <div className="h-6 w-6 rounded-full bg-white border border-[#F8C831] p-[3px] flex items-center justify-center shrink-0 shadow-sm">
-                          <img src={subcat.logoUrl} alt="" className="max-h-full max-w-full object-contain drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]" />
-                        </div>
-                      ) : (
-                        <div className="h-6 w-6 rounded-full bg-white border border-[#F8C831] p-[3px] flex items-center justify-center shrink-0 shadow-sm">
+                      <div className="h-6 w-6 rounded-full bg-white border border-[#F8C831] p-[3px] flex items-center justify-center shrink-0 shadow-sm">
+                        {subcat.logoUrl ? (
+                          <OptimizedImage
+                            src={subcat.logoUrl}
+                            alt=""
+                            width={24}
+                            height={24}
+                            sizeVariant="tiny"
+                            className="max-h-full max-w-full object-contain drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]"
+                            fallback={<span className="text-xs">🏆</span>}
+                          />
+                        ) : (
                           <span className="text-xs">🏆</span>
-                        </div>
-                      )}
+                        )}
+                      </div>
                       <span className="text-[14px] font-semibold leading-[1.5] truncate flex-1 text-left">
                         {subcat.name}
                       </span>

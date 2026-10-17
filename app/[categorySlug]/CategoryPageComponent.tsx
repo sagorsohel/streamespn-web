@@ -17,6 +17,7 @@ import { MatchCardSkeleton } from '@/components/home/MatchCardSkeleton';
 import { BannerSkeleton } from '@/components/home/BannerSkeleton';
 import { HeroBannerCarousel } from '@/components/home/HeroBannerCarousel';
 import { MobileLiveSlider } from '@/components/home/MobileLiveSlider';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
 import {
   Radio,
   Clock3,
@@ -529,7 +530,15 @@ export function CategoryPageComponent({
               <div className="flex items-center gap-2.5 truncate min-w-0">
                 <div className="h-6 w-6 rounded-full bg-white border border-[#F8C831] p-[3px] flex items-center justify-center shrink-0 shadow-sm">
                   {selectedSubcatObj?.logoUrl ? (
-                    <img src={selectedSubcatObj.logoUrl} alt="" className="max-h-full max-w-full object-contain drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]" />
+                    <OptimizedImage
+                      src={selectedSubcatObj.logoUrl}
+                      alt=""
+                      width={24}
+                      height={24}
+                      sizeVariant="tiny"
+                      className="max-h-full max-w-full object-contain drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]"
+                      fallback={<span className="text-xs">🏆</span>}
+                    />
                   ) : (
                     <span className="text-xs">🏆</span>
                   )}
@@ -597,15 +606,21 @@ export function CategoryPageComponent({
                           }`}
                       >
                         <div className="flex items-center gap-2.5 truncate flex-1 min-w-0 pr-2">
-                          {subcat.logoUrl ? (
-                            <div className="h-6 w-6 rounded-full bg-white border border-[#F8C831] p-[3px] flex items-center justify-center shrink-0 shadow-sm">
-                              <img src={subcat.logoUrl} alt="" className="max-h-full max-w-full object-contain drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]" />
-                            </div>
-                          ) : (
-                            <div className="h-6 w-6 rounded-full bg-white border border-[#F8C831] p-[3px] flex items-center justify-center shrink-0 shadow-sm">
+                          <div className="h-6 w-6 rounded-full bg-white border border-[#F8C831] p-[3px] flex items-center justify-center shrink-0 shadow-sm">
+                            {subcat.logoUrl ? (
+                              <OptimizedImage
+                                src={subcat.logoUrl}
+                                alt=""
+                                width={24}
+                                height={24}
+                                sizeVariant="tiny"
+                                className="max-h-full max-w-full object-contain drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]"
+                                fallback={<span className="text-xs">🏆</span>}
+                              />
+                            ) : (
                               <span className="text-xs">🏆</span>
-                            </div>
-                          )}
+                            )}
+                          </div>
                           <span className="truncate text-left font-bold text-xs sm:text-sm">
                             {subcat.name}
                           </span>
@@ -790,7 +805,15 @@ export function CategoryPageComponent({
                         : 'bg-white border-2 border-[#F8C831] group-hover:scale-105 shadow-sm'
                         }`}>
                         {subcat.logoUrl ? (
-                          <img src={subcat.logoUrl} alt="" className="max-h-full max-w-full object-contain drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]" />
+                          <OptimizedImage
+                            src={subcat.logoUrl}
+                            alt=""
+                            width={40}
+                            height={40}
+                            sizeVariant="tiny"
+                            className="max-h-full max-w-full object-contain drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]"
+                            fallback={<span className="text-xl">🏆</span>}
+                          />
                         ) : (
                           <span className="text-xl">🏆</span>
                         )}

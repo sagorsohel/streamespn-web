@@ -3,6 +3,7 @@
 import React from 'react';
 import { Trophy, Globe } from 'lucide-react';
 import { startTopLoader } from '@/components/layout/TopLoadingBar';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
 
 export interface Category {
   id: number;
@@ -56,7 +57,15 @@ export const SportsFilter: React.FC<SportsFilterProps> = ({
             }`}
           >
             {cat.iconUrl ? (
-              <img src={cat.iconUrl} alt="" className="h-4 w-4 object-contain" />
+              <OptimizedImage
+                src={cat.iconUrl}
+                alt=""
+                width={16}
+                height={16}
+                sizeVariant="tiny"
+                className="h-4 w-4 object-contain"
+                fallback={<Trophy className="h-3.5 w-3.5 text-[var(--brand-yellow)]" />}
+              />
             ) : (
               <Trophy className="h-3.5 w-3.5 text-[var(--brand-yellow)]" />
             )}

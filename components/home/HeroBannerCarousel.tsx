@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PlayCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { slugify } from '@/lib/utils';
 import { MatchItem } from './MatchCard';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
 
 interface HeroBannerCarouselProps {
   matches: MatchItem[];
@@ -119,9 +120,12 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({ matches 
                     {currentMatch.homeTeam || 'Home Team'}
                   </span>
                   {currentMatch.homeTeamLogo && (
-                    <img
+                    <OptimizedImage
                       src={currentMatch.homeTeamLogo}
-                      alt=""
+                      alt={currentMatch.homeTeam || ''}
+                      width={48}
+                      height={48}
+                      sizeVariant="tiny"
                       className="h-8 w-8 sm:h-12 sm:w-12 object-contain drop-shadow-md"
                     />
                   )}
@@ -135,9 +139,12 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({ matches 
 
                 <div className="flex items-center gap-2.5">
                   {currentMatch.awayTeamLogo && (
-                    <img
+                    <OptimizedImage
                       src={currentMatch.awayTeamLogo}
-                      alt=""
+                      alt={currentMatch.awayTeam || ''}
+                      width={48}
+                      height={48}
+                      sizeVariant="tiny"
                       className="h-8 w-8 sm:h-12 sm:w-12 object-contain drop-shadow-md"
                     />
                   )}
@@ -150,7 +157,15 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({ matches 
               <div className="flex flex-col items-center justify-center space-y-2 py-1 max-w-2xl mx-auto">
                 <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#F8C831]/20 border border-[#F8C831]/40 text-[#F8C831] text-xs font-black uppercase tracking-wider">
                   {subcatLogo ? (
-                    <img src={subcatLogo} alt="" className="h-4 w-4 object-contain" />
+                    <OptimizedImage
+                      src={subcatLogo}
+                      alt=""
+                      width={20}
+                      height={20}
+                      sizeVariant="tiny"
+                      className="h-4 w-4 object-contain"
+                      fallback={<span>🏆</span>}
+                    />
                   ) : (
                     <span>🏆</span>
                   )}
@@ -166,7 +181,14 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({ matches 
             <div className="flex flex-wrap items-center justify-center gap-4 pt-1">
               <span className="text-xs font-extrabold text-amber-300 font-mono inline-flex items-center gap-1.5">
                 {subcatLogo && (
-                  <img src={subcatLogo} alt="" className="h-3.5 w-3.5 object-contain inline-block" />
+                  <OptimizedImage
+                    src={subcatLogo}
+                    alt=""
+                    width={16}
+                    height={16}
+                    sizeVariant="tiny"
+                    className="h-3.5 w-3.5 object-contain inline-block"
+                  />
                 )}
                 {currentMatch.matchTime
                   ? new Date(currentMatch.matchTime).toLocaleTimeString('en-US', {

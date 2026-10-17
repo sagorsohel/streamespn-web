@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { slugify } from '@/lib/utils';
 import { MatchCard, MatchItem } from '@/components/home/MatchCard';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { AdRenderer } from '@/components/ads/AdRenderer';
 import { JsonLdSchema } from '@/components/seo/JsonLdSchema';
 import {
@@ -420,7 +421,15 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
                   <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 justify-start">
                     <div className="h-10 w-10 sm:h-14 sm:w-14 shrink-0 flex items-center justify-center p-1">
                       {match.homeTeamLogo ? (
-                        <img src={match.homeTeamLogo} alt="" className="max-h-full max-w-full object-contain" />
+                        <OptimizedImage
+                          src={match.homeTeamLogo}
+                          alt={match.homeTeam || ''}
+                          width={56}
+                          height={56}
+                          sizeVariant="tiny"
+                          className="max-h-full max-w-full object-contain"
+                          fallback={<span className="text-xl sm:text-2xl">🛡️</span>}
+                        />
                       ) : (
                         <span className="text-xl sm:text-2xl">🛡️</span>
                       )}
@@ -456,7 +465,15 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
                     </span>
                     <div className="h-10 w-10 sm:h-14 sm:w-14 shrink-0 flex items-center justify-center p-1">
                       {match.awayTeamLogo ? (
-                        <img src={match.awayTeamLogo} alt="" className="max-h-full max-w-full object-contain" />
+                        <OptimizedImage
+                          src={match.awayTeamLogo}
+                          alt={match.awayTeam || ''}
+                          width={56}
+                          height={56}
+                          sizeVariant="tiny"
+                          className="max-h-full max-w-full object-contain"
+                          fallback={<span className="text-xl sm:text-2xl">🛡️</span>}
+                        />
                       ) : (
                         <span className="text-xl sm:text-2xl">🛡️</span>
                       )}
@@ -467,7 +484,15 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
                 <div className="w-full text-center py-2 space-y-1">
                   <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[#F8C831] font-black text-xs uppercase tracking-wider">
                     {match.subcategoryLogo || match.categoryLogo ? (
-                      <img src={match.subcategoryLogo || match.categoryLogo} alt="" className="h-4 w-4 object-contain" />
+                      <OptimizedImage
+                        src={match.subcategoryLogo || match.categoryLogo}
+                        alt=""
+                        width={20}
+                        height={20}
+                        sizeVariant="tiny"
+                        className="h-4 w-4 object-contain"
+                        fallback={<span>🏆</span>}
+                      />
                     ) : (
                       <span>🏆</span>
                     )}
