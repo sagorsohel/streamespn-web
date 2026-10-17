@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PlayCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { slugify } from '@/lib/utils';
+import { slugify, isValidScore, sanitizeScore } from '@/lib/utils';
 import { MatchItem } from './MatchCard';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 
@@ -136,8 +136,10 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({ matches 
                 </div>
 
                 <div className="px-4 py-1.5 bg-black/60 rounded-xl font-mono text-base sm:text-lg font-black text-[#F8C831] border border-white/10 shadow-inner">
-                  {currentMatch.homeScore !== null && currentMatch.awayScore !== null
-                    ? `${currentMatch.homeScore} - ${currentMatch.awayScore}`
+                  {currentMatch.status !== 'upcoming' &&
+                  isValidScore(currentMatch.homeScore) &&
+                  isValidScore(currentMatch.awayScore)
+                    ? `${sanitizeScore(currentMatch.homeScore)} - ${sanitizeScore(currentMatch.awayScore)}`
                     : 'VS'}
                 </div>
 

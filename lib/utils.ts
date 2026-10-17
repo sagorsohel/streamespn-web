@@ -19,3 +19,14 @@ export function slugify(text: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+export function isValidScore(score: any): boolean {
+  if (score === null || score === undefined) return false;
+  const s = String(score).trim().toLowerCase();
+  return s !== '' && s !== 'null' && s !== 'undefined';
+}
+
+export function sanitizeScore(score: any, fallback = '0'): string {
+  if (!isValidScore(score)) return fallback;
+  return String(score).trim();
+}
+

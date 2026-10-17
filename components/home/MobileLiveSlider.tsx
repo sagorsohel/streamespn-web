@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { MatchItem } from './MatchCard';
-import { slugify } from '@/lib/utils';
+import { slugify, sanitizeScore } from '@/lib/utils';
 import { Radio } from 'lucide-react';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 
@@ -165,7 +165,7 @@ export const MobileLiveSlider: React.FC<MobileLiveSliderProps> = ({ matches }) =
                     {m.status === 'live' ? (
                       <>
                         <span className="text-2xl xs:text-3xl font-black tracking-wider text-[#F8C831] font-sans whitespace-nowrap leading-none mb-1.5 drop-shadow-md">
-                          {m.homeScore ?? 0} : {m.awayScore ?? 0}
+                          {sanitizeScore(m.homeScore)} : {sanitizeScore(m.awayScore)}
                         </span>
                         <span className="inline-flex items-center gap-1.5 bg-purple-900/90 text-purple-100 border border-purple-400/40 text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-lg whitespace-nowrap">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />

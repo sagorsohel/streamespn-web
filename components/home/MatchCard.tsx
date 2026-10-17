@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { PlayCircle } from 'lucide-react';
-import { slugify } from '@/lib/utils';
+import { slugify, sanitizeScore } from '@/lib/utils';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 
 export interface MatchItem {
@@ -120,7 +120,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
             </span>
           ) : isFinished ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-slate-200 dark:bg-zinc-800 px-2.5 py-0.5 text-[11px] font-normal text-slate-800 dark:text-zinc-200 shrink-0">
-              <span>Final {match.homeScore ?? 0}-{match.awayScore ?? 0}</span>
+              <span>Final {sanitizeScore(match.homeScore)}-{sanitizeScore(match.awayScore)}</span>
             </span>
           ) : (
             <span suppressHydrationWarning className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 font-mono shrink-0">
@@ -263,7 +263,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
                 {isLive ? (
                   <div className="flex flex-col items-center">
                     <span className="text-[#40b857] font-bold text-sm sm:text-base tracking-widest font-sans">
-                      {match.homeScore ?? 0} - {match.awayScore ?? 0}
+                      {sanitizeScore(match.homeScore)} - {sanitizeScore(match.awayScore)}
                     </span>
                     {formatLiveTimeOnly(match) && (
                       <span className="text-[10px] font-extrabold text-[#40b857] tracking-wider">
@@ -274,7 +274,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
                 ) : isFinished ? (
                   <div className="flex flex-col items-center">
                     <span className="text-slate-800 dark:text-zinc-100 font-bold text-xs sm:text-sm tracking-widest font-sans">
-                      {match.homeScore ?? 0} - {match.awayScore ?? 0}
+                      {sanitizeScore(match.homeScore)} - {sanitizeScore(match.awayScore)}
                     </span>
                     <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
                       FT

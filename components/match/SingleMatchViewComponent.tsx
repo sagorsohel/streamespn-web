@@ -5,7 +5,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { slugify } from '@/lib/utils';
+import { slugify, isValidScore, sanitizeScore } from '@/lib/utils';
 import { MatchCard, MatchItem } from '@/components/home/MatchCard';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { AdRenderer } from '@/components/ads/AdRenderer';
@@ -447,8 +447,8 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
                   {/* CENTER: VS / LIVE SCORE PILL */}
                   <div className="shrink-0 flex flex-col items-center">
                     <div className="flex items-center justify-center px-4 sm:px-6 py-2 sm:py-2.5 rounded-2xl bg-[var(--bg-main)] border border-slate-200/80 dark:border-white/10 font-black text-sm sm:text-lg font-mono text-[#F8C831]">
-                      {isLive || isFinished || (match.homeScore !== null && match.awayScore !== null)
-                        ? `${match.homeScore ?? 0} - ${match.awayScore ?? 0}`
+                      {(isLive || isFinished) && isValidScore(match.homeScore) && isValidScore(match.awayScore)
+                        ? `${sanitizeScore(match.homeScore)} - ${sanitizeScore(match.awayScore)}`
                         : 'VS'}
                     </div>
                     {isLive ? (

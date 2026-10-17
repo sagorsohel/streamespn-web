@@ -4,6 +4,8 @@
  * Works 100% accurately regardless of VPN / proxy server locations.
  */
 
+import { sanitizeScore } from '@/lib/utils';
+
 export const getUserTimezone = (): string => {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
@@ -181,7 +183,7 @@ export const formatLiveBadgeText = (match: {
   status: string;
 }): string => {
   if (match.status !== 'live') return '';
-  const scoreStr = `${match.homeScore ?? 0}-${match.awayScore ?? 0}`;
+  const scoreStr = `${sanitizeScore(match.homeScore)}-${sanitizeScore(match.awayScore)}`;
   const details = formatLiveTimeOnly(match);
   return details ? `Live ${scoreStr} • ${details}` : `Live ${scoreStr}`;
 };
