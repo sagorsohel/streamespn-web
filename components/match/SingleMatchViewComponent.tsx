@@ -638,7 +638,7 @@ export function SingleMatchViewComponent({
             {/* ========================================================================= */}
             {/* 2. MIDDLE SECTION: VIDEO STREAM PLAYER (891px WIDTH x 500px HEIGHT)        */}
             {/* ========================================================================= */}
-            <div className="group relative mx-auto w-full max-w-[891px] overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-950 shadow-sm sm:rounded-[24px] dark:border-white/10">
+            <div className="group relative mx-auto w-full max-w-[891px] overflow-hidden rounded-2xl border-2 border-red-500 bg-red-500 shadow-sm sm:rounded-[24px] dark:border-red-500">
               {/* VIDEO PLAYER CANVAS: 891px x 500px */}
               <div className="xs:h-[340px] relative flex h-[240px] w-full items-center justify-center overflow-hidden border-red-500 bg-black sm:h-[420px] md:h-[500px]">
                 {/* Stadium backdrop image */}
@@ -843,23 +843,35 @@ export function SingleMatchViewComponent({
 
               <div className="grid grid-cols-2 gap-4 text-xs sm:grid-cols-4 sm:text-sm">
                 {/* Time */}
-                <div suppressHydrationWarning className="space-y-1 rounded-xl border border-slate-200/80 bg-[var(--bg-main)] p-3.5 dark:border-white/10">
+                <div
+                  suppressHydrationWarning
+                  className="space-y-1 rounded-xl border border-slate-200/80 bg-[var(--bg-main)] p-3.5 dark:border-white/10"
+                >
                   <div className="flex items-center gap-1.5 text-[11px] font-bold tracking-wider text-[var(--text-muted)] uppercase">
                     <Clock3 className="h-3.5 w-3.5 shrink-0 text-indigo-400" />
                     <span>Match Time</span>
                   </div>
-                  <div suppressHydrationWarning className="font-mono font-extrabold text-[var(--text-white)]">
+                  <div
+                    suppressHydrationWarning
+                    className="font-mono font-extrabold text-[var(--text-white)]"
+                  >
                     {timeFormatted}
                   </div>
                 </div>
 
                 {/* Date */}
-                <div suppressHydrationWarning className="space-y-1 rounded-xl border border-slate-200/80 bg-[var(--bg-main)] p-3.5 dark:border-white/10">
+                <div
+                  suppressHydrationWarning
+                  className="space-y-1 rounded-xl border border-slate-200/80 bg-[var(--bg-main)] p-3.5 dark:border-white/10"
+                >
                   <div className="flex items-center gap-1.5 text-[11px] font-bold tracking-wider text-[var(--text-muted)] uppercase">
                     <CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#F8C831]" />
                     <span>Match Date</span>
                   </div>
-                  <div suppressHydrationWarning className="font-extrabold text-[var(--text-white)]">
+                  <div
+                    suppressHydrationWarning
+                    className="font-extrabold text-[var(--text-white)]"
+                  >
                     {dateFormatted}
                   </div>
                 </div>

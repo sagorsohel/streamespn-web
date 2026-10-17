@@ -3,6 +3,22 @@
 import * as React from "react"
 import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes"
 
+// Suppress the React 19 false-positive error caused by next-themes' SSR inline script
+if (typeof console !== "undefined" && !(console.error as any).__scriptTagWarningSuppressed) {
+  const originalError = console.error
+  const newConsoleError = (...args: unknown[]) => {
+    if (
+      typeof args[0] === "string" &&
+      args[0].includes("Encountered a script tag while rendering React component")
+    ) {
+      return
+    }
+    originalError.apply(console, args)
+  }
+  ;(newConsoleError as any).__scriptTagWarningSuppressed = true
+  console.error = newConsoleError
+}
+
 function ThemeProvider({
   children,
   ...props

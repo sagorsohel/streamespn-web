@@ -112,19 +112,6 @@ export function HomePageClient({
       if (res.data?.success && Array.isArray(res.data?.data?.matches)) {
         let fetchedMatches: MatchItem[] = res.data.data.matches;
 
-        // Auto Fallback for Home Page ONLY if selectedCategory is 'all' and selectedSubcategory is set
-        if (pageNum === 1 && fetchedMatches.length === 0 && selectedCategory === 'all' && selectedSubcategory !== null) {
-          try {
-            const fallbackRes = await api.get('/matches?limit=20&page=1&home=true');
-            if (fallbackRes.data?.success && Array.isArray(fallbackRes.data?.data?.matches) && fallbackRes.data.data.matches.length > 0) {
-              fetchedMatches = fallbackRes.data.data.matches;
-              setSelectedSubcategory(null);
-            }
-          } catch (e) {
-            // ignore
-          }
-        }
-
         if (pageNum === 1) {
           const unique = Array.from(new Map(fetchedMatches.map((m) => [m.id, m])).values());
           setMatches(unique);
@@ -362,6 +349,55 @@ export function HomePageClient({
 
         {/* RIGHT MAIN CONTENT AREA */}
         <main className="flex-1 space-y-6 min-w-0">
+
+          {/* MOBILE ONLY: TRENDING LEAGUES HORIZONTAL SCROLL BAR */}
+          {trendingSubcategories.length > 0 && (
+            <div className="lg:hidden space-y-2 pt-1 pb-1">
+              <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[var(--text-white)]">
+                <Flame className="h-4 w-4 text-[#F8C831] fill-[#F8C831]" />
+                <span>Trending Leagues</span>
+              </div>
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+                {trendingSubcategories.map((subcat) => {
+                  const isSelected = selectedSubcategory === String(subcat.id);
+                  return (
+                    <button
+                      key={subcat.id}
+                      onClick={() => {
+                        if (isSelected) {
+                          setSelectedSubcategory(null);
+                        } else {
+                          setSelectedSubcategory(String(subcat.id));
+                        }
+                      }}
+                      className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold shrink-0 transition-all ${
+                        isSelected
+                          ? 'bg-[#F8C831] text-black shadow-md border border-[#F8C831]'
+                          : 'bg-[var(--bg-card)] text-[#555555] dark:text-zinc-200 border border-[var(--border-glass)] hover:bg-[var(--bg-card-hover)]'
+                      }`}
+                    >
+                      <div className="h-4 w-4 rounded-full bg-white border border-[#F8C831] p-[1.5px] flex items-center justify-center shrink-0">
+                        {subcat.logoUrl ? (
+                          <OptimizedImage
+                            src={subcat.logoUrl}
+                            alt=""
+                            width={14}
+                            height={14}
+                            sizeVariant="tiny"
+                            className="max-h-full max-w-full object-contain"
+                            fallback={<span className="text-[10px]">🏆</span>}
+                          />
+                        ) : (
+                          <span className="text-[10px]">🏆</span>
+                        )}
+                      </div>
+                      <span className="whitespace-nowrap">{subcat.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* INITIAL LOADING STATE WITH RESPONSIVE SKELETONS */}
           {loading && matches.length === 0 ? (
