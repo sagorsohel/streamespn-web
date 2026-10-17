@@ -146,8 +146,10 @@ export default async function RootLayout({
       className={cn("antialiased", fontMono.variable, "font-sans", geist.variable)}
     >
       <head suppressHydrationWarning>
-        <link rel="preconnect" href="https://www.highperformanceformat.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://www.highperformanceformat.com" />
+        <link rel="preconnect" href="https://r2.thesportsdb.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://r2.thesportsdb.com" />
+        <link rel="preconnect" href="https://musikazblai.org" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://musikazblai.org" />
         <script
           suppressHydrationWarning
           dangerouslySetInnerHTML={{

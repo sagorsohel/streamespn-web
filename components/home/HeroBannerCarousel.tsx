@@ -51,6 +51,14 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({ matches 
       ? currentMatch.subcategoryLogo
       : currentMatch.categoryLogo || null;
 
+  const heroBgImage =
+    (currentMatch.bgImage && currentMatch.bgImage.trim()) ||
+    (currentMatch.categoryBgImage && currentMatch.categoryBgImage.trim()) ||
+    (currentMatch.playerImage && currentMatch.playerImage.trim()) ||
+    (currentMatch.categoryPlayerImage && currentMatch.categoryPlayerImage.trim()) ||
+    (currentMatch.categoryThumbUrl && currentMatch.categoryThumbUrl.trim()) ||
+    'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80';
+
   const handlePrev = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -73,26 +81,19 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({ matches 
         href={targetLink}
         className="block w-full relative overflow-hidden rounded-2xl border border-[var(--border-glass)] bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 shadow-2xl min-h-[220px] p-6 text-white cursor-pointer hover:border-[#F8C831]/50 transition-all"
       >
-        {/* Background Image with Smooth Fade */}
-        <AnimatePresence mode="wait">
-          <motion.div
+        {/* Background Image with High Priority LCP Delivery */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <OptimizedImage
             key={`bg-${currentMatch.id}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.38 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-            style={{
-              backgroundImage: `url(${(currentMatch.bgImage && currentMatch.bgImage.trim()) ||
-                (currentMatch.categoryBgImage && currentMatch.categoryBgImage.trim()) ||
-                (currentMatch.playerImage && currentMatch.playerImage.trim()) ||
-                (currentMatch.categoryPlayerImage && currentMatch.categoryPlayerImage.trim()) ||
-                (currentMatch.categoryThumbUrl && currentMatch.categoryThumbUrl.trim()) ||
-                'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80'
-                })`,
-            }}
+            src={heroBgImage}
+            alt=""
+            fill
+            priority={currentIndex === 0}
+            sizeVariant="preview"
+            sizes="(max-width: 1200px) 100vw, 1200px"
+            className="object-cover object-center opacity-35 transition-transform duration-700 group-hover:scale-105"
           />
-        </AnimatePresence>
+        </div>
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none" />
 
@@ -108,7 +109,10 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({ matches 
           >
             {/* Status Badge */}
             <span className="inline-flex items-center gap-1.5 text-xs font-black text-white px-3.5 py-1 bg-[#40b857] rounded-full shadow-lg">
-              <span className="h-2 w-2 rounded-full bg-white animate-ping" />
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+              </span>
               {currentMatch.status === 'live' ? 'Featured Live Event' : 'Upcoming '}
             </span>
 
@@ -220,7 +224,7 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({ matches 
                   e.stopPropagation();
                   setCurrentIndex(idx);
                 }}
-                className={`transition-all rounded-full ${currentIndex === idx
+                className={`rounded-full transition-colors duration-200 ${currentIndex === idx
                     ? 'w-6 h-1.5 bg-[#F8C831]'
                     : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'
                   }`}

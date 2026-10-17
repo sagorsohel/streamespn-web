@@ -373,12 +373,17 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
       {/* 🏟️ Single Page Hero & Ambient Background Banner */}
       {singlePageBgImage && (
         <div className="absolute top-0 left-0 right-0 h-[680px] sm:h-[860px] pointer-events-none overflow-hidden select-none z-0">
-          <div
-            className="absolute inset-0 bg-cover bg-top scale-100 opacity-60 dark:opacity-65 transition-opacity duration-700"
-            style={{
-              backgroundImage: `url(${singlePageBgImage})`,
-            }}
-          />
+          <div className="absolute inset-0 overflow-hidden">
+            <OptimizedImage
+              src={singlePageBgImage}
+              alt=""
+              fill
+              priority
+              sizeVariant="preview"
+              sizes="100vw"
+              className="object-cover object-top opacity-60 dark:opacity-65 transition-opacity duration-700"
+            />
+          </div>
           {/* Fresh, clean fade overlay that keeps the top crisp and smoothly blends into the page body */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[var(--bg-main)]/50 to-[var(--bg-main)]" />
         </div>
@@ -511,12 +516,16 @@ export function SingleMatchViewComponent({ categorySlug, subcategorySlug, matchS
               {/* VIDEO PLAYER CANVAS: 891px x 500px */}
               <div className="relative w-full h-[240px] xs:h-[340px] sm:h-[420px] md:h-[500px] bg-black flex items-center justify-center overflow-hidden">
                 {/* Stadium backdrop image */}
-                <div
-                  className="absolute inset-0 bg-cover bg-center opacity-90 scale-105 transition-transform duration-700 group-hover:scale-100"
-                  style={{
-                    backgroundImage: `url(${playerBackdrop})`,
-                  }}
-                />
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  <OptimizedImage
+                    src={playerBackdrop}
+                    alt=""
+                    fill
+                    sizeVariant="preview"
+                    sizes="(max-width: 891px) 100vw, 891px"
+                    className="object-cover object-center opacity-90 scale-105 transition-transform duration-700 group-hover:scale-100"
+                  />
+                </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/15 to-black/25" />
 
                 {/* 2A. UNSTARTED OVERLAY SCREEN */}
