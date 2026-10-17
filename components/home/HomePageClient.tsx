@@ -15,6 +15,7 @@ import { BannerSkeleton } from '@/components/home/BannerSkeleton';
 import { MobileLiveSlider } from '@/components/home/MobileLiveSlider';
 import { HeroBannerCarousel } from '@/components/home/HeroBannerCarousel';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
+import { ScrollableSidebarList } from '@/components/common/ScrollableSidebarList';
 import { startTopLoader, stopTopLoader } from '@/components/layout/TopLoadingBar';
 import {
   Clock3,
@@ -302,7 +303,12 @@ export function HomePageClient({
               No trending leagues available right now.
             </div>
           ) : (
-            <div className="flex flex-col gap-1 max-h-[75vh] overflow-y-auto no-scrollbar">
+            <ScrollableSidebarList
+              maxHeightClass="max-h-[75vh]"
+              className="flex flex-col gap-1 pr-1"
+              dependency={trendingSubcategories}
+              label="More Leagues"
+            >
               {trendingSubcategories.map((subcat) => {
                 const isSelected = selectedSubcategory === String(subcat.id);
 
@@ -349,7 +355,7 @@ export function HomePageClient({
                   </button>
                 );
               })}
-            </div>
+            </ScrollableSidebarList>
           )}
 
         </aside>

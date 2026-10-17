@@ -18,6 +18,7 @@ import { BannerSkeleton } from '@/components/home/BannerSkeleton';
 import { HeroBannerCarousel } from '@/components/home/HeroBannerCarousel';
 import { MobileLiveSlider } from '@/components/home/MobileLiveSlider';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
+import { ScrollableSidebarList } from '@/components/common/ScrollableSidebarList';
 import {
   Radio,
   Clock3,
@@ -592,7 +593,12 @@ export function CategoryPageComponent({
                   No active subcategories enabled for this sport.
                 </div>
               ) : (
-                <div className="flex flex-col gap-1.5 overflow-y-auto no-scrollbar max-h-[70vh]">
+                <ScrollableSidebarList
+                  maxHeightClass="max-h-[70vh]"
+                  className="flex flex-col gap-1.5 pr-1"
+                  dependency={subcategories}
+                  label="More Leagues"
+                >
                   {subcategories.map((subcat) => {
                     const isSelected = selectedSubcategory === String(subcat.id);
                     return (
@@ -632,7 +638,7 @@ export function CategoryPageComponent({
                       </button>
                     );
                   })}
-                </div>
+                </ScrollableSidebarList>
               )}
             </aside>
 
@@ -771,7 +777,12 @@ export function CategoryPageComponent({
             </div>
 
             {/* SCROLLABLE MODAL BODY */}
-            <div className="overflow-y-auto no-scrollbar space-y-4 flex-1 py-1">
+            <ScrollableSidebarList
+              maxHeightClass="max-h-[60vh]"
+              className="space-y-4 flex-1 py-1 pr-1"
+              dependency={subcategories}
+              label="More Leagues"
+            >
 
               {/* ALL LEAGUES BUTTON */}
               <button
@@ -827,7 +838,7 @@ export function CategoryPageComponent({
                 })}
               </div>
 
-            </div>
+            </ScrollableSidebarList>
 
           </div>
         </div>

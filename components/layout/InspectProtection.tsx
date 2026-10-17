@@ -2,6 +2,24 @@
 
 import { useEffect } from 'react';
 
+// Protect DOM manipulation against 3rd-party ad scripts mutating/removing React DOM nodes
+if (typeof window !== 'undefined' && typeof Node !== 'undefined') {
+  const origRemoveChild = Node.prototype.removeChild;
+  Node.prototype.removeChild = function (child: any) {
+    if (child && child.parentNode !== this) {
+      return child;
+    }
+    return origRemoveChild.apply(this, arguments as any);
+  };
+  const origInsertBefore = Node.prototype.insertBefore;
+  Node.prototype.insertBefore = function (newNode: any, referenceNode: any) {
+    if (referenceNode && referenceNode.parentNode !== this) {
+      return newNode;
+    }
+    return origInsertBefore.apply(this, arguments as any);
+  };
+}
+
 export function InspectProtection() {
   useEffect(() => {
     // 1. Disable Right-Click Context Menu

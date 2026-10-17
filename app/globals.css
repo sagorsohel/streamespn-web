@@ -77,6 +77,25 @@ body {
   scrollbar-width: none;  /* Firefox */
 }
 
+/* Sleek Thin Scrollbar for Sidebars & Scrollable Lists */
+.thin-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(140, 140, 150, 0.28);
+  border-radius: 9999px;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(248, 200, 49, 0.7);
+}
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(140, 140, 150, 0.28) transparent;
+}
+
 /* Full Button Scale & Glow Heartbeat Pulse (100% GPU Composited) */
 @keyframes fullButtonPulse {
   0%, 100% {

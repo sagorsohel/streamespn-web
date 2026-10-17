@@ -150,48 +150,6 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://r2.thesportsdb.com" />
         <link rel="preconnect" href="https://musikazblai.org" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://musikazblai.org" />
-        <script
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                // Protect DOM manipulation against 3rd-party ad scripts mutating/removing nodes
-                if (typeof window !== 'undefined' && typeof Node !== 'undefined') {
-                  var origRemoveChild = Node.prototype.removeChild;
-                  Node.prototype.removeChild = function(child) {
-                    if (child && child.parentNode !== this) {
-                      return child;
-                    }
-                    return origRemoveChild.apply(this, arguments);
-                  };
-                  var origInsertBefore = Node.prototype.insertBefore;
-                  Node.prototype.insertBefore = function(newNode, referenceNode) {
-                    if (referenceNode && referenceNode.parentNode !== this) {
-                      return newNode;
-                    }
-                    return origInsertBefore.apply(this, arguments);
-                  };
-                }
-
-                document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; }, true);
-                window.addEventListener('keydown', function(e) {
-                  var k = e.key ? e.key.toUpperCase() : '';
-                  var c = e.keyCode || e.which;
-                  if (
-                    k === 'F12' || c === 123 ||
-                    ((e.ctrlKey || e.metaKey) && e.shiftKey && (k === 'I' || k === 'J' || k === 'C' || k === 'K' || k === 'E' || c === 73 || c === 74 || c === 67 || c === 75 || c === 69)) ||
-                    (e.metaKey && e.altKey && (k === 'I' || k === 'J' || k === 'C' || k === 'U' || c === 73 || c === 74 || c === 67 || c === 85)) ||
-                    ((e.ctrlKey || e.metaKey) && (k === 'U' || k === 'S' || c === 85 || c === 83))
-                  ) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return false;
-                  }
-                }, true);
-              })();
-            `,
-          }}
-        />
         <SSRHeadScripts rawHtml={headAdsHtml} isEnabled={isHeadAdsEnabled} />
       </head>
       <body suppressHydrationWarning className="min-h-screen bg-[var(--bg-main)] text-[var(--text-white)] flex flex-col font-sans">
