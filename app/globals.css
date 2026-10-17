@@ -77,26 +77,40 @@ body {
   scrollbar-width: none;  /* Firefox */
 }
 
-/* Full Button Scale & Glow Heartbeat Pulse */
+/* Full Button Scale & Glow Heartbeat Pulse (100% GPU Composited) */
 @keyframes fullButtonPulse {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 4px 16px rgba(246, 196, 41, 0.45);
-    border-color: rgba(255, 238, 150, 0.85);
+    opacity: 0.97;
   }
   50% {
-    transform: scale(1.02);
-    box-shadow: 0 6px 22px rgba(246, 196, 41, 0.75);
-    border-color: #ffffff;
+    transform: scale(1.025);
+    opacity: 1;
+  }
+}
+
+@keyframes livePulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.85);
   }
 }
 
 .animate-border-pulse,
 .animate-full-pulse {
-  box-shadow: 0 4px 16px rgba(246, 196, 41, 0.45);
+  box-shadow: 0 4px 18px rgba(246, 196, 41, 0.55);
   border-color: rgba(255, 238, 150, 0.85);
   animation: fullButtonPulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  transition: background-color 0.2s ease;
+  will-change: transform, opacity;
+}
+
+.animate-live-dot {
+  animation: livePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  will-change: transform, opacity;
 }
 
 .animate-border-pulse:hover,

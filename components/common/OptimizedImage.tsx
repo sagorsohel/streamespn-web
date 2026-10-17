@@ -40,6 +40,11 @@ export function OptimizedImage({
       className={className}
       loading={rest.priority ? undefined : 'lazy'}
       decoding="async"
+      style={{
+        ...(!fill && width ? { maxWidth: '100%', height: 'auto' } : {}),
+        ...(!fill && width && height ? { aspectRatio: `${width} / ${height}` } : {}),
+        ...rest.style,
+      }}
       onError={() => setHasError(true)}
       {...rest}
     />
