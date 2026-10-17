@@ -637,12 +637,20 @@ export function SingleMatchViewComponent({
 
             {/* ========================================================================= */}
             {/* 2. MIDDLE SECTION: VIDEO STREAM PLAYER (891px WIDTH x 500px HEIGHT)        */}
-            {/* ========================================================================= */}
-            <div className="group relative mx-auto w-full max-w-[891px] overflow-hidden rounded-2xl border-2 border-red-500 bg-red-500 shadow-sm sm:rounded-[24px] dark:border-red-500">
+            <div
+              suppressHydrationWarning
+              className="player-stream-red-border group relative mx-auto w-full max-w-[891px] overflow-hidden rounded-2xl bg-slate-950 shadow-sm sm:rounded-[24px]"
+            >
               {/* VIDEO PLAYER CANVAS: 891px x 500px */}
-              <div className="xs:h-[340px] relative flex h-[240px] w-full items-center justify-center overflow-hidden border-red-500 bg-black sm:h-[420px] md:h-[500px]">
+              <div
+                suppressHydrationWarning
+                className="player-canvas-red-border xs:h-[340px] relative flex h-[240px] w-full items-center justify-center overflow-hidden rounded-2xl bg-black sm:h-[420px] sm:rounded-[24px] md:h-[500px]"
+              >
                 {/* Stadium backdrop image */}
-                <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                <div
+                  suppressHydrationWarning
+                  className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl sm:rounded-[24px]"
+                >
                   <OptimizedImage
                     src={playerBackdrop}
                     alt=""
