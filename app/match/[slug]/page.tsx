@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 import { prefetchSingleMatch } from '@/lib/serverPrefetch';
 import { SingleMatchViewComponent } from '@/components/match/SingleMatchViewComponent';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface MatchSlugPageProps {
   params: Promise<{ slug: string }>;
 }

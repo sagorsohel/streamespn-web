@@ -104,7 +104,20 @@ export async function prefetchCategoryData(
 
         const matchRes = await api.get(matchUrl, { timeout: 8000 });
         if (matchRes.data?.success && Array.isArray(matchRes.data?.data?.matches)) {
-          matches = matchRes.data.data.matches;
+          const raw = matchRes.data.data.matches;
+          const now = Date.now();
+          matches = raw.map((m: MatchItem) => {
+            if (m.status === 'live' && m.matchTime) {
+              const t = new Date(m.matchTime).getTime();
+              if (!isNaN(t)) {
+                const diff = (now - t) / (1000 * 3600);
+                if (diff > 3.5 || diff < -0.5) {
+                  return { ...m, status: 'finished' as const, livePeriod: 'FT', liveMinute: 'FT' };
+                }
+              }
+            }
+            return m;
+          });
           if (matches.length === 0 && selectedSubId) {
             try {
               const fallbackRes = await api.get(`/matches?limit=100&page=1&categoryId=${targetCategory.id}`, { timeout: 5000 });
@@ -171,11 +184,25 @@ export async function prefetchHomeData(): Promise<PrefetchedHomeData> {
     if (trendRes.status === 'fulfilled' && trendRes.value.data?.success && Array.isArray(trendRes.value.data?.data?.subcategories)) {
       trendingSubcategories = trendRes.value.data.data.subcategories;
     }
+    const now = Date.now();
+    const sanitizeLive = (m: MatchItem): MatchItem => {
+      if (m.status === 'live' && m.matchTime) {
+        const t = new Date(m.matchTime).getTime();
+        if (!isNaN(t)) {
+          const diff = (now - t) / (1000 * 3600);
+          if (diff > 3.5 || diff < -0.5) {
+            return { ...m, status: 'finished' as const, livePeriod: 'FT', liveMinute: 'FT' };
+          }
+        }
+      }
+      return m;
+    };
+
     if (bannerRes.status === 'fulfilled' && bannerRes.value.data?.success && Array.isArray(bannerRes.value.data?.data?.matches)) {
-      bannerMatches = bannerRes.value.data.data.matches;
+      bannerMatches = bannerRes.value.data.data.matches.map(sanitizeLive);
     }
     if (matchRes.status === 'fulfilled' && matchRes.value.data?.success && Array.isArray(matchRes.value.data?.data?.matches)) {
-      matches = matchRes.value.data.data.matches;
+      matches = matchRes.value.data.data.matches.map(sanitizeLive);
     }
   } catch (err) {
     // gracefully fallback

@@ -4,6 +4,9 @@ import { prefetchCategoryData } from '@/lib/serverPrefetch';
 import { CategoryPageComponent } from './CategoryPageComponent';
 import { JsonLdSchema } from '@/components/seo/JsonLdSchema';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface PageProps {
   params: Promise<{ categorySlug: string }>;
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;

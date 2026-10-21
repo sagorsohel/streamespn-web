@@ -150,9 +150,10 @@ export function HomePageClient({
   );
 
   useEffect(() => {
-    // If SSR already pre-populated data, skip client-side waterfall on mount
+    // If SSR already pre-populated data, fast-mount with initialMatches then silently revalidate
     if (initialDataProvided.current) {
       initialDataProvided.current = false;
+      fetchMatches(1);
       return;
     }
     fetchCategories();
@@ -224,9 +225,18 @@ export function HomePageClient({
     );
   };
 
-  // 1. Live Matches: Always include (even if match time is older/started earlier)
+  // 1. Live Matches: Only include if status is 'live' AND match started within the last 3.5 hours and on current date
   const liveMatches = React.useMemo(() => {
-    return uniqueMatches.filter((m) => m.status === 'live');
+    const now = Date.now();
+    return uniqueMatches.filter((m) => {
+      if (m.status !== 'live') return false;
+      if (!m.matchTime) return true;
+      const t = new Date(m.matchTime).getTime();
+      if (isNaN(t)) return true;
+      const hoursDiff = (now - t) / (1000 * 3600);
+      // Stale safety guard: Sports matches do not exceed 3.5 hours and cannot belong to earlier days
+      return hoursDiff >= -0.5 && hoursDiff <= 3.5 && (isToday(m.matchTime) || isTomorrow(m.matchTime));
+    });
   }, [uniqueMatches]);
 
   // 2. Today's Upcoming: Matches happening today (excluding finished and live)
@@ -241,8 +251,15 @@ export function HomePageClient({
 
   // Featured Hero Matches Carousel (from banner API or fallback to live and today/tomorrow upcoming)
   const displayedBannerMatches = React.useMemo(() => {
+    const now = Date.now();
     const validMatches = (bannerMatches.length > 0 ? bannerMatches : uniqueMatches).filter((m) => {
-      if (m.status === 'live') return true;
+      if (m.status === 'live') {
+        if (!m.matchTime) return true;
+        const t = new Date(m.matchTime).getTime();
+        if (isNaN(t)) return true;
+        const hoursDiff = (now - t) / (1000 * 3600);
+        return hoursDiff >= -0.5 && hoursDiff <= 3.5 && (isToday(m.matchTime) || isTomorrow(m.matchTime));
+      }
       if (m.status === 'finished') return false;
       return isToday(m.matchTime) || isTomorrow(m.matchTime);
     });

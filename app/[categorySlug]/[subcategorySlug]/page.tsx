@@ -5,6 +5,9 @@ import { prefetchCategoryData, prefetchSingleMatch } from '@/lib/serverPrefetch'
 import { SubcategoryOrMatchView } from './SubcategoryOrMatchView';
 import { JsonLdSchema } from '@/components/seo/JsonLdSchema';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface NestedPageProps {
   params: Promise<{ categorySlug: string; subcategorySlug: string }>;
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;

@@ -472,8 +472,18 @@ export function CategoryPageComponent({
     );
   };
 
-  // 1. Live Matches: Always include (even if older/started earlier)
-  const liveMatches = React.useMemo(() => uniqueMatches.filter((m) => m.status === 'live'), [uniqueMatches]);
+  // 1. Live Matches: Only include if status is 'live' AND match started within the last 3.5 hours and on current date
+  const liveMatches = React.useMemo(() => {
+    const now = Date.now();
+    return uniqueMatches.filter((m) => {
+      if (m.status !== 'live') return false;
+      if (!m.matchTime) return true;
+      const t = new Date(m.matchTime).getTime();
+      if (isNaN(t)) return true;
+      const hoursDiff = (now - t) / (1000 * 3600);
+      return hoursDiff >= -0.5 && hoursDiff <= 3.5 && (isToday(m.matchTime) || isTomorrow(m.matchTime));
+    });
+  }, [uniqueMatches]);
 
   // 2. Today's Upcoming: Matches happening today (excluding finished and live)
   const todayUpcomingMatches = React.useMemo(() => uniqueMatches.filter((m) => m.status !== 'live' && m.status !== 'finished' && isToday(m.matchTime)), [uniqueMatches]);
@@ -486,8 +496,15 @@ export function CategoryPageComponent({
 
   // Category Banner Matches: Prioritize Live matches first, then Upcoming matches (Today / Tomorrow only)
   const categoryBannerMatches = React.useMemo(() => {
+    const now = Date.now();
     const validMatches = uniqueMatches.filter((m) => {
-      if (m.status === 'live') return true;
+      if (m.status === 'live') {
+        if (!m.matchTime) return true;
+        const t = new Date(m.matchTime).getTime();
+        if (isNaN(t)) return true;
+        const hoursDiff = (now - t) / (1000 * 3600);
+        return hoursDiff >= -0.5 && hoursDiff <= 3.5 && (isToday(m.matchTime) || isTomorrow(m.matchTime));
+      }
       if (m.status === 'finished') return false;
       return isToday(m.matchTime) || isTomorrow(m.matchTime);
     });
