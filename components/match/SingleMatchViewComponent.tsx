@@ -16,7 +16,7 @@ import {
   fetchAdsSettingsAsync,
   AdsSettings,
 } from "@/lib/adsCache"
-import { formatMatchFullDateTime, formatLiveTimeOnly } from "@/lib/timezone"
+import { formatMatchFullDateTime, formatLiveTimeOnly, parseUtcDate } from "@/lib/timezone"
 import { useLiveScoreSync } from "@/lib/useLiveScoreSync"
 import {
   Play,
@@ -70,6 +70,11 @@ export function SingleMatchViewComponent({
   const [relatedMatches, setRelatedMatches] = useState<MatchItem[]>([])
   const [loading, setLoading] = useState<boolean>(() => !initialMatch)
   const [notFound, setNotFound] = useState<boolean>(false)
+  const [mounted, setMounted] = useState<boolean>(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Redirect hierarchically if match is not found: subcategory -> category -> home
   useEffect(() => {
@@ -400,23 +405,25 @@ export function SingleMatchViewComponent({
   const isLive = match?.status === "live"
   const isFinished = match?.status === "finished"
 
-  const matchDate = match?.matchTime ? new Date(match.matchTime) : null
+  const matchDate = match?.matchTime ? parseUtcDate(match.matchTime) : null
   const rawTimeFormatted = matchDate
     ? matchDate.toLocaleTimeString("en-US", {
-        hour: "2-digit",
+        hour: "numeric",
         minute: "2-digit",
-        hour12: false,
-      })
+        hour12: true,
+        timeZone: "UTC",
+      }) + " UTC"
     : "TBA"
   const rawDateFormatted = matchDate
     ? matchDate.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
         year: "numeric",
+        timeZone: "UTC",
       })
     : ""
 
-  const formattedObj = match?.matchTime
+  const formattedObj = mounted && match?.matchTime
     ? formatMatchFullDateTime(match.matchTime)
     : null
   const timeFormatted = formattedObj

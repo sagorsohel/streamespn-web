@@ -50,10 +50,10 @@ export const formatMatchTime = (utcTimeStr: string | null | undefined): string =
   const date = parseUtcDate(utcTimeStr);
   if (!date) return 'TBA';
   try {
-    return date.toLocaleTimeString(undefined, {
-      hour: '2-digit',
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
       minute: '2-digit',
-      hour12: false,
+      hour12: true,
     });
   } catch (e) {
     return 'TBA';
@@ -81,10 +81,10 @@ export const formatMatchFullDateTime = (utcTimeStr: string | null | undefined): 
   const date = parseUtcDate(utcTimeStr);
   if (!date) return { time: 'TBA', date: '', tzAbbr: '' };
   try {
-    const time = date.toLocaleTimeString(undefined, {
-      hour: '2-digit',
+    const time = date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
       minute: '2-digit',
-      hour12: false,
+      hour12: true,
     });
 
     const dateStr = date.toLocaleDateString(undefined, {
