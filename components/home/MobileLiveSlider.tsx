@@ -6,14 +6,20 @@ import { MatchItem } from './MatchCard';
 import { slugify, sanitizeScore } from '@/lib/utils';
 import { Radio } from 'lucide-react';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
+import { formatMatchTime } from '@/lib/timezone';
 
 interface MobileLiveSliderProps {
   matches: MatchItem[];
 }
 
 export const MobileLiveSlider: React.FC<MobileLiveSliderProps> = ({ matches }) => {
+  const [mounted, setMounted] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Prioritize live matches first, then upcoming (up to 10)
   const sliderMatches = React.useMemo(() => {
@@ -176,7 +182,7 @@ export const MobileLiveSlider: React.FC<MobileLiveSliderProps> = ({ matches }) =
                       <>
                         <span className="text-lg xs:text-xl font-black tracking-wider text-[#F8C831] font-sans whitespace-nowrap leading-none mb-1.5 drop-shadow-md">
                           {m.matchTime
-                            ? new Date(m.matchTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            ? (mounted ? formatMatchTime(m.matchTime) : 'TBA')
                             : 'VS'}
                         </span>
                         <span className="inline-flex items-center gap-1 bg-purple-900/90 text-purple-200 border border-purple-400/30 text-[9px] font-bold px-2 py-0.5 rounded-full shadow-lg whitespace-nowrap">
