@@ -10,6 +10,7 @@ interface ScrollableSidebarListProps {
   scrollStep?: number
   label?: string
   dependency?: any
+  activeId?: string | number | null
 }
 
 export const ScrollableSidebarList: React.FC<ScrollableSidebarListProps> = ({
@@ -19,6 +20,7 @@ export const ScrollableSidebarList: React.FC<ScrollableSidebarListProps> = ({
   scrollStep = 240,
   label = "More Leagues",
   dependency,
+  activeId,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [canScrollUp, setCanScrollUp] = useState(false)
@@ -34,6 +36,43 @@ export const ScrollableSidebarList: React.FC<ScrollableSidebarListProps> = ({
     setCanScrollUp(hasMoreUp)
     setCanScrollDown(hasMoreDown)
   }, [])
+
+  // Auto-scroll to active item inside this sidebar container
+  useEffect(() => {
+    if (!activeId) return
+    const el = containerRef.current
+    if (!el) return
+
+    const scrollToActive = () => {
+      const activeEl = el.querySelector<HTMLElement>(
+        `[data-subid="${activeId}"], [data-active="true"]`
+      )
+      if (!activeEl) return
+
+      const containerRect = el.getBoundingClientRect()
+      const activeRect = activeEl.getBoundingClientRect()
+
+      // Calculate where container should scroll so activeEl is centered
+      const currentScrollTop = el.scrollTop
+      const relativeTop = activeRect.top - containerRect.top + currentScrollTop
+      const targetScrollTop = relativeTop - el.clientHeight / 2 + activeEl.clientHeight / 2
+
+      el.scrollTo({
+        top: Math.max(0, targetScrollTop),
+        behavior: "smooth",
+      })
+    }
+
+    const rafId = requestAnimationFrame(scrollToActive)
+    const t1 = setTimeout(scrollToActive, 80)
+    const t2 = setTimeout(scrollToActive, 300)
+
+    return () => {
+      cancelAnimationFrame(rafId)
+      clearTimeout(t1)
+      clearTimeout(t2)
+    }
+  }, [activeId, dependency])
 
   useEffect(() => {
     const el = containerRef.current

@@ -81,7 +81,7 @@ export async function prefetchCategoryData(
           );
 
           if (normSub) {
-            const matchedSub = activeSubs.find(
+            const matchedSub = allSubs.find(
               (s: Subcategory) =>
                 slugify(s.name) === normSub ||
                 String(s.id) === normSub ||
@@ -90,6 +90,9 @@ export async function prefetchCategoryData(
             if (matchedSub) {
               selectedSubId = String(matchedSub.id);
               subName = matchedSub.name;
+              if (!activeSubs.some((s) => s.id === matchedSub.id)) {
+                activeSubs.push(matchedSub);
+              }
             }
           }
         }

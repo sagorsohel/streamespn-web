@@ -135,22 +135,35 @@ export function CategoryPageComponent({
     if (initialKeyRef.current !== currentRouteKey) {
       initialKeyRef.current = currentRouteKey;
       if (initialCategory) setCategory(initialCategory);
-      if (initialSubcategories) setSubcategories(initialSubcategories);
+      if (initialSubcategories && initialSubcategories.length > 0) setSubcategories(initialSubcategories);
       if (initialMatches) setMatches(initialMatches);
-      if (initialSelectedSubcategory !== undefined) setSelectedSubcategory(initialSelectedSubcategory);
-    }
-  }, [currentRouteKey, initialCategory, initialSubcategories, initialMatches, initialSelectedSubcategory]);
 
-  // Auto-scroll selected subcategory into view in left sidebar
+      let resolvedSubId: string | null = initialSelectedSubcategory || null;
+      if (!resolvedSubId && subcategorySlug) {
+        const found = (initialSubcategories || subcategories).find(
+          (s) => slugify(s.name) === subcategorySlug.toLowerCase() || String(s.id) === subcategorySlug
+        );
+        if (found) resolvedSubId = String(found.id);
+      }
+
+      if (resolvedSubId) {
+        setSelectedSubcategory(resolvedSubId);
+      } else if (!subcategorySlug) {
+        setSelectedSubcategory(null);
+      }
+    }
+  }, [currentRouteKey, initialCategory, initialSubcategories, initialMatches, initialSelectedSubcategory, subcategorySlug, subcategories]);
+
+  // Auto-scroll selected subcategory into view in left sidebar (fallback)
   useEffect(() => {
     if (selectedSubcategory && activeSubcatRef.current) {
       const timer = setTimeout(() => {
         activeSubcatRef.current?.scrollIntoView({
           behavior: 'smooth',
-          block: 'nearest',
+          block: 'center',
           inline: 'nearest',
         });
-      }, 250);
+      }, 150);
       return () => clearTimeout(timer);
     }
   }, [selectedSubcategory, subcategories]);
@@ -271,12 +284,15 @@ export function CategoryPageComponent({
               Boolean(s.status) === true &&
               (Number(s.matchCount || 0) > 0 || Number(s.totalMatchCount || 0) > 0)
           );
-          if (subcategorySlug && activeSubs.length > 0) {
-            const matchedSubcat = activeSubs.find(
+          if (subcategorySlug && fetchedSubList.length > 0) {
+            const matchedSubcat = fetchedSubList.find(
               (s: Subcategory) => slugify(s.name) === subcategorySlug.toLowerCase() || String(s.id) === subcategorySlug
             );
             if (matchedSubcat) {
               initialSubId = String(matchedSubcat.id);
+              if (!activeSubs.some((s) => s.id === matchedSubcat.id)) {
+                activeSubs.push(matchedSubcat);
+              }
             }
           }
           if (isMounted) {
@@ -306,12 +322,15 @@ export function CategoryPageComponent({
               (Number(s.matchCount || 0) > 0 || Number(s.totalMatchCount || 0) > 0)
           );
 
-          if (subcategorySlug && activeSubs.length > 0) {
-            const matchedSubcat = activeSubs.find(
+          if (subcategorySlug && fetchedSubList.length > 0) {
+            const matchedSubcat = fetchedSubList.find(
               (s: Subcategory) => slugify(s.name) === subcategorySlug.toLowerCase() || String(s.id) === subcategorySlug
             );
             if (matchedSubcat) {
               initialSubId = String(matchedSubcat.id);
+              if (!activeSubs.some((s) => s.id === matchedSubcat.id)) {
+                activeSubs.push(matchedSubcat);
+              }
             }
           }
           if (isMounted) {
@@ -406,9 +425,6 @@ export function CategoryPageComponent({
   const handleSubcategorySelect = (subcat: Subcategory | null) => {
     if (!category) return;
     setIsMobileSubcatOpen(false);
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }
 
     let targetUrl = `/${categorySlug}`;
     let newSubId: string | null = null;
@@ -422,6 +438,7 @@ export function CategoryPageComponent({
     }
 
     setSelectedSubcategory(newSubId);
+    prevSubSlugRef.current = newSubId && subcat ? slugify(subcat.name) : undefined;
     router.replace(targetUrl, { scroll: false });
     fetchMatches(category.id, newSubId, 1);
   };
@@ -613,7 +630,8 @@ export function CategoryPageComponent({
                 <ScrollableSidebarList
                   maxHeightClass="max-h-[70vh]"
                   className="flex flex-col gap-1.5 pr-1"
-                  dependency={subcategories}
+                  dependency={[subcategories, selectedSubcategory]}
+                  activeId={selectedSubcategory}
                   label="More Leagues"
                 >
                   {subcategories.map((subcat) => {
@@ -621,6 +639,8 @@ export function CategoryPageComponent({
                     return (
                       <button
                         key={subcat.id}
+                        data-subid={String(subcat.id)}
+                        data-active={isSelected ? 'true' : 'false'}
                         ref={isSelected ? activeSubcatRef : null}
                         onClick={() => handleSubcategorySelect(subcat)}
                         className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all border ${isSelected
@@ -797,7 +817,8 @@ export function CategoryPageComponent({
             <ScrollableSidebarList
               maxHeightClass="max-h-[60vh]"
               className="space-y-4 flex-1 py-1 pr-1"
-              dependency={subcategories}
+              dependency={[subcategories, selectedSubcategory]}
+              activeId={selectedSubcategory}
               label="More Leagues"
             >
 
@@ -825,6 +846,8 @@ export function CategoryPageComponent({
                   return (
                     <button
                       key={subcat.id}
+                      data-subid={String(subcat.id)}
+                      data-active={isSelected ? 'true' : 'false'}
                       onClick={() => handleSubcategorySelect(subcat)}
                       className="flex flex-col items-center justify-center group cursor-pointer"
                     >
