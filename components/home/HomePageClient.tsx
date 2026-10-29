@@ -314,21 +314,20 @@ export function HomePageClient({
               label="More Leagues"
             >
               {trendingSubcategories.map((subcat) => {
+                const parentCat = categories.find((c) => c.id === subcat.categoryId);
+                const catSlug = slugify(subcat.categoryName || parentCat?.sportName || 'sports');
+                const subSlug = slugify(subcat.name);
+                const targetUrl = `/${catSlug}/${subSlug}`;
                 const isSelected = selectedSubcategory === String(subcat.id);
 
                 return (
-                  <button
+                  <Link
                     key={subcat.id}
-                    onClick={() => {
-                      if (isSelected) {
-                        setSelectedSubcategory(null);
-                      } else {
-                        setSelectedSubcategory(String(subcat.id));
-                      }
-                    }}
+                    href={targetUrl}
+                    onClick={() => startTopLoader()}
                     className={`w-full flex items-center justify-between p-2.5 rounded-xl text-[14px] font-semibold leading-[1.5] transition-all group ${isSelected
                       ? 'bg-[#F8C831] text-black shadow-md border border-[#F8C831]'
-                      : 'bg-[var(--bg-card)] text-[#555555] dark:text-zinc-200 border border-[var(--border-glass)] hover:bg-[var(--bg-card-hover)]'
+                      : 'bg-[var(--bg-card)] text-[#555555] dark:text-zinc-200 border border-[var(--border-glass)] hover:bg-[var(--bg-card-hover)] hover:text-black dark:hover:text-white'
                       }`}
                   >
                     <div className="flex items-center gap-2.5 truncate flex-1 min-w-0 mr-1.5">
@@ -356,7 +355,7 @@ export function HomePageClient({
                       className={`h-4 w-4 shrink-0 transition-transform ${isSelected ? 'text-black' : 'text-slate-400 dark:text-zinc-400 group-hover:translate-x-0.5'
                         }`}
                     />
-                  </button>
+                  </Link>
                 );
               })}
             </ScrollableSidebarList>
@@ -376,21 +375,21 @@ export function HomePageClient({
               </div>
               <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
                 {trendingSubcategories.map((subcat) => {
+                  const parentCat = categories.find((c) => c.id === subcat.categoryId);
+                  const catSlug = slugify(subcat.categoryName || parentCat?.sportName || 'sports');
+                  const subSlug = slugify(subcat.name);
+                  const targetUrl = `/${catSlug}/${subSlug}`;
                   const isSelected = selectedSubcategory === String(subcat.id);
+
                   return (
-                    <button
+                    <Link
                       key={subcat.id}
-                      onClick={() => {
-                        if (isSelected) {
-                          setSelectedSubcategory(null);
-                        } else {
-                          setSelectedSubcategory(String(subcat.id));
-                        }
-                      }}
+                      href={targetUrl}
+                      onClick={() => startTopLoader()}
                       className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold shrink-0 transition-all ${
                         isSelected
                           ? 'bg-[#F8C831] text-black shadow-md border border-[#F8C831]'
-                          : 'bg-[var(--bg-card)] text-[#555555] dark:text-zinc-200 border border-[var(--border-glass)] hover:bg-[var(--bg-card-hover)]'
+                          : 'bg-[var(--bg-card)] text-[#555555] dark:text-zinc-200 border border-[var(--border-glass)] hover:bg-[var(--bg-card-hover)] hover:text-black dark:hover:text-white'
                       }`}
                     >
                       <div className="h-4 w-4 rounded-full bg-white border border-[#F8C831] p-[1.5px] flex items-center justify-center shrink-0">
@@ -409,7 +408,7 @@ export function HomePageClient({
                         )}
                       </div>
                       <span className="whitespace-nowrap">{subcat.name}</span>
-                    </button>
+                    </Link>
                   );
                 })}
               </div>
