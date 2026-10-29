@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { HomePageClient as HomePage } from '@/components/home/HomePageClient';
 import api from '@/lib/api';
 
 import { getCategories, clearCategoriesCache } from '@/lib/categories';
@@ -109,7 +108,9 @@ export function CategoryPageComponent({
   // 🔄 REAL-TIME SILENT LIVE SCORE & MINUTE SYNC (15s interval)
   useLiveScoreSync(matches, setMatches);
 
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(initialSelectedSubcategory || null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(
+    initialSelectedSubcategory || subcategorySlug || null
+  );
   const [loading, setLoading] = useState<boolean>(!initialCategory);
   const [matchesLoading, setMatchesLoading] = useState<boolean>(false);
   const [notFound, setNotFound] = useState<boolean>(false);
@@ -134,16 +135,29 @@ export function CategoryPageComponent({
   useEffect(() => {
     if (initialKeyRef.current !== currentRouteKey) {
       initialKeyRef.current = currentRouteKey;
+      prevSubSlugRef.current = subcategorySlug;
       if (initialCategory) setCategory(initialCategory);
       if (initialSubcategories && initialSubcategories.length > 0) setSubcategories(initialSubcategories);
       if (initialMatches) setMatches(initialMatches);
 
       let resolvedSubId: string | null = initialSelectedSubcategory || null;
       if (!resolvedSubId && subcategorySlug) {
-        const found = (initialSubcategories || subcategories).find(
-          (s) => slugify(s.name) === subcategorySlug.toLowerCase() || String(s.id) === subcategorySlug
+        const pool = [
+          ...(initialSubcategories || []),
+          ...subcategories,
+          ...(category ? getCachedSubcategories(String(category.id)) || [] : []),
+        ];
+        const found = pool.find(
+          (s) =>
+            slugify(s.name) === subcategorySlug.toLowerCase() ||
+            String(s.id) === subcategorySlug ||
+            s.name?.toLowerCase() === subcategorySlug.replace(/-/g, ' ').toLowerCase()
         );
-        if (found) resolvedSubId = String(found.id);
+        if (found) {
+          resolvedSubId = String(found.id);
+        } else {
+          resolvedSubId = subcategorySlug;
+        }
       }
 
       if (resolvedSubId) {
@@ -152,7 +166,7 @@ export function CategoryPageComponent({
         setSelectedSubcategory(null);
       }
     }
-  }, [currentRouteKey, initialCategory, initialSubcategories, initialMatches, initialSelectedSubcategory, subcategorySlug, subcategories]);
+  }, [currentRouteKey, initialCategory, initialSubcategories, initialMatches, initialSelectedSubcategory, subcategorySlug, category]);
 
   // Auto-scroll selected subcategory into view in left sidebar (fallback)
   useEffect(() => {
@@ -183,16 +197,6 @@ export function CategoryPageComponent({
       const res = await api.get(url);
       if (res.data?.success && Array.isArray(res.data?.data?.matches)) {
         let fetched: MatchItem[] = res.data.data.matches;
-
-        // Fallback 1: If subcategory returns 0 matches, fallback to category matches
-        if (pageNum === 1 && fetched.length === 0 && subId) {
-          try {
-            const catFallback = await api.get(`/matches?limit=20&page=1&categoryId=${catId}`);
-            if (catFallback.data?.success && Array.isArray(catFallback.data?.data?.matches) && catFallback.data.data.matches.length > 0) {
-              fetched = catFallback.data.data.matches;
-            }
-          } catch (e) { }
-        }
 
         if (pageNum === 1) {
           const unique = Array.from(new Map<number, MatchItem>(fetched.map((m) => [m.id, m])).values());
@@ -286,17 +290,20 @@ export function CategoryPageComponent({
           );
           if (subcategorySlug && fetchedSubList.length > 0) {
             const matchedSubcat = fetchedSubList.find(
-              (s: Subcategory) => slugify(s.name) === subcategorySlug.toLowerCase() || String(s.id) === subcategorySlug
+              (s: Subcategory) =>
+                slugify(s.name) === subcategorySlug.toLowerCase() ||
+                String(s.id) === subcategorySlug ||
+                s.name?.toLowerCase() === subcategorySlug.replace(/-/g, ' ').toLowerCase()
             );
             if (matchedSubcat) {
               initialSubId = String(matchedSubcat.id);
               if (!activeSubs.some((s) => s.id === matchedSubcat.id)) {
-                activeSubs.push(matchedSubcat);
+                activeSubs.unshift(matchedSubcat);
               }
             }
           }
           if (isMounted) {
-            setSelectedSubcategory(initialSubId);
+            setSelectedSubcategory(initialSubId || subcategorySlug || null);
             setSubcategories(activeSubs);
           }
         }
@@ -324,17 +331,20 @@ export function CategoryPageComponent({
 
           if (subcategorySlug && fetchedSubList.length > 0) {
             const matchedSubcat = fetchedSubList.find(
-              (s: Subcategory) => slugify(s.name) === subcategorySlug.toLowerCase() || String(s.id) === subcategorySlug
+              (s: Subcategory) =>
+                slugify(s.name) === subcategorySlug.toLowerCase() ||
+                String(s.id) === subcategorySlug ||
+                s.name?.toLowerCase() === subcategorySlug.replace(/-/g, ' ').toLowerCase()
             );
             if (matchedSubcat) {
               initialSubId = String(matchedSubcat.id);
               if (!activeSubs.some((s) => s.id === matchedSubcat.id)) {
-                activeSubs.push(matchedSubcat);
+                activeSubs.unshift(matchedSubcat);
               }
             }
           }
           if (isMounted) {
-            setSelectedSubcategory(initialSubId);
+            setSelectedSubcategory(initialSubId || subcategorySlug || null);
             setSubcategories(activeSubs);
           }
         }
@@ -349,7 +359,10 @@ export function CategoryPageComponent({
 
           if (subcategorySlug) {
             const matched = fetchedSubList.find(
-              (s: Subcategory) => slugify(s.name) === subcategorySlug.toLowerCase() || String(s.id) === subcategorySlug
+              (s: Subcategory) =>
+                slugify(s.name) === subcategorySlug.toLowerCase() ||
+                String(s.id) === subcategorySlug ||
+                s.name?.toLowerCase() === subcategorySlug.replace(/-/g, ' ').toLowerCase()
             );
             const subTitle = matched ? matched.name : subcategorySlug.toUpperCase();
             const catTitle = targetCategory?.sportName || '';
@@ -367,23 +380,13 @@ export function CategoryPageComponent({
         if (matchResResult.status === 'fulfilled' && matchResResult.value.data?.success && Array.isArray(matchResResult.value.data?.data?.matches)) {
           let fetchedMatches: MatchItem[] = matchResResult.value.data.data.matches;
 
-          // Auto Fallback: If subcategory filter returns 0 matches, fallback to category matches
-          if (fetchedMatches.length === 0 && targetSubIdOrSlug) {
-            try {
-              const fallbackRes = await api.get(`/matches?limit=100&page=1&categoryId=${targetCategory.id}`);
-              if (fallbackRes.data?.success && Array.isArray(fallbackRes.data?.data?.matches) && fallbackRes.data.data.matches.length > 0) {
-                fetchedMatches = fallbackRes.data.data.matches;
-              }
-            } catch (e) { }
-          }
-
           const uniqueMatches = Array.from(new Map(fetchedMatches.map((m) => [m.id, m])).values());
           setMatches(uniqueMatches);
           setPage(1);
           setHasMore(uniqueMatches.length >= 20);
         }
       } catch (err) {
-        if (isMounted && !matches.length) setNotFound(true);
+        // silent error handling - never reset to notFound for 0 matches
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -404,23 +407,54 @@ export function CategoryPageComponent({
     if (prevSubSlugRef.current === subcategorySlug) return;
     prevSubSlugRef.current = subcategorySlug;
 
-    if (!subcategories.length || !category) return;
-    let targetSubId: string | null = null;
+    if (!category) return;
 
-    if (subcategorySlug) {
-      const matchedSubcat = subcategories.find(
-        (s) => slugify(s.name) === subcategorySlug.toLowerCase() || String(s.id) === subcategorySlug
-      );
-      if (matchedSubcat) {
-        targetSubId = String(matchedSubcat.id);
-      }
+    if (!subcategorySlug) {
+      setSelectedSubcategory(null);
+      fetchMatches(category.id, null, 1);
+      return;
     }
 
-    if (targetSubId !== selectedSubcategory) {
+    const cached = getCachedSubcategories(String(category.id)) || [];
+    const pool = [...subcategories, ...cached];
+    const matchedSubcat = pool.find(
+      (s) =>
+        slugify(s.name) === subcategorySlug.toLowerCase() ||
+        String(s.id) === subcategorySlug ||
+        s.name?.toLowerCase() === subcategorySlug.replace(/-/g, ' ').toLowerCase()
+    );
+
+    if (matchedSubcat) {
+      const targetSubId = String(matchedSubcat.id);
       setSelectedSubcategory(targetSubId);
+      setSubcategories((prev) =>
+        prev.some((s) => s.id === matchedSubcat.id) ? prev : [matchedSubcat, ...prev]
+      );
       fetchMatches(category.id, targetSubId, 1);
+    } else {
+      setSelectedSubcategory(subcategorySlug);
+      fetchMatches(category.id, subcategorySlug, 1);
+
+      api.get(`/subcategories?categoryId=${category.id}`).then((res) => {
+        if (res.data?.success && Array.isArray(res.data?.data?.subcategories)) {
+          const freshSubs: Subcategory[] = res.data.data.subcategories;
+          setCachedSubcategories(String(category.id), freshSubs);
+          const found = freshSubs.find(
+            (s) =>
+              slugify(s.name) === subcategorySlug.toLowerCase() ||
+              String(s.id) === subcategorySlug ||
+              s.name?.toLowerCase() === subcategorySlug.replace(/-/g, ' ').toLowerCase()
+          );
+          if (found) {
+            setSelectedSubcategory(String(found.id));
+            setSubcategories((prev) =>
+              prev.some((s) => s.id === found.id) ? prev : [found, ...prev]
+            );
+          }
+        }
+      }).catch(() => {});
     }
-  }, [subcategorySlug, subcategories, category]);
+  }, [subcategorySlug, category]);
 
   const handleSubcategorySelect = (subcat: Subcategory | null) => {
     if (!category) return;
@@ -509,7 +543,11 @@ export function CategoryPageComponent({
   // Past matches whose date has passed are excluded!
   const tomorrowUpcomingMatches = React.useMemo(() => uniqueMatches.filter((m) => m.status !== 'live' && m.status !== 'finished' && isTomorrow(m.matchTime)), [uniqueMatches]);
 
-  const selectedSubcatObj = subcategories.find((s) => String(s.id) === selectedSubcategory);
+  const selectedSubcatObj = subcategories.find(
+    (s) =>
+      String(s.id) === String(selectedSubcategory) ||
+      (Boolean(subcategorySlug) && slugify(s.name) === subcategorySlug?.toLowerCase())
+  );
 
   // Category Banner Matches: Prioritize Live matches first, then Upcoming matches (Today / Tomorrow only)
   const categoryBannerMatches = React.useMemo(() => {
@@ -531,8 +569,16 @@ export function CategoryPageComponent({
     return combined.slice(0, 10);
   }, [uniqueMatches]);
 
-  if (notFound || (!loading && !matchesLoading && matches.length === 0)) {
-    return <HomePage />;
+  if (notFound || (!loading && !category)) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-20 text-center space-y-4">
+        <div className="text-4xl">⚠️</div>
+        <h1 className="text-xl font-bold text-[var(--text-white)]">Category Not Found</h1>
+        <p className="text-xs sm:text-sm text-[var(--text-muted)]">
+          The requested category could not be found.
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -608,7 +654,7 @@ export function CategoryPageComponent({
 
               <button
                 onClick={() => handleSubcategorySelect(null)}
-                className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all border ${selectedSubcategory === null
+                className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all border ${selectedSubcategory === null && !subcategorySlug
                   ? 'bg-[#F8C831] text-black shadow-md border-[#F8C831]'
                   : 'bg-[var(--bg-card)] text-[var(--text-white)] border-[var(--border-glass)] hover:bg-[var(--bg-card-hover)]'
                   }`}
@@ -635,7 +681,7 @@ export function CategoryPageComponent({
                   label="More Leagues"
                 >
                   {subcategories.map((subcat) => {
-                    const isSelected = selectedSubcategory === String(subcat.id);
+                    const isSelected = selectedSubcategory === String(subcat.id) || (Boolean(subcategorySlug) && slugify(subcat.name) === subcategorySlug?.toLowerCase());
                     return (
                       <button
                         key={subcat.id}
@@ -692,8 +738,14 @@ export function CategoryPageComponent({
               ) : (uniqueMatches.length === 0 || (liveMatches.length === 0 && todayUpcomingMatches.length === 0 && tomorrowUpcomingMatches.length === 0)) ? (
                 <div className="p-8 text-center text-xs sm:text-sm text-[var(--text-muted)] border border-[var(--border-glass)] rounded-2xl bg-[var(--bg-card)] space-y-2">
                   <div className="text-3xl">📅</div>
-                  <div className="font-bold text-[var(--text-white)]">No Events Available</div>
-                  <p>There are currently no events available under this filter.</p>
+                  <div className="font-bold text-base text-[var(--text-white)]">
+                    {selectedSubcategory || subcategorySlug ? 'No match schedule today' : 'No Events Available'}
+                  </div>
+                  <p>
+                    {selectedSubcategory || subcategorySlug
+                      ? `There are currently no matches scheduled for ${subcategories.find((s) => String(s.id) === String(selectedSubcategory) || (subcategorySlug && slugify(s.name) === subcategorySlug.toLowerCase()))?.name || (subcategorySlug ? subcategorySlug.replace(/-/g, ' ') : 'this league')} today. Please check back later.`
+                      : 'There are currently no events available under this filter.'}
+                  </p>
                 </div>
               ) : (
                 <motion.div

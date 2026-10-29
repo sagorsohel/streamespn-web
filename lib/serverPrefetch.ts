@@ -91,7 +91,7 @@ export async function prefetchCategoryData(
               selectedSubId = String(matchedSub.id);
               subName = matchedSub.name;
               if (!activeSubs.some((s) => s.id === matchedSub.id)) {
-                activeSubs.push(matchedSub);
+                activeSubs.unshift(matchedSub);
               }
             }
           }
@@ -121,15 +121,6 @@ export async function prefetchCategoryData(
             }
             return m;
           });
-          if (matches.length === 0 && selectedSubId) {
-            try {
-              const fallbackRes = await api.get(`/matches?limit=100&page=1&categoryId=${targetCategory.id}`, { timeout: 5000 });
-              if (fallbackRes.data?.success && Array.isArray(fallbackRes.data?.data?.matches) && fallbackRes.data.data.matches.length > 0) {
-                matches = fallbackRes.data.data.matches;
-                selectedSubId = null;
-              }
-            } catch (e) {}
-          }
         }
       }
     }
