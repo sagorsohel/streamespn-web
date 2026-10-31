@@ -22,6 +22,7 @@ import {
   ChevronRight,
   TrendingUp,
 } from 'lucide-react';
+import { fuzzyFilterAndRankMatches, computeMatchScore } from '@/lib/fuzzySearch';
 
 export default function SearchResultsView() {
   const router = useRouter();
@@ -34,6 +35,7 @@ export default function SearchResultsView() {
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<'all' | 'live' | 'upcoming' | 'finished'>('all');
   const [selectedSport, setSelectedSport] = useState<string>('all');
+  const [detectedCorrection, setDetectedCorrection] = useState<string | null>(null);
 
   // Keep search query synced when URL query changes
   useEffect(() => {
@@ -48,12 +50,13 @@ export default function SearchResultsView() {
 
     const fetchSearchResults = async () => {
       setLoading(true);
+      setDetectedCorrection(null);
       startTopLoader();
 
       try {
         let fetchedList: MatchItem[] = [];
 
-        // 2. Fetch directly from optimized search endpoint
+        // 1. Fetch from search endpoint
         const res = await api.get('/matches', {
           params: {
             search: queryTerm || undefined,
@@ -67,45 +70,34 @@ export default function SearchResultsView() {
           fetchedList = res.data.data.matches;
         }
 
-        // 3. Client-side inclusion filter (guarantees accuracy across teams, titles, and leagues)
+        // 2. If no direct results and queryTerm provided, fallback to active matches pool for fuzzy match
+        if (fetchedList.length === 0 && queryTerm) {
+          try {
+            const fallbackRes = await api.get('/matches', {
+              params: {
+                all: 'true',
+                limit: 250,
+              },
+            });
+            if (fallbackRes.data?.success && Array.isArray(fallbackRes.data.data?.matches)) {
+              fetchedList = fallbackRes.data.data.matches;
+            }
+          } catch (e) {}
+        }
+
+        // 3. Typo-tolerant fuzzy filter and ranking
         if (queryTerm) {
-          const term = queryTerm.toLowerCase();
-          const words = term.split(/\s+/).filter(Boolean);
+          fetchedList = fuzzyFilterAndRankMatches(fetchedList, queryTerm);
 
-          const matchesSearch = (m: MatchItem) => {
-            const h = (m.homeTeam || '').toLowerCase();
-            const a = (m.awayTeam || '').toLowerCase();
-            const t = (m.title || '').toLowerCase();
-            const c = (m.categoryName || '').toLowerCase();
-            const s = (m.subcategoryName || '').toLowerCase();
-
-            // Direct substring match across visible teams, titles, and leagues
-            if (
-              h.includes(term) ||
-              a.includes(term) ||
-              t.includes(term) ||
-              c.includes(term) ||
-              s.includes(term)
-            ) {
-              return true;
+          // Check if top match was a fuzzy/typo correction
+          if (fetchedList.length > 0) {
+            const topScored = computeMatchScore(fetchedList[0], queryTerm);
+            if (topScored.isFuzzy && topScored.matchedName) {
+              setDetectedCorrection(topScored.matchedName);
+            } else {
+              setDetectedCorrection(null);
             }
-
-            // Word-by-word match for multi-word queries (e.g. "Real Madrid")
-            if (words.length > 1) {
-              return words.every(
-                (w) =>
-                  h.includes(w) ||
-                  a.includes(w) ||
-                  t.includes(w) ||
-                  c.includes(w) ||
-                  s.includes(w)
-              );
-            }
-
-            return false;
-          };
-
-          fetchedList = fetchedList.filter(matchesSearch);
+          }
         }
 
         if (!isCancelled) {
@@ -217,9 +209,17 @@ export default function SearchResultsView() {
             )}
           </h1>
           {activeQuery ? (
-            <p className="text-xs text-[var(--text-muted)] mt-1 font-medium">
-              Showing all matches related to &quot;<span className="text-[var(--text-white)] font-bold">{activeQuery}</span>&quot;
-            </p>
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              <p className="text-xs text-[var(--text-muted)] font-medium">
+                Showing all matches related to &quot;<span className="text-[var(--text-white)] font-bold">{activeQuery}</span>&quot;
+              </p>
+              {detectedCorrection && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#F8C831] bg-[#F8C831]/10 px-2.5 py-0.5 rounded-full border border-[#F8C831]/20">
+                  <Sparkles className="h-3 w-3 animate-pulse" />
+                  Matched: {detectedCorrection}
+                </span>
+              )}
+            </div>
           ) : (
             <p className="text-xs text-[var(--text-muted)] mt-1 font-medium">
               Showing all available live & upcoming matches
