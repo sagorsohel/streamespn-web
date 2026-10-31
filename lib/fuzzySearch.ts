@@ -1,7 +1,6 @@
 /**
  * High-performance Precise Typo-Tolerance and Fuzzy Search Utility for Web
- * Guarantees that only accurate and relevant matches are returned even with misspelled search queries.
- * (e.g. "cerlos" -> "Carlos Alcaraz", eliminating false positives like "Cerro" or "Certosa")
+ * Accurately detects intended matches even with vowel/phonetic typos (e.g. "cerlus" -> "Carlos Alcaraz")
  */
 
 import { MatchItem } from '@/components/home/MatchCard';
@@ -68,6 +67,18 @@ export function levenshteinDistance(s1: string, s2: string): number {
 }
 
 /**
+ * Extracts consonant skeleton (e.g. "cerlus" -> "crls", "carlos" -> "crls")
+ */
+export function getConsonantSkeleton(s: string): string {
+  if (!s) return '';
+  const clean = s.toLowerCase().replace(/[^a-z]/g, '');
+  if (!clean) return '';
+  const first = clean[0];
+  const rest = clean.slice(1).replace(/[aeiouy]/g, '');
+  return first + rest;
+}
+
+/**
  * Calculates similarity score (0 to 100) between two individual words
  */
 export function wordSimilarity(qWord: string, targetWord: string): number {
@@ -84,24 +95,31 @@ export function wordSimilarity(qWord: string, targetWord: string): number {
   }
 
   // Reject if length difference is too large for a typo
-  if (Math.abs(qW.length - tW.length) > 1) return 0;
+  if (Math.abs(qW.length - tW.length) > 2) return 0;
 
   const dist = levenshteinDistance(qW, tW);
   const sndxQ = soundex(qW);
   const sndxT = soundex(tW);
+  const skelQ = getConsonantSkeleton(qW);
+  const skelT = getConsonantSkeleton(tW);
 
-  // Strict typo rules to prevent false-positives:
-  // Words <= 6 characters: max 1 edit (e.g. cerlos -> carlos)
-  // Words >= 7 characters: max 2 edits (e.g. dimitriv -> dimitrov)
-  const maxAllowedDist = qW.length <= 6 ? 1 : 2;
+  // Phonetic or consonant skeleton match (e.g. "cerlus" ~ "carlos" both have C642 & crls)
+  const isPhoneticOrVowelMatch = (sndxQ === sndxT) || (skelQ === skelT && skelQ.length >= 3);
+
+  // If phonetic/vowels match, allow distance up to 2 (or 3 for long words)
+  const maxAllowedDist = isPhoneticOrVowelMatch
+    ? (qW.length <= 5 ? 2 : 3)
+    : (qW.length <= 5 ? 1 : 2);
+
   if (dist > maxAllowedDist) return 0;
 
   const ratio = 1 - dist / maxLen;
-  if (ratio < 0.70) return 0;
+  if (!isPhoneticOrVowelMatch && ratio < 0.65) return 0;
 
   let score = ratio * 80;
   if (qW[0] === tW[0]) score += 10;
-  if (sndxQ === sndxT) score += 10;
+  if (sndxQ === sndxT) score += 12;
+  if (skelQ === skelT && skelQ.length >= 3) score += 10;
 
   return Math.min(score, 98);
 }
@@ -184,7 +202,7 @@ export function computeMatchScore(match: MatchItem, query: string): MatchScoreRe
       }
     }
 
-    if (bestWordScore >= 70) {
+    if (bestWordScore >= 65) {
       totalScore += bestWordScore;
       if (!bestCandidateName && bestMatchedWord) {
         bestCandidateName = bestMatchedWord;
@@ -217,7 +235,7 @@ export function fuzzyFilterAndRankMatches(matches: MatchItem[], query: string): 
   const scored: MatchScoreResult[] = [];
   for (const m of matches) {
     const res = computeMatchScore(m, qClean);
-    if (res.score >= 70) {
+    if (res.score >= 65) {
       scored.push(res);
     }
   }
@@ -228,10 +246,10 @@ export function fuzzyFilterAndRankMatches(matches: MatchItem[], query: string): 
   scored.sort((a, b) => b.score - a.score);
 
   // Confidence gap filtering:
-  // If top match has a high score (>= 80), only keep close high-confidence matches (topScore - 12)
-  // This eliminates unrelated random matches (e.g. Cerro when searching Carlos)
+  // If top match has a high score (>= 80), only keep close high-confidence matches (topScore - 15)
+  // This eliminates unrelated random matches
   const topScore = scored[0].score;
-  const cutoff = topScore >= 80 ? Math.max(70, topScore - 12) : 70;
+  const cutoff = topScore >= 80 ? Math.max(65, topScore - 15) : 65;
   const filtered = scored.filter((s) => s.score >= cutoff);
 
   const now = Date.now();
