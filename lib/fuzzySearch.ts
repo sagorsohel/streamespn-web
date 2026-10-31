@@ -1,7 +1,7 @@
 /**
- * High-performance Fuzzy Search and Typo-Tolerance Utility
- * Enables typo-tolerant matching (e.g. "cerlos" -> "Carlos Alcaraz", "alcarez" -> "Alcaraz", "barselona" -> "Barcelona")
- * Uses Damerau-Levenshtein edit distance, phonetic Soundex, and normalized string matching.
+ * High-performance Precise Typo-Tolerance and Fuzzy Search Utility for Web
+ * Guarantees that only accurate and relevant matches are returned even with misspelled search queries.
+ * (e.g. "cerlos" -> "Carlos Alcaraz", eliminating false positives like "Cerro" or "Certosa")
  */
 
 import { MatchItem } from '@/components/home/MatchCard';
@@ -78,34 +78,32 @@ export function wordSimilarity(qWord: string, targetWord: string): number {
   const maxLen = Math.max(qW.length, tW.length);
   if (maxLen === 0) return 100;
 
-  // Substring match inside the target word
+  // Exact substring match inside target word (e.g. "alcar" inside "alcaraz")
   if (tW.includes(qW)) {
     return 90 + (qW.length / tW.length) * 10;
   }
 
-  // Length constraints for edit distance
-  // 3-4 chars: max 1 typo
-  // 5-7 chars: max 2 typos
-  // 8+ chars: max 3 typos
-  const maxAllowedDist = qW.length <= 4 ? 1 : (qW.length <= 7 ? 2 : 3);
+  // Reject if length difference is too large for a typo
+  if (Math.abs(qW.length - tW.length) > 1) return 0;
+
   const dist = levenshteinDistance(qW, tW);
+  const sndxQ = soundex(qW);
+  const sndxT = soundex(tW);
+
+  // Strict typo rules to prevent false-positives:
+  // Words <= 6 characters: max 1 edit (e.g. cerlos -> carlos)
+  // Words >= 7 characters: max 2 edits (e.g. dimitriv -> dimitrov)
+  const maxAllowedDist = qW.length <= 6 ? 1 : 2;
   if (dist > maxAllowedDist) return 0;
 
   const ratio = 1 - dist / maxLen;
-  if (ratio < 0.6) return 0;
+  if (ratio < 0.70) return 0;
 
-  let score = ratio * 75;
-
-  // Same first letter bonus
+  let score = ratio * 80;
   if (qW[0] === tW[0]) score += 10;
+  if (sndxQ === sndxT) score += 10;
 
-  // Identical Soundex bonus
-  if (soundex(qW) === soundex(tW)) score += 15;
-
-  // Same length bonus
-  if (qW.length === tW.length) score += 5;
-
-  return Math.min(score, 95);
+  return Math.min(score, 98);
 }
 
 export interface MatchScoreResult {
@@ -186,7 +184,7 @@ export function computeMatchScore(match: MatchItem, query: string): MatchScoreRe
       }
     }
 
-    if (bestWordScore >= 60) {
+    if (bestWordScore >= 70) {
       totalScore += bestWordScore;
       if (!bestCandidateName && bestMatchedWord) {
         bestCandidateName = bestMatchedWord;
@@ -210,7 +208,7 @@ export function computeMatchScore(match: MatchItem, query: string): MatchScoreRe
 }
 
 /**
- * Filter and rank matches based on query with typo-tolerance
+ * Filter and rank matches based on query with strict typo-tolerance and confidence gap filtering
  */
 export function fuzzyFilterAndRankMatches(matches: MatchItem[], query: string): MatchItem[] {
   const qClean = query.trim();
@@ -219,20 +217,43 @@ export function fuzzyFilterAndRankMatches(matches: MatchItem[], query: string): 
   const scored: MatchScoreResult[] = [];
   for (const m of matches) {
     const res = computeMatchScore(m, qClean);
-    if (res.score >= 60) {
+    if (res.score >= 70) {
       scored.push(res);
     }
   }
 
-  // Sort descending by score, then ascending by match time
-  scored.sort((a, b) => {
-    if (Math.abs(b.score - a.score) > 10) {
+  if (scored.length === 0) return [];
+
+  // Sort by score descending first
+  scored.sort((a, b) => b.score - a.score);
+
+  // Confidence gap filtering:
+  // If top match has a high score (>= 80), only keep close high-confidence matches (topScore - 12)
+  // This eliminates unrelated random matches (e.g. Cerro when searching Carlos)
+  const topScore = scored[0].score;
+  const cutoff = topScore >= 80 ? Math.max(70, topScore - 12) : 70;
+  const filtered = scored.filter((s) => s.score >= cutoff);
+
+  const now = Date.now();
+  const statusPriority: Record<string, number> = { live: 1, upcoming: 2, finished: 3 };
+
+  // Sort descending by score, status, and closest match time
+  filtered.sort((a, b) => {
+    if (Math.abs(b.score - a.score) > 5) {
       return b.score - a.score;
     }
+    const pA = statusPriority[a.match.status] || 4;
+    const pB = statusPriority[b.match.status] || 4;
+    if (pA !== pB) return pA - pB;
+
+    const custA = (a.match as any).isCustomized ? 1 : 0;
+    const custB = (b.match as any).isCustomized ? 1 : 0;
+    if (custA !== custB) return custB - custA;
+
     const timeA = a.match.matchTime ? new Date(a.match.matchTime).getTime() : 0;
     const timeB = b.match.matchTime ? new Date(b.match.matchTime).getTime() : 0;
-    return timeA - timeB;
+    return Math.abs(timeA - now) - Math.abs(timeB - now);
   });
 
-  return scored.map((s) => s.match);
+  return filtered.map((s) => s.match);
 }
