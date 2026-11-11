@@ -461,6 +461,21 @@ export function SingleMatchViewComponent({
       ? `${match.homeTeam} VS ${match.awayTeam}`
       : match?.title || "Match Stream"
 
+  const matchName =
+    match?.matchType === "team_vs_team" && match?.homeTeam && match?.awayTeam
+      ? `${match.homeTeam} vs ${match.awayTeam}`
+      : match?.title ||
+        (match?.homeTeam && match?.awayTeam
+          ? `${match.homeTeam} vs ${match.awayTeam}`
+          : "Match")
+
+  const subcatName = match?.subcategoryName || displaySubcategory || "League"
+  const catName = match?.categoryName || displayCategory || "Sports"
+  const venueStr = match?.venue?.trim() ? match.venue.trim() : "the stadium"
+
+  const seoTitle = `${matchName} Live Score & Match Updates | StreamESPN`
+  const seoDescription = `Follow ${matchName} in the ${subcatName} on ${dateFormatted} at ${timeFormatted}. Get ${catName} match details, schedules, scores, and updates from ${venueStr} on StreamESPN.`
+
   if (notFound) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#070b13] text-white">
@@ -943,6 +958,19 @@ export function SingleMatchViewComponent({
                   )
                 })()}
               </div>
+            </div>
+
+            {/* MATCH SEO / OG TITLE & DESCRIPTION */}
+            <div className="mx-auto w-full max-w-[891px] rounded-2xl border border-slate-200/80 bg-[var(--bg-card)] p-4 shadow-sm sm:p-5 dark:border-white/10">
+              <h2 className="mb-1.5 text-sm font-extrabold text-[var(--text-white)] sm:text-base">
+                {seoTitle}
+              </h2>
+              <p
+                suppressHydrationWarning
+                className="text-xs leading-relaxed text-[var(--text-muted)] sm:text-sm"
+              >
+                {seoDescription}
+              </p>
             </div>
 
             {/* 4. RELATED MATCHES SECTION */}
