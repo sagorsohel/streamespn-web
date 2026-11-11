@@ -2,6 +2,10 @@ import { MetadataRoute } from 'next';
 import api from '@/lib/api';
 import { slugify } from '@/lib/utils';
 
+// Ensure sitemap is dynamically generated on-demand and auto-updated when matches are inserted
+export const dynamic = 'force-dynamic';
+export const revalidate = 60; // Auto-regenerates with fresh data every 60 seconds
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://streamespn.org';
 
@@ -15,8 +19,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       url: `${baseUrl}/replay`,
       lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
+      changeFrequency: 'hourly',
+      priority: 0.85,
     },
     {
       url: `${baseUrl}/about-us`,
@@ -53,12 +57,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let categoryRoutes: MetadataRoute.Sitemap = [];
   let subcategoryRoutes: MetadataRoute.Sitemap = [];
   let matchRoutes: MetadataRoute.Sitemap = [];
+  const categoryMap = new Map<number, string>();
 
   try {
-    // 1. Dynamic Category Routes
-    const catRes = await api.get('/categories', { timeout: 10000 }).catch(() => null);
-    if (catRes?.data?.success && Array.isArray(catRes.data.data?.categories)) {
-      categoryRoutes = catRes.data.data.categories.map((cat: any) => ({
+    // 1. Dynamic Sports / Category Routes (Endpoint is /sports)
+    const sportsRes = await api.get('/sports', { timeout: 15000 }).catch(() => null);
+    if (sportsRes?.data?.success && Array.isArray(sportsRes.data.data?.sports)) {
+      const sportsList = sportsRes.data.data.sports;
+      sportsList.forEach((cat: any) => {
+        if (cat.id && cat.sportName) {
+          categoryMap.set(cat.id, cat.sportName);
+        }
+      });
+
+      categoryRoutes = sportsList.map((cat: any) => ({
         url: `${baseUrl}/${slugify(cat.sportName || 'sports')}`,
         lastModified: new Date(),
         changeFrequency: 'hourly' as const,
@@ -66,35 +78,56 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }));
     }
 
-    // 2. Dynamic Subcategory Routes
-    const subRes = await api.get('/subcategories', { timeout: 10000 }).catch(() => null);
+    // 2. Dynamic Subcategory / League Routes
+    const subRes = await api.get('/subcategories?all=true&limit=1500', { timeout: 15000 }).catch(() => null);
     if (subRes?.data?.success && Array.isArray(subRes.data.data?.subcategories)) {
       subcategoryRoutes = subRes.data.data.subcategories
-        .filter((sub: any) => sub.status !== false)
-        .map((sub: any) => ({
-          url: `${baseUrl}/${slugify(sub.categoryName || 'sports')}/${slugify(sub.name || '')}`,
-          lastModified: new Date(),
-          changeFrequency: 'hourly' as const,
-          priority: 0.85,
-        }));
+        .filter((sub: any) => sub.status !== false && sub.name)
+        .map((sub: any) => {
+          const parentSportName = sub.categoryName || categoryMap.get(sub.categoryId) || 'sports';
+          return {
+            url: `${baseUrl}/${slugify(parentSportName)}/${slugify(sub.name || '')}`,
+            lastModified: sub.updatedAt ? new Date(sub.updatedAt) : new Date(),
+            changeFrequency: 'hourly' as const,
+            priority: 0.85,
+          };
+        });
     }
 
-    // 3. Dynamic Match Event Routes
-    const matchRes = await api.get('/matches?limit=200', { timeout: 10000 }).catch(() => null);
+    // 3. Dynamic Match Event Routes (Auto-updated when new matches are added via API)
+    const matchRes = await api.get('/matches?all=true&limit=1000', { timeout: 20000 }).catch(() => null);
     if (matchRes?.data?.success && Array.isArray(matchRes.data.data?.matches)) {
-      matchRoutes = matchRes.data.data.matches.map((match: any) => {
-        const catSlug = slugify(match.categoryName || 'sports');
-        const matchSlug = match.slug || slugify(match.title || `${match.homeTeam}-vs-${match.awayTeam}`);
-        return {
-          url: `${baseUrl}/${catSlug}/${matchSlug}`,
-          lastModified: match.updatedAt ? new Date(match.updatedAt) : new Date(),
-          changeFrequency: 'always' as const,
-          priority: 0.95,
-        };
+      const matchMap = new Map<string, any>();
+
+      matchRes.data.data.matches.forEach((match: any) => {
+        if (!match) return;
+        const catSlug = slugify(match.categoryName || categoryMap.get(match.categoryId) || 'sports');
+        const subSlug = slugify(match.subcategoryName || 'all');
+        const matchSlug = match.slug || String(match.id);
+        const canonicalUrl = `${baseUrl}/${catSlug}/${subSlug}/${matchSlug}`;
+
+        if (!matchMap.has(canonicalUrl)) {
+          const isLive = match.status === 'live';
+          const isUpcoming = match.status === 'upcoming';
+          const lastMod = match.updatedAt
+            ? new Date(match.updatedAt)
+            : match.matchTime
+              ? new Date(match.matchTime)
+              : new Date();
+
+          matchMap.set(canonicalUrl, {
+            url: canonicalUrl,
+            lastModified: lastMod,
+            changeFrequency: isLive ? 'always' : isUpcoming ? 'hourly' : 'daily',
+            priority: isLive ? 1.0 : isUpcoming ? 0.95 : 0.7,
+          });
+        }
       });
+
+      matchRoutes = Array.from(matchMap.values());
     }
   } catch (e) {
-    // Silent catch if API is offline
+    // Graceful fallback to static routes if remote API is temporarily slow
   }
 
   return [
