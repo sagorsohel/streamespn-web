@@ -17,7 +17,11 @@ import {
   fetchAdsSettingsAsync,
   AdsSettings,
 } from "@/lib/adsCache"
-import { formatMatchFullDateTime, formatLiveTimeOnly, parseUtcDate } from "@/lib/timezone"
+import {
+  formatMatchFullDateTime,
+  formatLiveTimeOnly,
+  parseUtcDate,
+} from "@/lib/timezone"
 import { useLiveScoreSync } from "@/lib/useLiveScoreSync"
 import {
   Play,
@@ -424,9 +428,10 @@ export function SingleMatchViewComponent({
       })
     : ""
 
-  const formattedObj = mounted && match?.matchTime
-    ? formatMatchFullDateTime(match.matchTime)
-    : null
+  const formattedObj =
+    mounted && match?.matchTime
+      ? formatMatchFullDateTime(match.matchTime)
+      : null
   const timeFormatted = formattedObj
     ? `${formattedObj.time} ${formattedObj.tzAbbr ? `(${formattedObj.tzAbbr})` : ""}`
     : rawTimeFormatted
@@ -660,9 +665,11 @@ export function SingleMatchViewComponent({
 
             {/* TOP BANNER AD (ABOVE VIDEO STREAM PLAYER) */}
             <ResponsiveAdBanner
-              initialCode={adsSettings?.footerAds || (adsSettings as any)?.bannerAds}
+              initialCode={
+                adsSettings?.footerAds || (adsSettings as any)?.bannerAds
+              }
               placement="player"
-              className="max-w-[891px] mx-auto px-2"
+              className="mx-auto max-w-[891px] px-2"
             />
 
             {/* ========================================================================= */}
@@ -962,9 +969,6 @@ export function SingleMatchViewComponent({
 
             {/* MATCH SEO / OG TITLE & DESCRIPTION */}
             <div className="mx-auto w-full max-w-[891px] rounded-2xl border border-slate-200/80 bg-[var(--bg-card)] p-4 shadow-sm sm:p-5 dark:border-white/10">
-              <h2 className="mb-1.5 text-sm font-extrabold text-[var(--text-white)] sm:text-base">
-                {seoTitle}
-              </h2>
               <p
                 suppressHydrationWarning
                 className="text-xs leading-relaxed text-[var(--text-muted)] sm:text-sm"
