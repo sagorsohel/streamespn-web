@@ -16,6 +16,7 @@ const fontMono = Geist_Mono({
 import { Suspense } from "react";
 import { TopLoadingBar } from "@/components/layout/TopLoadingBar";
 import { SSRHeadScripts } from "@/components/ads/SSRHeadScripts";
+import { GoogleAdSenseAutoAds } from "@/components/ads/GoogleAdSenseAutoAds";
 import { InspectProtection } from "@/components/layout/InspectProtection";
 import type { Metadata } from "next";
 
@@ -155,6 +156,7 @@ export default async function RootLayout({
       <body suppressHydrationWarning className="min-h-screen bg-[var(--bg-main)] text-[var(--text-white)] flex flex-col font-sans">
         <ThemeProvider>
           <InspectProtection />
+          <GoogleAdSenseAutoAds />
           <Suspense fallback={null}>
             <TopLoadingBar />
           </Suspense>

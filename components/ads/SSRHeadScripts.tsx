@@ -24,6 +24,8 @@ export const SSRHeadScripts: React.FC<SSRHeadScriptsProps> = ({ rawHtml, isEnabl
     const isDefer = /\bdefer\b/i.test(rawAttrs);
     const crossOriginMatch = rawAttrs.match(/crossorigin(?:=["']([^"']+)["'])?/i);
     const crossOrigin = crossOriginMatch ? (crossOriginMatch[1] || 'anonymous') : undefined;
+    const adClientMatch = rawAttrs.match(/data-ad-client=["']([^"']+)["']/i);
+    const adClient = adClientMatch ? adClientMatch[1] : undefined;
 
     if (srcMatch && srcMatch[1]) {
       const srcUrl = srcMatch[1];
@@ -38,6 +40,7 @@ export const SSRHeadScripts: React.FC<SSRHeadScriptsProps> = ({ rawHtml, isEnabl
           defer={isDefer ? true : undefined}
           type={typeMatch ? typeMatch[1] : undefined}
           crossOrigin={crossOrigin as any}
+          data-ad-client={adClient}
           suppressHydrationWarning={true}
           data-streamespn-head-script="true"
         />
