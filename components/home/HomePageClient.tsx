@@ -14,6 +14,7 @@ import { MatchCardSkeleton } from '@/components/home/MatchCardSkeleton';
 import { BannerSkeleton } from '@/components/home/BannerSkeleton';
 import { MobileLiveSlider } from '@/components/home/MobileLiveSlider';
 import { HeroBannerCarousel } from '@/components/home/HeroBannerCarousel';
+import { ResponsiveAdBanner } from '@/components/ads/ResponsiveAdBanner';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { ScrollableSidebarList } from '@/components/common/ScrollableSidebarList';
 import { startTopLoader, stopTopLoader } from '@/components/layout/TopLoadingBar';
@@ -289,6 +290,9 @@ export function HomePageClient({
           <HeroBannerCarousel matches={displayedBannerMatches} />
         </>
       )}
+
+      {/* TOP BANNER AD (ABOVE TRENDING & MATCHES) */}
+      <ResponsiveAdBanner placement="home" className="max-w-7xl mx-auto my-2" />
 
       <div className="flex flex-col lg:flex-row gap-6">
 

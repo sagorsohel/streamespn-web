@@ -15,6 +15,7 @@ export interface AdsSettings {
   navAds?: string;
   modalSignupAds?: string;
   footerAds?: string;
+  bannerAds?: string;
   floatMobileAds?: string;
   floatDesktopAds?: string;
   histatsScript?: string;

@@ -9,6 +9,7 @@ import { slugify, isValidScore, sanitizeScore } from "@/lib/utils"
 import { MatchCard, MatchItem } from "@/components/home/MatchCard"
 import { OptimizedImage } from "@/components/common/OptimizedImage"
 import { AdRenderer } from "@/components/ads/AdRenderer"
+import { ResponsiveAdBanner } from "@/components/ads/ResponsiveAdBanner"
 import { JsonLdSchema } from "@/components/seo/JsonLdSchema"
 import {
   getAdsSettingsSync,
@@ -641,6 +642,13 @@ export function SingleMatchViewComponent({
                 </div>
               )}
             </div>
+
+            {/* TOP BANNER AD (ABOVE VIDEO STREAM PLAYER) */}
+            <ResponsiveAdBanner
+              initialCode={adsSettings?.footerAds || (adsSettings as any)?.bannerAds}
+              placement="player"
+              className="max-w-[891px] mx-auto px-2"
+            />
 
             {/* ========================================================================= */}
             {/* 2. MIDDLE SECTION: VIDEO STREAM PLAYER (891px WIDTH x 500px HEIGHT)        */}
