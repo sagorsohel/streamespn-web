@@ -42,3 +42,4 @@ export const GoogleAdSenseAutoAds: React.FC = () => {
 
   return null;
 };
+
