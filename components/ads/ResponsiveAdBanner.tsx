@@ -16,6 +16,7 @@ export const ResponsiveAdBanner: React.FC<ResponsiveAdBannerProps> = ({
 }) => {
   const [adsSettings, setAdsSettings] = useState<AdsSettings>(() => getAdsSettingsSync());
   const [mounted, setMounted] = useState(false);
+  const [isUnfilled, setIsUnfilled] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,6 +32,7 @@ export const ResponsiveAdBanner: React.FC<ResponsiveAdBannerProps> = ({
   useEffect(() => {
     if (!mounted || !containerRef.current || !rawCode) return;
 
+    setIsUnfilled(false);
     const container = containerRef.current;
     container.innerHTML = '';
 
@@ -68,12 +70,33 @@ export const ResponsiveAdBanner: React.FC<ResponsiveAdBannerProps> = ({
     // Wait until browser completes layout and container.offsetWidth > 0 before calling push({})
     if (rawCode.includes('adsbygoogle')) {
       let isCancelled = false;
+      let observer: MutationObserver | null = null;
 
       const attemptPush = (retries = 15) => {
         if (isCancelled || !containerRef.current) return;
 
         const ins = containerRef.current.querySelector('ins.adsbygoogle') as HTMLElement | null;
         if (!ins) return;
+
+        // Monitor if Google AdSense marks this slot as 'unfilled'
+        if (!observer && typeof MutationObserver !== 'undefined') {
+          observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+              if (mutation.type === 'attributes' && mutation.attributeName === 'data-ad-status') {
+                const status = (mutation.target as HTMLElement).getAttribute('data-ad-status');
+                if (status === 'unfilled') {
+                  setIsUnfilled(true);
+                }
+              }
+            }
+          });
+          observer.observe(ins, { attributes: true, attributeFilter: ['data-ad-status'] });
+
+          // Also check current attribute if already set
+          if (ins.getAttribute('data-ad-status') === 'unfilled') {
+            setIsUnfilled(true);
+          }
+        }
 
         // Check if already initialized by Google
         if (ins.getAttribute('data-adsbygoogle-status')) return;
@@ -98,23 +121,26 @@ export const ResponsiveAdBanner: React.FC<ResponsiveAdBannerProps> = ({
       return () => {
         isCancelled = true;
         clearTimeout(timer);
+        if (observer) {
+          observer.disconnect();
+        }
       };
     }
   }, [mounted, rawCode]);
 
-  if (!rawCode) return null;
+  if (!rawCode || isUnfilled) return null;
 
   return (
     <div
       suppressHydrationWarning
       className={`w-full block my-3 text-center clear-both overflow-hidden ${className}`}
-      style={{ minHeight: '90px' }}
+      style={{ minHeight: isUnfilled ? '0px' : '90px', display: isUnfilled ? 'none' : 'block' }}
     >
       <div
         ref={containerRef}
         suppressHydrationWarning
         className="w-full block mx-auto text-center overflow-hidden"
-        style={{ minWidth: '280px', minHeight: '90px' }}
+        style={{ minWidth: '280px', minHeight: isUnfilled ? '0px' : '90px' }}
         data-ad-placement={placement}
       />
     </div>
