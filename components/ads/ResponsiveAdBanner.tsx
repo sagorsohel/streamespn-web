@@ -11,8 +11,8 @@ interface ResponsiveAdBannerProps {
 
 /**
  * ResponsiveAdBanner Component
- * Renders ANY arbitrary HTML, image banners, iframes, scripts, or Google AdSense codes
- * exactly 1:1 same-to-same as inputted in the Admin Panel.
+ * Renders raw HTML / Google AdSense / Image Banners with full Server-Side Rendering (SSR)
+ * so that the code is 100% visible in view-source:, and dynamically executes scripts on client.
  */
 export const ResponsiveAdBanner: React.FC<ResponsiveAdBannerProps> = ({
   initialCode,
@@ -37,17 +37,23 @@ export const ResponsiveAdBanner: React.FC<ResponsiveAdBannerProps> = ({
     if (!mounted || !containerRef.current || !rawCode) return;
 
     const container = containerRef.current;
-    
-    // 1. Inject the exact raw HTML code 1:1 same-to-same into DOM
-    container.innerHTML = rawCode;
 
-    // 2. Identify and execute all <script> tags dynamically in proper order
+    // Ensure container has the latest rawCode (in case of client-side settings update)
+    if (container.getAttribute('data-loaded-code') !== rawCode) {
+      container.innerHTML = rawCode;
+      container.setAttribute('data-loaded-code', rawCode);
+    }
+
+    // Identify and execute all <script> tags dynamically in proper order
     const scripts = Array.from(container.querySelectorAll('script'));
     let hasAdSensePush = false;
 
     scripts.forEach((oldScript) => {
+      // Skip if already executed
+      if (oldScript.getAttribute('data-executed') === 'true') return;
+
       const scriptText = oldScript.textContent || oldScript.innerText || '';
-      
+
       // If it's the inline adsbygoogle.push() script, remove it now;
       // we'll invoke it safely once container layout width is verified (> 0).
       if (scriptText.includes('adsbygoogle') && scriptText.includes('.push(')) {
@@ -62,10 +68,11 @@ export const ResponsiveAdBanner: React.FC<ResponsiveAdBannerProps> = ({
         newScript.setAttribute(attr.name, attr.value);
       });
       newScript.textContent = scriptText;
+      newScript.setAttribute('data-executed', 'true');
       oldScript.parentNode?.replaceChild(newScript, oldScript);
     });
 
-    // 3. For Google AdSense: wait until CSS layout renders width > 0 before calling push({})
+    // For Google AdSense: wait until CSS layout renders width > 0 before calling push({})
     if (hasAdSensePush || rawCode.includes('adsbygoogle')) {
       let isCancelled = false;
 
@@ -113,6 +120,7 @@ export const ResponsiveAdBanner: React.FC<ResponsiveAdBannerProps> = ({
         suppressHydrationWarning
         className="w-full flex justify-center items-center flex-col mx-auto text-center overflow-hidden [&_img]:max-w-full [&_img]:h-auto [&_img]:inline-block [&_iframe]:max-w-full [&_iframe]:mx-auto"
         data-ad-placement={placement}
+        dangerouslySetInnerHTML={{ __html: rawCode }}
       />
     </div>
   );
