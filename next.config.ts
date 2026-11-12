@@ -53,6 +53,10 @@ const nextConfig: NextConfig = {
     const backendDestination = cleanBackend.endsWith('/:path*') ? cleanBackend : `${cleanBackend}/:path*`;
     return [
       {
+        source: '/soccer-guide',
+        destination: '/soccer-guide.html',
+      },
+      {
         source: '/api/:path*',
         destination: backendDestination,
       },
