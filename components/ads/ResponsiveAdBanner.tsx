@@ -9,6 +9,11 @@ interface ResponsiveAdBannerProps {
   placement?: 'home' | 'player' | 'general';
 }
 
+/**
+ * ResponsiveAdBanner Component
+ * Renders ANY arbitrary HTML, image banners, iframes, scripts, or Google AdSense codes
+ * exactly 1:1 same-to-same as inputted in the Admin Panel.
+ */
 export const ResponsiveAdBanner: React.FC<ResponsiveAdBannerProps> = ({
   initialCode,
   className = '',
@@ -16,7 +21,6 @@ export const ResponsiveAdBanner: React.FC<ResponsiveAdBannerProps> = ({
 }) => {
   const [adsSettings, setAdsSettings] = useState<AdsSettings>(() => getAdsSettingsSync());
   const [mounted, setMounted] = useState(false);
-  const [isUnfilled, setIsUnfilled] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,73 +36,46 @@ export const ResponsiveAdBanner: React.FC<ResponsiveAdBannerProps> = ({
   useEffect(() => {
     if (!mounted || !containerRef.current || !rawCode) return;
 
-    setIsUnfilled(false);
     const container = containerRef.current;
-    container.innerHTML = '';
+    
+    // 1. Inject the exact raw HTML code 1:1 same-to-same into DOM
+    container.innerHTML = rawCode;
 
-    // Create wrapper to parse HTML string into DOM nodes
-    const temp = document.createElement('div');
-    temp.innerHTML = rawCode;
+    // 2. Identify and execute all <script> tags dynamically in proper order
+    const scripts = Array.from(container.querySelectorAll('script'));
+    let hasAdSensePush = false;
 
-    // 1. Append non-script elements (e.g. <ins class="adsbygoogle">, images, divs, iframes)
-    Array.from(temp.childNodes).forEach((node) => {
-      if (node.nodeName !== 'SCRIPT') {
-        container.appendChild(node.cloneNode(true));
-      }
-    });
-
-    // 2. Re-create and execute all external / non-push <script> tags
-    // NOTE: DO NOT synchronously execute inline scripts that call adsbygoogle.push()!
-    // Immediate execution before CSS layout causes "No slot size for availableWidth=0".
-    const scripts = Array.from(temp.querySelectorAll('script'));
     scripts.forEach((oldScript) => {
-      const isPushScript = (oldScript.text || '').includes('adsbygoogle');
-      if (isPushScript) {
-        // Skip synchronous push script — we handle it safely in step 3 below once width > 0
+      const scriptText = oldScript.textContent || oldScript.innerText || '';
+      
+      // If it's the inline adsbygoogle.push() script, remove it now;
+      // we'll invoke it safely once container layout width is verified (> 0).
+      if (scriptText.includes('adsbygoogle') && scriptText.includes('.push(')) {
+        hasAdSensePush = true;
+        oldScript.remove();
         return;
       }
 
+      // Re-create script element so the browser actually executes it
       const newScript = document.createElement('script');
       Array.from(oldScript.attributes).forEach((attr) => {
         newScript.setAttribute(attr.name, attr.value);
       });
-      newScript.text = oldScript.text;
-      container.appendChild(newScript);
+      newScript.textContent = scriptText;
+      oldScript.parentNode?.replaceChild(newScript, oldScript);
     });
 
-    // 3. For Google AdSense (<ins class="adsbygoogle">):
-    // Wait until browser completes layout and container.offsetWidth > 0 before calling push({})
-    if (rawCode.includes('adsbygoogle')) {
+    // 3. For Google AdSense: wait until CSS layout renders width > 0 before calling push({})
+    if (hasAdSensePush || rawCode.includes('adsbygoogle')) {
       let isCancelled = false;
-      let observer: MutationObserver | null = null;
 
-      const attemptPush = (retries = 15) => {
+      const attemptPush = (retries = 20) => {
         if (isCancelled || !containerRef.current) return;
 
         const ins = containerRef.current.querySelector('ins.adsbygoogle') as HTMLElement | null;
         if (!ins) return;
 
-        // Monitor if Google AdSense marks this slot as 'unfilled'
-        if (!observer && typeof MutationObserver !== 'undefined') {
-          observer = new MutationObserver((mutations) => {
-            for (const mutation of mutations) {
-              if (mutation.type === 'attributes' && mutation.attributeName === 'data-ad-status') {
-                const status = (mutation.target as HTMLElement).getAttribute('data-ad-status');
-                if (status === 'unfilled') {
-                  setIsUnfilled(true);
-                }
-              }
-            }
-          });
-          observer.observe(ins, { attributes: true, attributeFilter: ['data-ad-status'] });
-
-          // Also check current attribute if already set
-          if (ins.getAttribute('data-ad-status') === 'unfilled') {
-            setIsUnfilled(true);
-          }
-        }
-
-        // Check if already initialized by Google
+        // Skip if already processed by Google
         if (ins.getAttribute('data-adsbygoogle-status')) return;
 
         const currentWidth = containerRef.current.offsetWidth || containerRef.current.clientWidth;
@@ -110,37 +87,31 @@ export const ResponsiveAdBanner: React.FC<ResponsiveAdBannerProps> = ({
             // silent catch
           }
         } else if (retries > 0) {
-          // Width not computed yet (layout in-flight) - retry after short interval
-          setTimeout(() => attemptPush(retries - 1), 60);
+          // Retry after short interval until browser finishes layout
+          setTimeout(() => attemptPush(retries - 1), 50);
         }
       };
 
-      // Initial check with small delay to allow browser paint & reflow
-      const timer = setTimeout(() => attemptPush(15), 50);
+      const timer = setTimeout(() => attemptPush(20), 50);
 
       return () => {
         isCancelled = true;
         clearTimeout(timer);
-        if (observer) {
-          observer.disconnect();
-        }
       };
     }
   }, [mounted, rawCode]);
 
-  if (!rawCode || isUnfilled) return null;
+  if (!rawCode) return null;
 
   return (
     <div
       suppressHydrationWarning
       className={`w-full block my-3 text-center clear-both overflow-hidden ${className}`}
-      style={{ minHeight: isUnfilled ? '0px' : '90px', display: isUnfilled ? 'none' : 'block' }}
     >
       <div
         ref={containerRef}
         suppressHydrationWarning
-        className="w-full block mx-auto text-center overflow-hidden"
-        style={{ minWidth: '280px', minHeight: isUnfilled ? '0px' : '90px' }}
+        className="w-full flex justify-center items-center flex-col mx-auto text-center overflow-hidden [&_img]:max-w-full [&_img]:h-auto [&_img]:inline-block [&_iframe]:max-w-full [&_iframe]:mx-auto"
         data-ad-placement={placement}
       />
     </div>
