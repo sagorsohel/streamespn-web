@@ -14,7 +14,7 @@ export const TopGoogleAd: React.FC = () => {
   const pathname = usePathname()
   return (
     <div suppressHydrationWarning className="relative z-10 w-full px-4">
-      <div className="mx-auto w-full max-w-7xl p-3">
+      <div className="mx-auto w-full max-w-7xl">
         <AdRenderer
           uniqueKey="top-google-ad"
           refreshKey={pathname}
