@@ -26,7 +26,7 @@ export const TopGoogleAd: React.FC = () => {
     return () => unsubscribe()
   }, [])
 
-  if (settings?.isTopGoogleAdEnabled === false) return null
+  if (!settings?.isTopGoogleAdEnabled) return null
 
   return (
     <div suppressHydrationWarning className="relative z-10 w-full px-4">
