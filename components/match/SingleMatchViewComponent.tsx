@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from "react"
 
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import api from "@/lib/api"
 import { slugify, isValidScore, sanitizeScore } from "@/lib/utils"
 import { MatchCard, MatchItem } from "@/components/home/MatchCard"
@@ -69,6 +69,7 @@ export function SingleMatchViewComponent({
   initialAdsSettings,
 }: MatchDetailProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const [match, setMatch] = useState<MatchItem | null>(
     () => initialMatch || null
   )

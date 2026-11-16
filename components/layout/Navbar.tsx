@@ -8,7 +8,6 @@ import api from "@/lib/api"
 import { getCategories } from "@/lib/categories"
 import { slugify } from "@/lib/utils"
 import { AdRenderer } from "../ads/AdRenderer"
-import { HARDCODED_ADSENSE } from "../ads/hardcodedAdsense"
 import { startTopLoader } from "./TopLoadingBar"
 
 import type { AdsSettings } from "@/lib/adsCache"
@@ -578,16 +577,6 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
         )}
       </header>
 
-      {/* ALWAYS-ON HARDCODED GOOGLE ADSENSE — top of every page, below the navbar, NOT sticky */}
-      <div suppressHydrationWarning className="w-full px-4">
-        <div className="mx-auto w-full max-w-7xl">
-          <AdRenderer
-            uniqueKey="top-google-ad"
-            refreshKey={pathname}
-            code={HARDCODED_ADSENSE}
-          />
-        </div>
-      </div>
 
       {/* LEFT SIDE DRAWER MENU (PURE WHITE IN LIGHT MODE, SLEEK CHARCOAL IN DARK MODE) */}
       {leftDrawerOpen && (
