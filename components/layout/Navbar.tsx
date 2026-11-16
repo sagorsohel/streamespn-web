@@ -561,12 +561,10 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
           </div>
         </div>
 
-      </header>
-
-      {/* 3. NAVBAR AD BANNER SLOT — right below the navbar (outside the sticky header so it scrolls away) */}
+        {/* 3. NAVBAR AD BANNER SLOT — inside the sticky header so it stays fixed while scrolling */}
       <div
         suppressHydrationWarning
-        className="flex w-full flex-col items-center justify-center gap-1 px-4 py-1.5"
+        className="flex w-full flex-col items-center justify-center gap-1 border-t border-[var(--border-glass)] bg-[var(--bg-header)] px-4 py-1.5"
       >
         {/* Always-on hardcoded Google AdSense (independent of admin panel) */}
         <div className="mx-auto w-full max-w-7xl">
@@ -587,6 +585,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
           </div>
         )}
       </div>
+      </header>
 
       {/* LEFT SIDE DRAWER MENU (PURE WHITE IN LIGHT MODE, SLEEK CHARCOAL IN DARK MODE) */}
       {leftDrawerOpen && (
