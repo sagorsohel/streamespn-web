@@ -47,26 +47,31 @@ export const InlineAd: React.FC<InlineAdProps> = ({ code, placement = 'general',
     });
 
     if (hasAdSensePush || code.includes('adsbygoogle')) {
-      let cancelled = false;
-      const attemptPush = (retries = 20) => {
-        if (cancelled || !containerRef.current) return;
-        const ins = containerRef.current.querySelector('ins.adsbygoogle') as HTMLElement | null;
-        if (!ins || ins.getAttribute('data-adsbygoogle-status')) return;
-
+      // Keep checking: push whenever the <ins> has a real width but Google has not processed it yet
+      // (handles late layout, slow adsbygoogle.js load and ignored early pushes). Stops once processed.
+      let ticks = 0;
+      const check = () => {
+        const ins = containerRef.current?.querySelector('ins.adsbygoogle') as HTMLElement | null;
+        if (!ins) return;
+        if (ins.getAttribute('data-adsbygoogle-status')) {
+          clearInterval(interval);
+          return;
+        }
         if ((ins.offsetWidth || ins.clientWidth) > 0) {
           try {
             ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
           } catch {
             // ignore
           }
-        } else if (retries > 0) {
-          setTimeout(() => attemptPush(retries - 1), 50);
         }
+        // retry a few times (about 30s) then give up
+        if (++ticks >= 15) clearInterval(interval);
       };
-      const timer = setTimeout(() => attemptPush(20), 50);
+      const interval = setInterval(check, 2000);
+      const first = setTimeout(check, 100);
       return () => {
-        cancelled = true;
-        clearTimeout(timer);
+        clearInterval(interval);
+        clearTimeout(first);
       };
     }
   }, [code]);
