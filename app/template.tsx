@@ -7,7 +7,11 @@ export default function Template({ children }: { children: React.ReactNode }) {
     <>
       <br />
       <TopGoogleAd />
+      <br />
       {children}
+      <br />
+      <TopGoogleAd />
+      <br />
     </>
   )
 }
