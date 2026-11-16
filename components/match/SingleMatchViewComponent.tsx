@@ -971,7 +971,7 @@ export function SingleMatchViewComponent({
             <div className="mx-auto w-full max-w-[891px] rounded-2xl border border-slate-200/80 bg-[var(--bg-card)] p-4 shadow-sm sm:p-5 dark:border-white/10">
               <p
                 suppressHydrationWarning
-                className="font-bold text-[var(--text-white)] transition-colors group-hover:text-[#F8C831]"
+                className="text-xs font-semibold text-slate-800 sm:text-sm dark:text-zinc-100"
               >
                 {seoDescription}
               </p>

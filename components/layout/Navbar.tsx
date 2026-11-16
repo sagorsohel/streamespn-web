@@ -386,6 +386,22 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
           </div>
         </div>
 
+        {/* ADMIN "NAVBAR AD CODE" SLOT — between the top bar and the menu; only when ON and filled (OFF/empty = no gap) */}
+        {navAdCode.trim() && (
+          <div
+            suppressHydrationWarning
+            className="flex w-full items-center justify-center border-t border-[var(--border-glass)] bg-[var(--bg-header)] px-4 py-1.5"
+          >
+            <div className="mx-auto flex w-full max-w-7xl items-center justify-center">
+              <AdRenderer
+                uniqueKey="nav-ad"
+                refreshKey={pathname}
+                code={navAdCode}
+              />
+            </div>
+          </div>
+        )}
+
         {/* 2. SUB-NAVBAR CATEGORIES ROW */}
 
         {/* DESKTOP SUB-NAVBAR */}
@@ -560,21 +576,6 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
           </div>
         </div>
 
-        {/* 3. ADMIN "NAVBAR AD CODE" SLOT — only when ON and filled; OFF/empty = no gap at all */}
-        {navAdCode.trim() && (
-          <div
-            suppressHydrationWarning
-            className="flex w-full items-center justify-center border-t border-[var(--border-glass)] bg-[var(--bg-header)] px-4 py-1.5"
-          >
-            <div className="mx-auto flex w-full max-w-7xl items-center justify-center">
-              <AdRenderer
-                uniqueKey="nav-ad"
-                refreshKey={pathname}
-                code={navAdCode}
-              />
-            </div>
-          </div>
-        )}
       </header>
 
 
