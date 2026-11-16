@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { getAdsSettingsSync, subscribeAdsSettings, AdsSettings } from '@/lib/adsCache';
 import { AdRenderer } from './AdRenderer';
 
-import { HARDCODED_ADSENSE } from './hardcodedAdsense';
 
 interface ResponsiveAdBannerProps {
   initialCode?: string;
@@ -33,10 +32,9 @@ export const ResponsiveAdBanner: React.FC<ResponsiveAdBannerProps> = ({
   // so turning the banner OFF in admin hides it.
   const live = adsSettings && adsSettings.footerAds !== undefined ? adsSettings : null;
   const enabled = live ? live.isFooterAdsEnabled !== false : true;
-  // Admin code wins; if the box is empty (and not switched OFF) the hardcoded AdSense unit is shown
-  const finalCode = enabled
-    ? ((live ? live.footerAds : initialCode) || '').trim() || HARDCODED_ADSENSE
-    : '';
+  // Only the admin "Top Banner Ad" code is shown here (empty box or OFF = nothing, no blank gap).
+  // The always-on Google AdSense unit lives in the sticky Navbar.
+  const finalCode = enabled ? ((live ? live.footerAds : initialCode) || '').trim() : '';
 
   if (!finalCode) return null;
 
