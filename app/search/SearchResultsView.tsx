@@ -128,11 +128,11 @@ export default function SearchResultsView() {
   const handleExecuteSearch = (termToUse?: string) => {
     const q = (termToUse !== undefined ? termToUse : searchInput).trim();
     if (!q) {
-      router.push('/search');
+      window.location.assign('/search');
       return;
     }
     startTopLoader();
-    router.push(`/search?q=${encodeURIComponent(q)}`);
+    window.location.assign(`/search?q=${encodeURIComponent(q)}`);
   };
 
   // Distinct sports available in this search result set
@@ -325,7 +325,7 @@ export default function SearchResultsView() {
                 onClick={() => {
                   setSearchInput('');
                   setActiveQuery('');
-                  router.push('/search');
+                  window.location.assign('/search');
                 }}
                 className="px-4 py-2 rounded-xl border border-[var(--border-glass)] bg-[var(--bg-main)] text-xs font-bold text-[var(--text-white)] hover:border-[#F8C831] transition-all"
               >

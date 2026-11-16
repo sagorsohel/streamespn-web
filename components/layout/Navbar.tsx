@@ -193,7 +193,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
 
   const navigateToCategory = (catSlug: string) => {
     startTopLoader()
-    router.push(`/${catSlug}`)
+    window.location.assign(`/${catSlug}`)
     setTimeout(() => {
       setIsMoreOpen(false)
       setLeftDrawerOpen(false)
@@ -244,7 +244,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
     if (!q) return
     setLeftDrawerOpen(false)
     startTopLoader()
-    router.push(`/search?q=${encodeURIComponent(q)}`)
+    window.location.assign(`/search?q=${encodeURIComponent(q)}`)
   }
 
   useEffect(() => {
@@ -453,7 +453,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
                         <DropdownMenuItem
                           key={cat.id}
                           onClick={() =>
-                            router.push(`/${catSlug}`, { scroll: false })
+                            window.location.assign(`/${catSlug}`)
                           }
                           className={`flex cursor-pointer items-center gap-2.5 rounded-xl p-2 text-left text-xs font-bold transition-all sm:text-sm ${
                             isSelected
@@ -532,7 +532,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
                         <DropdownMenuItem
                           key={cat.id}
                           onClick={() =>
-                            router.push(`/${catSlug}`, { scroll: false })
+                            window.location.assign(`/${catSlug}`)
                           }
                           className="group flex cursor-pointer flex-col items-center justify-center rounded-xl p-2 focus:bg-white/10"
                         >
@@ -695,7 +695,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
                         href={`/${catSlug}`}
                         onClick={() => {
                           setLeftDrawerOpen(false)
-                          router.push(`/${catSlug}`, { scroll: false })
+                          window.location.assign(`/${catSlug}`)
                         }}
                         className={`flex w-full cursor-pointer items-center justify-between rounded-xl p-2.5 text-xs font-extrabold transition-all ${
                           isSelected
