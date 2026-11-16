@@ -15,6 +15,9 @@ import {
  * Ad shown under the "UPCOMING" / "More Events" heading, above the match cards.
  * Always the hardcoded Google in-article unit; the admin panel only switches it ON/OFF.
  */
+// Master switch in code: set to true to bring the ad back (admin ON/OFF still applies on top).
+const MATCH_LIST_AD_ENABLED = false;
+
 export const MatchListAd: React.FC<{ className?: string }> = ({ className = '' }) => {
   const pathname = usePathname();
   const [settings, setSettings] = useState<AdsSettings>(() => getAdsSettingsSync());
@@ -25,7 +28,7 @@ export const MatchListAd: React.FC<{ className?: string }> = ({ className = '' }
     return () => unsubscribe();
   }, []);
 
-  if (settings?.isMatchListAdsEnabled === false) return null;
+  if (!MATCH_LIST_AD_ENABLED || settings?.isMatchListAdsEnabled === false) return null;
 
   return (
     <div suppressHydrationWarning className={`w-full ${className}`}>
