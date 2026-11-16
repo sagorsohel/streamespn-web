@@ -561,31 +561,33 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
           </div>
         </div>
 
-        {/* 3. NAVBAR AD BANNER SLOT — inside the sticky header so it stays fixed while scrolling */}
-      <div
-        suppressHydrationWarning
-        className="flex w-full flex-col items-center justify-center gap-1 border-t border-[var(--border-glass)] bg-[var(--bg-header)] px-4 py-1.5"
-      >
-        {/* Always-on hardcoded Google AdSense (independent of admin panel) */}
+        {/* 3. ADMIN "NAVBAR AD CODE" SLOT — only when ON and filled; OFF/empty = no gap at all */}
+        {navAdCode.trim() && (
+          <div
+            suppressHydrationWarning
+            className="flex w-full items-center justify-center border-t border-[var(--border-glass)] bg-[var(--bg-header)] px-4 py-1.5"
+          >
+            <div className="mx-auto flex w-full max-w-7xl items-center justify-center">
+              <AdRenderer
+                uniqueKey="nav-ad"
+                refreshKey={pathname}
+                code={navAdCode}
+              />
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* ALWAYS-ON HARDCODED GOOGLE ADSENSE — top of every page, below the navbar, NOT sticky */}
+      <div suppressHydrationWarning className="w-full px-4">
         <div className="mx-auto w-full max-w-7xl">
           <AdRenderer
-            uniqueKey="nav-google-ad"
+            uniqueKey="top-google-ad"
             refreshKey={pathname}
             code={HARDCODED_ADSENSE}
           />
         </div>
-        {/* Admin "Navbar Ad Code" (if ON and filled) — below the Google ad */}
-        {navAdCode.trim() && (
-          <div className="mx-auto flex w-full max-w-7xl items-center justify-center">
-            <AdRenderer
-              uniqueKey="nav-ad"
-              refreshKey={pathname}
-              code={navAdCode}
-            />
-          </div>
-        )}
       </div>
-      </header>
 
       {/* LEFT SIDE DRAWER MENU (PURE WHITE IN LIGHT MODE, SLEEK CHARCOAL IN DARK MODE) */}
       {leftDrawerOpen && (
