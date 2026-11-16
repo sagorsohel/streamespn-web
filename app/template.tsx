@@ -6,11 +6,11 @@ export default function Template({ children }: { children: React.ReactNode }) {
   return (
     <>
       <br />
-      {/* <TopGoogleAd /> */}
+      <TopGoogleAd />
       <br />
       {children}
       <br />
-      <TopGoogleAd />
+      {/* <TopGoogleAd /> */}
       <br />
     </>
   )
