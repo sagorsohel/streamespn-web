@@ -43,6 +43,7 @@ import {
   ArrowRight,
   MoveRight,
 } from "lucide-react"
+import { TopGoogleAd } from "../ads/TopGoogleAd"
 
 interface MatchDetailProps {
   categorySlug: string
@@ -513,7 +514,8 @@ export function SingleMatchViewComponent({
           <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[var(--bg-main)]/50 to-[var(--bg-main)]" />
         </div>
       )}
-
+      <br /> <TopGoogleAd />
+      <br />
       <div className="relative mx-auto w-full max-w-7xl flex-1 px-4 pt-3 pb-12 sm:px-6">
         {match && (
           <JsonLdSchema
@@ -550,7 +552,6 @@ export function SingleMatchViewComponent({
             isLive={isLive}
           />
         )}
-
         {loading ? (
           <div className="mx-auto w-full max-w-[891px] space-y-6">
             <div className="h-20 w-full animate-pulse rounded-2xl bg-slate-300 dark:bg-zinc-800" />
