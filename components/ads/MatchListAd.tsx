@@ -13,8 +13,7 @@ import {
 
 /**
  * Ad shown under the "UPCOMING" / "More Events" heading, above the match cards.
- * Admin "Match List Ad" code wins; if empty the built-in Google in-article unit is used;
- * if switched OFF in admin nothing is rendered.
+ * Always the hardcoded Google in-article unit; the admin panel only switches it ON/OFF.
  */
 export const MatchListAd: React.FC<{ className?: string }> = ({ className = '' }) => {
   const pathname = usePathname();
@@ -28,11 +27,9 @@ export const MatchListAd: React.FC<{ className?: string }> = ({ className = '' }
 
   if (settings?.isMatchListAdsEnabled === false) return null;
 
-  const code = (settings?.matchListAds || '').trim() || HARDCODED_LIST_ADSENSE;
-
   return (
     <div suppressHydrationWarning className={`w-full ${className}`}>
-      <AdRenderer uniqueKey="match-list-ad" refreshKey={pathname} code={code} />
+      <AdRenderer uniqueKey="match-list-ad" refreshKey={pathname} code={HARDCODED_LIST_ADSENSE} />
     </div>
   );
 };
