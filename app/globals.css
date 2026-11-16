@@ -146,3 +146,7 @@ body {
 .animate-full-pulse:hover {
   transform: scale(1);
 }
+/* Collapse AdSense units that Google did not fill (Google leaves an inline height on them) */
+ins.adsbygoogle[data-ad-status="unfilled"] {
+  display: none !important;
+}
