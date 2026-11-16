@@ -4,6 +4,14 @@ import React, { useEffect, useState } from 'react';
 import { getAdsSettingsSync, subscribeAdsSettings, AdsSettings } from '@/lib/adsCache';
 import { AdRenderer } from './AdRenderer';
 
+const HARDCODED_ADSENSE = `<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-9896387565016359"
+     data-ad-slot="3694761365"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>`;
+
 interface ResponsiveAdBannerProps {
   initialCode?: string;
   className?: string;
@@ -31,7 +39,10 @@ export const ResponsiveAdBanner: React.FC<ResponsiveAdBannerProps> = ({
   // so turning the banner OFF in admin hides it.
   const live = adsSettings && adsSettings.footerAds !== undefined ? adsSettings : null;
   const enabled = live ? live.isFooterAdsEnabled !== false : true;
-  const finalCode = enabled ? ((live ? live.footerAds : initialCode) || '').trim() : '';
+  // Admin code wins; if the box is empty (and not switched OFF) the hardcoded AdSense unit is shown
+  const finalCode = enabled
+    ? ((live ? live.footerAds : initialCode) || '').trim() || HARDCODED_ADSENSE
+    : '';
 
   if (!finalCode) return null;
 

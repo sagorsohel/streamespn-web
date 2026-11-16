@@ -151,6 +151,14 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://r2.thesportsdb.com" />
         <link rel="preconnect" href="https://musikazblai.org" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://musikazblai.org" />
+        {/* Hardcoded Google AdSense loader (skipped if the admin head scripts already include it) */}
+        {!/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/i.test(headAdsHtml) && (
+          <script
+            async
+            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9896387565016359"
+            crossOrigin="anonymous"
+          />
+        )}
         <SSRHeadScripts rawHtml={headAdsHtml} isEnabled={isHeadAdsEnabled} />
       </head>
       <body suppressHydrationWarning className="min-h-screen bg-[var(--bg-main)] text-[var(--text-white)] flex flex-col font-sans">
