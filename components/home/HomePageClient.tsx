@@ -15,6 +15,7 @@ import { BannerSkeleton } from '@/components/home/BannerSkeleton';
 import { MobileLiveSlider } from '@/components/home/MobileLiveSlider';
 import { HeroBannerCarousel } from '@/components/home/HeroBannerCarousel';
 import { ResponsiveAdBanner } from '@/components/ads/ResponsiveAdBanner';
+import { MatchListAd } from '@/components/ads/MatchListAd';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { ScrollableSidebarList } from '@/components/common/ScrollableSidebarList';
 import { startTopLoader, stopTopLoader } from '@/components/layout/TopLoadingBar';
@@ -481,6 +482,7 @@ export function HomePageClient({
                       </span>
                     </div>
                   </div>
+                  <MatchListAd />
                   <div className="space-y-2">
                     {todayUpcomingMatches.map((m) => (
                       <MatchCard key={m.id} match={m} />

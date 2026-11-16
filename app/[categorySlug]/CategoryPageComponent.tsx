@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
+import { MatchListAd } from '@/components/ads/MatchListAd';
 
 import { getCategories, clearCategoriesCache } from '@/lib/categories';
 import { getCachedMatches, setCachedMatches, getCachedSubcategories, setCachedSubcategories } from '@/lib/matchesCache';
@@ -791,6 +792,7 @@ export function CategoryPageComponent({
                           </span>
                         </div>
                       </div>
+                      <MatchListAd />
                       <div className="space-y-2">
                         {todayUpcomingMatches.map((m) => (
                           <MatchCard key={m.id} match={m} />

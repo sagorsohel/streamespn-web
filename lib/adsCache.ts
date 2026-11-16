@@ -18,6 +18,8 @@ export interface AdsSettings {
   isModalSignupAdsEnabled?: boolean;
   footerAds?: string;
   isFooterAdsEnabled?: boolean;
+  matchListAds?: string;
+  isMatchListAdsEnabled?: boolean;
   bannerAds?: string;
   floatMobileAds?: string;
   floatDesktopAds?: string;

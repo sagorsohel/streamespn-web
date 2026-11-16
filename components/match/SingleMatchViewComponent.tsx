@@ -9,6 +9,7 @@ import { slugify, isValidScore, sanitizeScore } from "@/lib/utils"
 import { MatchCard, MatchItem } from "@/components/home/MatchCard"
 import { OptimizedImage } from "@/components/common/OptimizedImage"
 import { AdRenderer } from "@/components/ads/AdRenderer"
+import { MatchListAd } from "@/components/ads/MatchListAd"
 import { ResponsiveAdBanner } from "@/components/ads/ResponsiveAdBanner"
 import { JsonLdSchema } from "@/components/seo/JsonLdSchema"
 import {
@@ -991,6 +992,7 @@ export function SingleMatchViewComponent({
                   </Link>
                 </div>
 
+                <MatchListAd />
                 <div className="space-y-2.5">
                   {relatedMatches.slice(0, 10).map((m) => (
                     <MatchCard key={m.id} match={m} />
