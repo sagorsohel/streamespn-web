@@ -8,20 +8,27 @@ import api from "@/lib/api"
 import { getCategories } from "@/lib/categories"
 import { slugify } from "@/lib/utils"
 import { AdRenderer } from "../ads/AdRenderer"
+import { HARDCODED_ADSENSE } from "../ads/hardcodedAdsense"
 import { startTopLoader } from "./TopLoadingBar"
 
 import type { AdsSettings } from "@/lib/adsCache"
 import { getAdsSettingsSync, setAdsSettingsCache } from "@/lib/adsCache"
 
 // Module-level memory — initialized from cache for instant 0ms display on load
-let _adCode = ""
+// Navbar ad: admin code if set, else the hardcoded Google AdSense unit; nothing when switched OFF.
+const resolveNavAd = (s?: Partial<AdsSettings> | null): string => {
+  if (s && s.isNavAdsEnabled === false) return ""
+  return ((s && s.navAds) || "").trim() || HARDCODED_ADSENSE
+}
+
+let _adCode = HARDCODED_ADSENSE
 let _membershipLink = ""
 
 if (typeof window !== "undefined") {
   try {
     const cached = getAdsSettingsSync()
     if (cached) {
-      _adCode = cached.navAds || ""
+      _adCode = resolveNavAd(cached)
       _membershipLink = cached.membershipReferralLink || ""
     }
   } catch (e) {}
@@ -33,7 +40,7 @@ const fetchAdData = (signal?: AbortSignal): Promise<void> =>
     .then((data) => {
       const s = data?.data?.settings
       if (s) {
-        _adCode = s.navAds || ""
+        _adCode = resolveNavAd(s)
         _membershipLink = s.membershipReferralLink || ""
         setAdsSettingsCache(s)
       }
@@ -144,7 +151,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
   const [scrolled, setScrolled] = useState<boolean>(false)
   // Read from initial SSR settings or module memory instantly (0ms) — populated on first HTML load!
   const [navAdCode, setNavAdCode] = useState<string>(
-    () => (initialAdsSettings ? initialAdsSettings.navAds || "" : _adCode)
+    () => (initialAdsSettings ? resolveNavAd(initialAdsSettings) : _adCode)
   )
   const [membershipLink, setMembershipLink] = useState<string>(
     () => initialAdsSettings?.membershipReferralLink || _membershipLink
@@ -155,7 +162,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
   // Sync initial SSR settings into memory immediately if provided
   useEffect(() => {
     if (initialAdsSettings && Object.keys(initialAdsSettings).length > 0) {
-      _adCode = initialAdsSettings.navAds || ""
+      _adCode = resolveNavAd(initialAdsSettings)
       _membershipLink =
         initialAdsSettings.membershipReferralLink || _membershipLink
       setNavAdCode(_adCode)
@@ -554,22 +561,23 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
           </div>
         </div>
 
-        {/* 3. NAVBAR AD BANNER SLOT */}
-        {navAdCode.trim() && (
-          <div
-            suppressHydrationWarning
-            className="flex w-full items-center justify-center border-t border-[var(--border-glass)] bg-[var(--bg-header)] px-4 py-1.5"
-          >
-            <div className="mx-auto flex w-full max-w-7xl items-center justify-center">
-              <AdRenderer
-                uniqueKey="nav-ad"
-                refreshKey={pathname}
-                code={navAdCode}
-              />
-            </div>
-          </div>
-        )}
       </header>
+
+      {/* 3. NAVBAR AD BANNER SLOT — right below the navbar (outside the sticky header so it scrolls away) */}
+      {navAdCode.trim() && (
+        <div
+          suppressHydrationWarning
+          className="flex w-full items-center justify-center px-4 py-1.5"
+        >
+          <div className="mx-auto flex w-full max-w-7xl items-center justify-center">
+            <AdRenderer
+              uniqueKey="nav-ad"
+              refreshKey={pathname}
+              code={navAdCode}
+            />
+          </div>
+        </div>
+      )}
 
       {/* LEFT SIDE DRAWER MENU (PURE WHITE IN LIGHT MODE, SLEEK CHARCOAL IN DARK MODE) */}
       {leftDrawerOpen && (

@@ -4,13 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { getAdsSettingsSync, subscribeAdsSettings, AdsSettings } from '@/lib/adsCache';
 import { AdRenderer } from './AdRenderer';
 
-const HARDCODED_ADSENSE = `<ins class="adsbygoogle"
-     style="display:block"
-     data-ad-client="ca-pub-9896387565016359"
-     data-ad-slot="3694761365"
-     data-ad-format="auto"
-     data-full-width-responsive="true"></ins>
-<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>`;
+import { HARDCODED_ADSENSE } from './hardcodedAdsense';
 
 interface ResponsiveAdBannerProps {
   initialCode?: string;
