@@ -1,17 +1,33 @@
 "use client"
 
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { AdRenderer } from "./AdRenderer"
 import { HARDCODED_ADSENSE } from "./hardcodedAdsense"
+import {
+  AdsSettings,
+  fetchAdsSettingsAsync,
+  getAdsSettingsSync,
+  subscribeAdsSettings,
+} from "@/lib/adsCache"
 
 /**
- * Hardcoded Google AdSense unit shown at the start of every page (not sticky).
- * Independent of the admin panel. Mounted from app/template.tsx, so it is
- * re-created (and a fresh ad is requested) on every page navigation.
+ * Hardcoded Google AdSense unit shown at the start (and end) of every page (not sticky).
+ * The ad code is hardcoded; the admin panel ("Page Google Ad") only switches it ON/OFF.
+ * Mounted from app/template.tsx, so it is re-created on every page navigation.
  */
 export const TopGoogleAd: React.FC = () => {
   const pathname = usePathname()
+  const [settings, setSettings] = useState<AdsSettings>(() => getAdsSettingsSync())
+
+  useEffect(() => {
+    const unsubscribe = subscribeAdsSettings((s) => setSettings(s))
+    fetchAdsSettingsAsync().then((s) => s && setSettings(s))
+    return () => unsubscribe()
+  }, [])
+
+  if (settings?.isTopGoogleAdEnabled === false) return null
+
   return (
     <div suppressHydrationWarning className="relative z-10 w-full px-4">
       <div className="mx-auto w-full max-w-7xl">

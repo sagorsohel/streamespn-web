@@ -20,6 +20,7 @@ export interface AdsSettings {
   isFooterAdsEnabled?: boolean;
   matchListAds?: string;
   isMatchListAdsEnabled?: boolean;
+  isTopGoogleAdEnabled?: boolean;
   bannerAds?: string;
   floatMobileAds?: string;
   floatDesktopAds?: string;
