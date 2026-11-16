@@ -53,7 +53,7 @@ export const InlineAd: React.FC<InlineAdProps> = ({ code, placement = 'general',
         const ins = containerRef.current.querySelector('ins.adsbygoogle') as HTMLElement | null;
         if (!ins || ins.getAttribute('data-adsbygoogle-status')) return;
 
-        if ((containerRef.current.offsetWidth || containerRef.current.clientWidth) > 0) {
+        if ((ins.offsetWidth || ins.clientWidth) > 0) {
           try {
             ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
           } catch {
@@ -76,7 +76,7 @@ export const InlineAd: React.FC<InlineAdProps> = ({ code, placement = 'general',
       ref={containerRef}
       suppressHydrationWarning
       data-ad-placement={placement}
-      className={`w-full flex justify-center items-center flex-col mx-auto text-center [&_img]:max-w-full [&_img]:h-auto [&_img]:inline-block [&_iframe]:max-w-full [&_iframe]:mx-auto ${className}`}
+      className={`w-full flex justify-center items-center flex-col mx-auto text-center [&_ins.adsbygoogle]:!block [&_ins.adsbygoogle]:w-full [&_ins.adsbygoogle]:min-h-[50px] [&_img]:max-w-full [&_img]:h-auto [&_img]:inline-block [&_iframe]:max-w-full [&_iframe]:mx-auto ${className}`}
       dangerouslySetInnerHTML={{ __html: code }}
     />
   );
