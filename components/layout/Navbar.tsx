@@ -15,13 +15,13 @@ import type { AdsSettings } from "@/lib/adsCache"
 import { getAdsSettingsSync, setAdsSettingsCache } from "@/lib/adsCache"
 
 // Module-level memory — initialized from cache for instant 0ms display on load
-// Navbar ad: admin code if set, else the hardcoded Google AdSense unit; nothing when switched OFF.
+// Admin Navbar ad code (shown BELOW the always-on hardcoded Google AdSense unit); empty when OFF.
 const resolveNavAd = (s?: Partial<AdsSettings> | null): string => {
   if (s && s.isNavAdsEnabled === false) return ""
-  return ((s && s.navAds) || "").trim() || HARDCODED_ADSENSE
+  return ((s && s.navAds) || "").trim()
 }
 
-let _adCode = HARDCODED_ADSENSE
+let _adCode = ""
 let _membershipLink = ""
 
 if (typeof window !== "undefined") {
@@ -564,11 +564,20 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
       </header>
 
       {/* 3. NAVBAR AD BANNER SLOT — right below the navbar (outside the sticky header so it scrolls away) */}
-      {navAdCode.trim() && (
-        <div
-          suppressHydrationWarning
-          className="flex w-full items-center justify-center px-4 py-1.5"
-        >
+      <div
+        suppressHydrationWarning
+        className="flex w-full flex-col items-center justify-center gap-1 px-4 py-1.5"
+      >
+        {/* Always-on hardcoded Google AdSense (independent of admin panel) */}
+        <div className="mx-auto w-full max-w-7xl">
+          <AdRenderer
+            uniqueKey="nav-google-ad"
+            refreshKey={pathname}
+            code={HARDCODED_ADSENSE}
+          />
+        </div>
+        {/* Admin "Navbar Ad Code" (if ON and filled) — below the Google ad */}
+        {navAdCode.trim() && (
           <div className="mx-auto flex w-full max-w-7xl items-center justify-center">
             <AdRenderer
               uniqueKey="nav-ad"
@@ -576,8 +585,8 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
               code={navAdCode}
             />
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* LEFT SIDE DRAWER MENU (PURE WHITE IN LIGHT MODE, SLEEK CHARCOAL IN DARK MODE) */}
       {leftDrawerOpen && (
