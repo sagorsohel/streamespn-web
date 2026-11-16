@@ -792,13 +792,11 @@ export function SingleMatchViewComponent({
                       })()}
 
                       {/* SIGNUP AD BANNER - PRE-RENDERED ON PAGE LOAD FOR ZERO DELAY */}
-                      {(adsSettings.modalSignupAds || adsSettings.navAds) && (
+                      {adsSettings.modalSignupAds && (
                         <div className="my-1.5 flex min-h-[52px] w-full max-w-[340px] items-center justify-center bg-transparent">
                           <AdRenderer
                             uniqueKey={`modal-ad-${matchSlug}`}
-                            code={
-                              adsSettings.modalSignupAds || adsSettings.navAds
-                            }
+                            code={adsSettings.modalSignupAds}
                           />
                         </div>
                       )}

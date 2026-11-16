@@ -21,7 +21,7 @@ if (typeof window !== "undefined") {
   try {
     const cached = getAdsSettingsSync()
     if (cached) {
-      _adCode = cached.navAds || cached.modalSignupAds || ""
+      _adCode = cached.navAds || ""
       _membershipLink = cached.membershipReferralLink || ""
     }
   } catch (e) {}
@@ -33,7 +33,7 @@ const fetchAdData = (signal?: AbortSignal): Promise<void> =>
     .then((data) => {
       const s = data?.data?.settings
       if (s) {
-        _adCode = s.navAds || s.modalSignupAds || ""
+        _adCode = s.navAds || ""
         _membershipLink = s.membershipReferralLink || ""
         setAdsSettingsCache(s)
       }
@@ -144,10 +144,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
   const [scrolled, setScrolled] = useState<boolean>(false)
   // Read from initial SSR settings or module memory instantly (0ms) — populated on first HTML load!
   const [navAdCode, setNavAdCode] = useState<string>(
-    () =>
-      initialAdsSettings?.navAds ||
-      initialAdsSettings?.modalSignupAds ||
-      _adCode
+    () => (initialAdsSettings ? initialAdsSettings.navAds || "" : _adCode)
   )
   const [membershipLink, setMembershipLink] = useState<string>(
     () => initialAdsSettings?.membershipReferralLink || _membershipLink
@@ -157,14 +154,8 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
 
   // Sync initial SSR settings into memory immediately if provided
   useEffect(() => {
-    if (
-      initialAdsSettings &&
-      (initialAdsSettings.navAds || initialAdsSettings.membershipReferralLink)
-    ) {
-      _adCode =
-        initialAdsSettings.navAds ||
-        initialAdsSettings.modalSignupAds ||
-        _adCode
+    if (initialAdsSettings && Object.keys(initialAdsSettings).length > 0) {
+      _adCode = initialAdsSettings.navAds || ""
       _membershipLink =
         initialAdsSettings.membershipReferralLink || _membershipLink
       setNavAdCode(_adCode)
@@ -176,16 +167,14 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
   // Fetch & sync fresh ad data on mount and on route navigation (category, subcategory, single match)
   useEffect(() => {
     // 1. Show cached memory data instantly (0ms) while fresh fetch is in-flight
-    if (_adCode) {
-      setNavAdCode(_adCode)
-      setMembershipLink(_membershipLink)
-    }
+    setNavAdCode(_adCode)
+    if (_membershipLink) setMembershipLink(_membershipLink)
 
     // 2. Fetch fresh data from backend (silent background update)
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), 1500)
     fetchAdData(controller.signal).then(() => {
-      if (_adCode) setNavAdCode(_adCode)
+      setNavAdCode(_adCode)
       if (_membershipLink) setMembershipLink(_membershipLink)
       clearTimeout(timer)
     })
@@ -566,18 +555,20 @@ export const Navbar: React.FC<NavbarProps> = ({ initialAdsSettings }) => {
         </div>
 
         {/* 3. NAVBAR AD BANNER SLOT */}
-        <div
-          suppressHydrationWarning
-          className="flex w-full items-center justify-center border-t border-[var(--border-glass)] bg-[var(--bg-header)] px-4 py-1.5"
-        >
-          <div className="mx-auto flex w-full max-w-7xl items-center justify-center">
-            <AdRenderer
-              uniqueKey="nav-ad"
-              refreshKey={pathname}
-              code={navAdCode}
-            />
+        {navAdCode.trim() && (
+          <div
+            suppressHydrationWarning
+            className="flex w-full items-center justify-center border-t border-[var(--border-glass)] bg-[var(--bg-header)] px-4 py-1.5"
+          >
+            <div className="mx-auto flex w-full max-w-7xl items-center justify-center">
+              <AdRenderer
+                uniqueKey="nav-ad"
+                refreshKey={pathname}
+                code={navAdCode}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </header>
 
       {/* LEFT SIDE DRAWER MENU (PURE WHITE IN LIGHT MODE, SLEEK CHARCOAL IN DARK MODE) */}

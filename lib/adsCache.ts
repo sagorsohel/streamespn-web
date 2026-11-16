@@ -13,8 +13,11 @@ export interface AdsSettings {
   isHeadAdsEnabled?: boolean;
   headerScripts?: HeaderScriptItem[];
   navAds?: string;
+  isNavAdsEnabled?: boolean;
   modalSignupAds?: string;
+  isModalSignupAdsEnabled?: boolean;
   footerAds?: string;
+  isFooterAdsEnabled?: boolean;
   bannerAds?: string;
   floatMobileAds?: string;
   floatDesktopAds?: string;

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useMemo, useEffect, useState, useRef } from 'react';
+import React, { useMemo, useEffect, useState, useRef, useCallback } from 'react';
+import { InlineAd } from './InlineAd';
 
 interface AdRendererProps {
   code?: string;
@@ -10,13 +11,30 @@ interface AdRendererProps {
   autoRefreshSeconds?: number;
 }
 
-export const AdRenderer: React.FC<AdRendererProps> = ({
-  code,
-  className = '',
-  refreshKey,
-}) => {
+type AdMode = 'adsense' | 'inline' | 'iframe';
+
+/**
+ * - AdSense           -> rendered on the real page (needs the parent's adsbygoogle.js)
+ * - script-only code  -> rendered on the real page (pop-under, social bar, loaders)
+ * - everything else   -> sandbox-free iframe (document.write based ad networks such as
+ *                        Adsterra atOptions/invoke.js, iframes, images, html, custom JS)
+ */
+const detectMode = (code: string): AdMode => {
+  if (/adsbygoogle/i.test(code)) return 'adsense';
+  const hasAtOptions = /atOptions/i.test(code);
+  const visibleMarkup = code
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, '')
+    .trim();
+  if (!hasAtOptions && !visibleMarkup && /<script/i.test(code)) return 'inline';
+  return 'iframe';
+};
+
+export const AdRenderer: React.FC<AdRendererProps> = ({ code, className = '', refreshKey }) => {
   const rawCode = (code || '').trim();
   const [mounted, setMounted] = useState(false);
+  const [height, setHeight] = useState<number | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const isFirstMount = useRef(true);
 
@@ -24,23 +42,12 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
     setMounted(true);
   }, []);
 
-  const { extractedWidth, extractedHeight } = useMemo(() => {
-    if (!rawCode) return { extractedWidth: 320, extractedHeight: 50 };
+  const mode = useMemo<AdMode>(() => (rawCode ? detectMode(rawCode) : 'iframe'), [rawCode]);
 
-    let width = 320;
-    let height = 50;
-
-    const widthMatch = rawCode.match(/['"]?width['"]?\s*[:=]\s*['"]?(\d+)/i);
-    if (widthMatch && widthMatch[1]) {
-      width = parseInt(widthMatch[1], 10);
-    }
-
-    const heightMatch = rawCode.match(/['"]?height['"]?\s*[:=]\s*['"]?(\d+)/i);
-    if (heightMatch && heightMatch[1]) {
-      height = parseInt(heightMatch[1], 10);
-    }
-
-    return { extractedWidth: width, extractedHeight: height };
+  // Initial height hint from the code (e.g. atOptions height) until real content is measured
+  const hintHeight = useMemo(() => {
+    const m = rawCode.match(/['"]?height['"]?\s*[:=]\s*['"]?(\d+)/i);
+    return m ? parseInt(m[1], 10) : 50;
   }, [rawCode]);
 
   const iframeSrcDoc = useMemo(() => {
@@ -50,6 +57,7 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base target="_blank">
     <script>
       try {
         if (!window.performance) window.performance = {};
@@ -68,17 +76,9 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
       } catch (e) {}
     </script>
     <style>
-      html, body {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        background: transparent !important;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        height: 100%;
-      }
+      html, body { margin: 0; padding: 0; background: transparent !important; overflow: hidden; }
+      body { display: flex; flex-direction: column; align-items: center; }
+      img, iframe, video { max-width: 100%; }
     </style>
   </head>
   <body>
@@ -87,42 +87,68 @@ export const AdRenderer: React.FC<AdRendererProps> = ({
 </html>`;
   }, [rawCode]);
 
-  // When refreshKey changes (page navigation to cat/subcat/match), reload in-place smoothly
+  // Resize the iframe to whatever the ad actually renders (ads load asynchronously)
+  const measure = useCallback(() => {
+    try {
+      const doc = iframeRef.current?.contentDocument;
+      if (!doc || !doc.body) return;
+      const h = Math.ceil(Math.max(doc.body.scrollHeight, doc.body.offsetHeight));
+      if (h > 0) setHeight((prev) => (prev === h ? prev : h));
+    } catch {
+      // cross-origin access blocked — keep hint height
+    }
+  }, []);
+
+  useEffect(() => {
+    if (mode !== 'iframe' || !mounted || !rawCode) return;
+    const interval = setInterval(measure, 500);
+    const stop = setTimeout(() => clearInterval(interval), 20000);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(stop);
+    };
+  }, [mode, mounted, rawCode, iframeSrcDoc, measure]);
+
+  // Reload in place when navigating (refreshKey changes)
   useEffect(() => {
     if (isFirstMount.current) {
       isFirstMount.current = false;
       return;
     }
-    if (iframeRef.current && rawCode && mounted) {
+    if (mode === 'iframe' && iframeRef.current && rawCode && mounted) {
       try {
         iframeRef.current.srcdoc = iframeSrcDoc;
-      } catch (e) {
-        // silent catch
+      } catch {
+        // ignore
       }
     }
-  }, [refreshKey, iframeSrcDoc, rawCode, mounted]);
+  }, [refreshKey, iframeSrcDoc, rawCode, mounted, mode]);
 
-  if (!rawCode || !mounted) {
-    return null;
+  if (!rawCode || !mounted) return null;
+
+  if (mode !== 'iframe') {
+    return (
+      <div suppressHydrationWarning className={`w-full max-w-full ${className}`}>
+        <InlineAd code={rawCode} />
+      </div>
+    );
   }
+
+  const h = height ?? hintHeight;
 
   return (
     <div
       suppressHydrationWarning
-      className={`flex justify-center items-center overflow-hidden bg-transparent max-w-full w-full relative ${className}`}
-      style={{ minHeight: `${extractedHeight}px`, height: `${extractedHeight}px` }}
+      className={`flex justify-center items-center bg-transparent max-w-full w-full relative ${className}`}
+      style={{ minHeight: `${h}px` }}
     >
       <iframe
         ref={iframeRef}
         srcDoc={iframeSrcDoc}
-        width={extractedWidth ? `${extractedWidth}px` : '100%'}
-        height={`${extractedHeight}px`}
-        style={{
-          border: 'none',
-          overflow: 'hidden',
-          background: 'transparent',
-          maxWidth: '100%',
-        }}
+        onLoad={measure}
+        width="100%"
+        height={`${h}px`}
+        style={{ border: 'none', overflow: 'hidden', background: 'transparent', maxWidth: '100%', width: '100%' }}
         scrolling="no"
         title="Advertisement"
       />
