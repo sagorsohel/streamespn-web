@@ -81,7 +81,7 @@ export const InlineAd: React.FC<InlineAdProps> = ({ code, placement = 'general',
       ref={containerRef}
       suppressHydrationWarning
       data-ad-placement={placement}
-      className={`w-full flex justify-center items-center flex-col mx-auto text-center [&_ins.adsbygoogle]:!block [&_ins.adsbygoogle]:w-full [&_ins.adsbygoogle]:min-h-[50px] [&_img]:max-w-full [&_img]:h-auto [&_img]:inline-block [&_iframe]:max-w-full [&_iframe]:mx-auto ${className}`}
+      className={`w-full flex justify-center items-center flex-col mx-auto text-center [&_ins.adsbygoogle]:w-full [&_ins.adsbygoogle[data-ad-status=unfilled]]:!hidden[&_img]:max-w-full [&_img]:h-auto [&_img]:inline-block [&_iframe]:max-w-full [&_iframe]:mx-auto ${className}`}
       dangerouslySetInnerHTML={{ __html: code }}
     />
   );
