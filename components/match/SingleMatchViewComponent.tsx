@@ -514,8 +514,7 @@ export function SingleMatchViewComponent({
           <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[var(--bg-main)]/50 to-[var(--bg-main)]" />
         </div>
       )}
-      <br /> <TopGoogleAd />
-      <br />
+
       <div className="relative mx-auto w-full max-w-7xl flex-1 px-4 pt-3 pb-12 sm:px-6">
         {match && (
           <JsonLdSchema
